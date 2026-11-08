@@ -37,6 +37,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -52,6 +53,14 @@ PARTS = ["AGENTS.md", "skills", "docs", "patch", "extensions"]
 
 # 镜像里允许存在、但不归 rsync 管的顶层条目：npm 清单（由本机 note_npm 维护 / 发布机不生成）
 MIRROR_KEEP = {"npm"}
+
+# 发布闸门用的「本机私有文件」特征：排除表（EXCLUDES）靠人工维护，新出现的私有文件
+# 未必登记；镜像里一旦出现这些名字，一律按问题处理（2026-11-08 立，见 scan_mirror）。
+PRIVATE_FILE_PATTERNS = [
+    re.compile(r"(^|/)\.env(\.|$)"),
+    re.compile(r"(^|/)[^/]*\.local\.(md|json|ya?ml|txt|csv)$"),
+    re.compile(r"(^|/)(endpoints|credentials|secrets)\.json$"),
+]
 
 # 不进镜像：本机私有配置 + 本机产物 + 运行时目录
 EXCLUDES = [
@@ -190,6 +199,53 @@ def prune_orphans(mirror: Path, dry: bool) -> list[str]:
         else:
             entry.unlink()
     return removed
+
+
+def scan_mirror(mirror: Path) -> list[str]:
+    """发布闸门：镜像落盘后、提交前做一次确定性扫描（2026-11-08 立）。
+
+    为什么需要：发布链路原来是「rsync → 直接提交推送」，本机私有文件只靠 EXCLUDES
+    这张手维护的排除表挡。表里漏登记一个 .env / 本机配置，就等于把密钥直接开源出去，
+    而且全程没有任何检查会提醒。
+
+    为什么 fail-closed：这是对外发布出口，"没扫成"不能当"扫干净"。gitleaks 未安装时
+    拒绝发布（先 brew install gitleaks），而不是跳过后照常推。
+    """
+    problems: list[str] = []
+
+    if shutil.which("gitleaks") is None:
+        problems.append("gitleaks 未安装：发布闸门要求先装（brew install gitleaks）")
+    else:
+        cfg = HOME / ".gitleaks.toml"
+        fd, report_name = tempfile.mkstemp(suffix=".json")
+        os.close(fd)
+        report = Path(report_name)
+        try:
+            cmd = ["gitleaks", "dir", str(mirror), "--no-banner",
+                   "--report-format", "json", "--report-path", str(report)]
+            if cfg.exists():
+                cmd += ["--config", str(cfg)]
+            subprocess.run(cmd, capture_output=True, text=True)
+            try:
+                hits = json.loads(report.read_text(encoding="utf-8") or "[]")
+            except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+                hits = [{"RuleID": "report-unreadable", "File": str(report), "StartLine": 0}]
+            for h in hits:
+                rel = str(h.get("File", "")).replace(str(mirror) + "/", "")
+                problems.append(
+                    f"gitleaks 命中 {h.get('RuleID')} @ pi/agent/{rel}:{h.get('StartLine', '?')}"
+                )
+        finally:
+            report.unlink(missing_ok=True)
+
+    for path in mirror.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(mirror).as_posix()
+        if any(pat.search(rel) for pat in PRIVATE_FILE_PATTERNS):
+            problems.append(f"疑似本机私有文件（未在 EXCLUDES 登记）：pi/agent/{rel}")
+
+    return problems
 
 
 def note_npm() -> None:
@@ -341,6 +397,18 @@ def main() -> int:
     if orphans:
         print(f"[PRUNE] 清理镜像孤儿条目：{'、'.join(orphans)}")
     note_npm()
+
+    # 发布前闸门（2026-11-08 立）：镜像里发现密钥或未登记的本机私有文件，直接拒绝发布。
+    problems = scan_mirror(mirror)
+    if problems:
+        print("[ERR] 发布闸门未通过，已拒绝提交：")
+        for p in problems[:40]:
+            print("  -", p)
+        if len(problems) > 40:
+            print(f"  ……（共 {len(problems)} 条）")
+        print("  处理：把对应内容从全局 ~/.pi/agent 移除，或在 EXCLUDES 里登记本机私有文件；"
+              "确认可公开的再重新发布。")
+        return 5
 
     files = changed_files(repo)
     if not files:
