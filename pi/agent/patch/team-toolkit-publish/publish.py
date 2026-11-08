@@ -321,19 +321,28 @@ def main() -> int:
             print(f"[NOTE] 仓库工作区另有 {len(dirty)} 处改动（非镜像内容，未纳入比对）")
         return 0
 
+    if args.dry_run:
+        # dry 模式下 rsync 不落盘，git 看不到任何改动——必须用 rsync 自己的 dry-run 比对
+        # 来统计变更（2026-11-08 修：原先用 changed_files() 统计，永远报 0 个文件，误导使用者）
+        items: list[str] = []
+        for part in PARTS:
+            items += dry_run_diff(part, mirror)
+        orphans = prune_orphans(mirror, dry=True)
+        if orphans:
+            print(f"[PRUNE] 将清理镜像孤儿条目：{'、'.join(orphans)}")
+        print(f"[DRY] 将变更 {len(items)} 个文件：")
+        for it in items[:60]:
+            print("  ", it)
+        return 0
+
     for part in PARTS:
-        sync_part(part, mirror, args.dry_run)
-    orphans = prune_orphans(mirror, args.dry_run)
+        sync_part(part, mirror, False)
+    orphans = prune_orphans(mirror, dry=False)
     if orphans:
         print(f"[PRUNE] 清理镜像孤儿条目：{'、'.join(orphans)}")
     note_npm()
 
     files = changed_files(repo)
-    if args.dry_run:
-        print(f"[DRY] 将变更 {len(files)} 个文件：")
-        for f in files[:60]:
-            print("  ", f)
-        return 0
     if not files:
         print("[OK] 全局与镜像已一致，无需发布")
         return 0
