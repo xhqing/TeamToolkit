@@ -33,6 +33,8 @@ type Dirty = { repo: string; changes: number; path: string };
 
 // 已提醒过的「不干净仓库集合」签名：同一批不重复注入 / 通知，防循环
 let nudged = "";
+// 漏发版提醒的去重签名（与 nudged 分开，否则两类提醒会互相覆盖）
+let nudgedStale = "";
 
 /** 状态缓存：两个开关文件各自按 mtime 失效。 */
 let stateCache: { sig: string; entries: string[] } | null = null;
@@ -104,7 +106,28 @@ export default function (pi: ExtensionAPI) {
 				encoding: "utf8",
 				timeout: 30000,
 			});
-			const data = JSON.parse(out) as { agent: string; dirty: Dirty[] };
+			const data = JSON.parse(out) as {
+				agent: string;
+				dirty: Dirty[];
+				unpublished?: Array<{ repo: string; version: string; commits: number }>;
+			};
+
+			// 漏发版提醒（2026-11-08 加）：发版自动衔接只挂在 /commit 流程末尾，
+			// 走 PR + auto-merge 的链路没有环节回头检查——turn-diff 当天静默积压 7 个版本。
+			const stale = data.unpublished ?? [];
+			if (stale.length > 0) {
+				const staleList = stale.map((s) => `${s.repo}（v${s.version}，${s.commits} 个待发布提交）`).join("、");
+				const staleSig = stale.map((s) => `${s.repo}@${s.version}`).sort().join(",");
+				if (staleSig !== nudgedStale) {
+					nudgedStale = staleSig;
+					ctx.ui.notify(
+						`[settle-repo-check] 有功能类改动但版本未发布：${staleList}（该走 /release）`,
+						"warning",
+					);
+				}
+			} else {
+				nudgedStale = "";
+			}
 			const all = data.dirty ?? [];
 			// 被 commit-mode 暂停的仓库：用户暂时不想提交，不催
 			const dirty = all.filter((d) => !isManualRepo(d.path));
