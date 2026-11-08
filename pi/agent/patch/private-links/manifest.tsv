@@ -29,8 +29,8 @@ GrowthMarketerAgent	assets/avatar
 GrowthMarketerAgent	assets/listing
 GrowthMarketerAgent	backup
 GrowthMarketerAgent	video-monetization
-Intraday	TODO.local.md
-Intraday	TODO-archive.local.md
+QuantStrategistAgent	Intraday/TODO.local.md
+QuantStrategistAgent	Intraday/TODO-archive.local.md
 LegalAgent	CHANGELOG.local.md
 LegalAgent	TODO.local.md
 LegalAgent	product-research
@@ -46,3 +46,7 @@ SocialMediaManagerAgent	docs/articles/ai-trading
 ToolCallingRules	quick-profit-plan.md
 ToolCallingRules	中国网盘拉新活动汇总.md
 ToolCallingRules	小红书店铺电子资源类目权限开通条件.md
+DayTradingAgent	signals/equity-log.csv
+DayTradingAgent	hooks/equity-baseline.local
+DayTradingAgent	state/live_reference.json
+DayTradingAgent	ledger

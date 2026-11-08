@@ -23,15 +23,31 @@ import re
 import subprocess
 import sys
 
-REG = os.path.expanduser("~/.claude/docs/agents-registry.md")
+# 权威源是 ~/.pi/agent/docs/agents-registry.md（2026-11-08 修）：旧版脚本读的是
+# ~/.claude/ 下的副本，那份从 2026-10-23 起就没更新过（差 128 行）——turn-diff 这类
+# 新子项目根本不在巡检范围内，当天堆了 13 个 worktree 没被发现就是这个原因。
+REG_CANDIDATES = [
+    os.path.expanduser("~/.pi/agent/docs/agents-registry.md"),
+    os.path.expanduser("~/.claude/docs/agents-registry.md"),
+]
 DEV = os.path.expanduser("~/Developer")
+
+
+def _sh(args, cwd=None):
+    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
 
 
 def registry_rows():
     """从注册表「子项目映射」表取 [(Agent 项目名, 子项目目录名)]。"""
-    try:
-        text = open(REG, encoding="utf-8").read()
-    except OSError:
+    text = None
+    for path in REG_CANDIDATES:
+        try:
+            text = open(path, encoding="utf-8").read()
+            break
+        except OSError:
+            continue
+    if text is None:
         return []
     m = re.search(r"\*\*子项目映射.*?\n\n(\|.*?)\n\n", text, re.S)
     if not m:
@@ -77,6 +93,47 @@ def dirty_repos(agent, rows):
     return out
 
 
+def unpublished_repos(agent, rows):
+    """自最新 tag 有 fix/feat 提交、但 VERSION 对应的 GitHub Release 不存在 → 漏发版。
+
+    为什么加（2026-11-08）：发版自动衔接只挂在 /commit 流程末尾；走 PR + auto-merge
+    的链路没有任何环节回头做这个检查——turn-diff 当天 23 个提交、7 个版本静默积压。
+    这里**只提示、不自动发版**：发版必须走 /release 完整流程（打 tag 不易撤销）。
+    """
+    out = []
+    for a, proj in rows:
+        if a != agent:
+            continue
+        d = os.path.join(DEV, proj)
+        if not os.path.isdir(os.path.join(d, ".git")):
+            continue
+        ver_file = os.path.join(d, "VERSION")
+        if not os.path.isfile(ver_file):
+            continue
+        code, tag, _ = _sh(["git", "-C", d, "describe", "--tags", "--abbrev=0"])
+        if code != 0 or not tag or not re.match(r"^v?\d+\.\d+", tag):
+            continue  # 从未发版过：不判定（首次发版另说）
+        code, log, _ = _sh(["git", "-C", d, "log", "--no-merges", "--format=%s", f"{tag}..HEAD"])
+        if code != 0:
+            continue
+        subjects = [s for s in log.splitlines() if s.strip()]
+        if not subjects or not any(re.match(r"^(fix|feat)(\(|!|:)", s, re.I) for s in subjects):
+            continue  # 自上个版本起没有功能类改动 → 按 2026-10-13 门禁不触发发版
+        try:
+            version = open(ver_file, encoding="utf-8").read().strip().lstrip("vV")
+        except OSError:
+            continue
+        if not version:
+            continue
+        code, _, err = _sh(["gh", "release", "view", f"v{version}", "--json", "tagName"], cwd=d)
+        if code == 0:
+            continue  # 该版本已发布
+        if "not found" not in err.lower():
+            continue  # 查询失败 / 未认证 → 不误报
+        out.append({"repo": proj, "version": version, "commits": len(subjects), "path": d})
+    return out
+
+
 def main():
     args = sys.argv[1:]
     cc = "--cc-stop" in args
@@ -102,8 +159,16 @@ def main():
         sys.exit(0)  # 非 Agent / 子项目会话 → 无此项
 
     dirty = dirty_repos(agent, rows)
+    stale = unpublished_repos(agent, rows)
 
     if cc:
+        if stale:
+            names = "、".join(f"{r['repo']}（v{r['version']}，{r['commits']} 个待发布提交）" for r in stale)
+            print(
+                f"[settle-repo-check] 这些子项目有功能类改动但版本未发布：{names}。"
+                "按用户规则该发版的走 /release 发版（版本未就绪先 /bump）。",
+                file=sys.stderr,
+            )
         if dirty:
             names = "、".join(f"{r['repo']}（{r['changes']} 处改动）" for r in dirty)
             print(
@@ -116,15 +181,20 @@ def main():
             sys.exit(2)
         sys.exit(0)
 
-    result = {"agent": agent, "dirty": dirty}
+    result = {"agent": agent, "dirty": dirty, "unpublished": stale}
     if "--json" in args:
         print(json.dumps(result, ensure_ascii=False))
-    elif dirty:
-        print(f"[settle-repo-check] {agent} 名下不干净的子项目仓库：")
-        for r in dirty:
-            print(f"  - {r['repo']}（{r['changes']} 处改动）")
     else:
-        print(f"[settle-repo-check] {agent} 名下子项目仓库全部干净 ✅")
+        if dirty:
+            print(f"[settle-repo-check] {agent} 名下不干净的子项目仓库：")
+            for r in dirty:
+                print(f"  - {r['repo']}（{r['changes']} 处改动）")
+        else:
+            print(f"[settle-repo-check] {agent} 名下子项目仓库全部干净 ✅")
+        if stale:
+            print(f"[settle-repo-check] 有功能类改动但版本未发布（该走 /release）：")
+            for r in stale:
+                print(f"  - {r['repo']}：v{r['version']} 未发布，自最新 tag 起 {r['commits']} 个提交")
     sys.exit(0)
 
 
