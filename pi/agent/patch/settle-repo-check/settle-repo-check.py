@@ -134,6 +134,57 @@ def unpublished_repos(agent, rows):
     return out
 
 
+def stale_worktrees(agent, rows):
+    """已合并、且工作区干净的残留 worktree（可清理）。
+
+    为什么加（2026-11-08）：规则要求 Leader 收尾时 `git worktree remove`，但这是
+    「靠人/AI 记得做」的步骤，没有工具提醒——turn-diff 当天堆了 13 个 worktree，
+    没人发现。这里只**报告**（不自动删）：能判断「已合并 + 干净」就够了，删不删
+    交给主人决定，避免误删在途 worktree。
+    """
+    out = []
+    for a, proj in rows:
+        if a != agent:
+            continue
+        d = os.path.join(DEV, proj)
+        if not os.path.isdir(os.path.join(d, ".git")):
+            continue
+        code, wt, _ = _sh(["git", "-C", d, "worktree", "list", "--porcelain"])
+        if code != 0:
+            continue
+        entries, cur = [], {}
+        for line in wt.splitlines():
+            if line.startswith("worktree "):
+                if cur:
+                    entries.append(cur)
+                cur = {"path": line[len("worktree "):]}
+            elif line.startswith("branch "):
+                cur["branch"] = line[len("branch "):].replace("refs/heads/", "")
+        if cur:
+            entries.append(cur)
+        if len(entries) <= 1:
+            continue  # 只有主工作区：没事可报（也避免白跑 gh）
+        # 一次拿回已合并分支名（squash 合并后原提交与 main 无祖先关系，不能本地判断）
+        code, br, _ = _sh(
+            ["gh", "pr", "list", "--state", "merged", "--limit", "100",
+             "--json", "headRefName", "--jq", ".[].headRefName"],
+            cwd=d,
+        )
+        merged = set(br.splitlines()) if code == 0 else set()
+        if not merged:
+            continue
+        for e in entries[1:]:
+            branch = e.get("branch", "")
+            path = e.get("path", "")
+            if not branch or branch not in merged:
+                continue
+            c2, st, _ = _sh(["git", "-C", path, "status", "--porcelain"])
+            if c2 != 0 or st.strip():
+                continue  # 不干净 / 读不到：不是「用完的」worktree
+            out.append({"repo": proj, "path": path, "branch": branch})
+    return out
+
+
 def main():
     args = sys.argv[1:]
     cc = "--cc-stop" in args
@@ -160,8 +211,16 @@ def main():
 
     dirty = dirty_repos(agent, rows)
     stale = unpublished_repos(agent, rows)
+    leftover = stale_worktrees(agent, rows)
 
     if cc:
+        if leftover:
+            names = "、".join(f"{r['repo']}:{r['branch']}" for r in leftover)
+            print(
+                f"[settle-repo-check] 这些 worktree 已合并且干净，可以清理：{names}"
+                "（`git worktree remove <路径>`）。",
+                file=sys.stderr,
+            )
         if stale:
             names = "、".join(f"{r['repo']}（v{r['version']}，{r['commits']} 个待发布提交）" for r in stale)
             print(
@@ -181,7 +240,7 @@ def main():
             sys.exit(2)
         sys.exit(0)
 
-    result = {"agent": agent, "dirty": dirty, "unpublished": stale}
+    result = {"agent": agent, "dirty": dirty, "unpublished": stale, "worktrees": leftover}
     if "--json" in args:
         print(json.dumps(result, ensure_ascii=False))
     else:
@@ -195,6 +254,10 @@ def main():
             print(f"[settle-repo-check] 有功能类改动但版本未发布（该走 /release）：")
             for r in stale:
                 print(f"  - {r['repo']}：v{r['version']} 未发布，自最新 tag 起 {r['commits']} 个提交")
+        if leftover:
+            print(f"[settle-repo-check] 已合并且干净的残留 worktree（可清理）：")
+            for r in leftover:
+                print(f"  - {r['repo']}: {r['branch']} → {r['path']}")
     sys.exit(0)
 
 

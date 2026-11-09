@@ -17,14 +17,10 @@ because their rights were signed over.
 ## The licence you grant
 
 By submitting a pull request, you agree that your contribution is licensed to
-this project under the project's own licence:
-
-- **Software projects:** the **MIT License**
-- **Non-software projects** (prose, articles, tutorials): the **Creative
-  Commons Attribution 4.0 International License (CC BY 4.0)**
-
-That is a licence, not an assignment. You keep the copyright; the project gains
-permission to use, modify and redistribute your work under that licence.
+this project under **the MIT License** — the licence this project itself uses
+(see `LICENSE.md`). That is a licence, not an assignment: you keep the
+copyright, and the project gains permission to use, modify and redistribute
+your work under that licence.
 
 If you are not comfortable with this arrangement, open an issue first and we can
 work something else out before you write any code.
