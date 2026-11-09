@@ -141,3 +141,29 @@ ssh -L 8385:127.0.0.1:8384 mac-mini    # 浏览器打开 http://127.0.0.1:8385
 | `extensions/snapshot-guard.ts` | 改前快照的强制点（没有新鲜快照就拦写入 / 删除） |
 | `~/Library/LaunchAgents/com.xhq.mirror-check.plist` | 本机每 10 分钟健康检查 |
 | macmini `~/Library/LaunchAgents/com.local.syncthing.plist` | macmini Syncthing 守护 |
+
+## 网络前提：macmini 的 git 必须走本地代理（2026-11-09 排查确认）
+
+**现象**：macmini 到 GitHub 间歇性失败，`git push` 报 `Empty reply from server`、`brew update` 卡死过 70 多分钟。
+
+**实测**（2026-11-09）：
+
+- 直连 `https://github.com`：5/5 失败（HTTP 000）
+- 经本地 xpilot 代理 `http://127.0.0.1:1087`：5/5 成功（HTTP 200）
+- 结论：**macmini 的 git 没配代理，直连 GitHub 被干扰**——不是 Syncthing、不是磁盘、不是 DNS。
+
+**修复**（已执行，写在 macmini 的 `~/.gitconfig`）：
+
+```bash
+git config --global http.proxy  http://127.0.0.1:1087
+git config --global https.proxy http://127.0.0.1:1087
+```
+
+**配套注意**：
+
+- `gh` 命令不受影响（实测不带代理也能用）。
+- `brew` 不读 git 配置，直连 GitHub 一样会卡——需要时手动带上代理：
+  `HTTPS_PROXY=http://127.0.0.1:1087 HTTP_PROXY=http://127.0.0.1:1087 brew upgrade <pkg>`。
+  2026-11-09 升级 gitleaks 时就撞上过：brew 说已是最新（元数据拉不下来），最后改为手动下载二进制装到 `~/.local/bin/`。
+- 代理由 macmini 上的 xpilot 提供（HTTP 1087 / SOCKS 1080），节点异常先看 `xpilot status`（只读，不要重启）。
+- **新 clone 的机器也要配这两条**，否则 publish / PR 会随机失败。
