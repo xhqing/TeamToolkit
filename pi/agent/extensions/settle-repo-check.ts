@@ -35,6 +35,8 @@ type Dirty = { repo: string; changes: number; path: string };
 let nudged = "";
 // 漏发版提醒的去重签名（与 nudged 分开，否则两类提醒会互相覆盖）
 let nudgedStale = "";
+// 残留 worktree 提醒的去重签名
+let nudgedWorktree = "";
 
 /** 状态缓存：两个开关文件各自按 mtime 失效。 */
 let stateCache: { sig: string; entries: string[] } | null = null;
@@ -110,7 +112,22 @@ export default function (pi: ExtensionAPI) {
 				agent: string;
 				dirty: Dirty[];
 				unpublished?: Array<{ repo: string; version: string; commits: number }>;
+				worktrees?: Array<{ repo: string; path: string; branch: string }>;
 			};
+
+			// 残留 worktree（2026-11-08 加）：已合并且工作区干净的 worktree 只报告、不自动删
+			const leftover = data.worktrees ?? [];
+			const leftoverSig = leftover.map((w) => `${w.repo}:${w.branch}`).sort().join(",");
+			if (leftover.length > 0 && leftoverSig !== nudgedWorktree) {
+				nudgedWorktree = leftoverSig;
+				ctx.ui.notify(
+					`[settle-repo-check] 有 ${leftover.length} 个已合并且干净的 worktree 可清理：` +
+						leftover.map((w) => `${w.repo}:${w.branch}`).join("、"),
+					"info",
+				);
+			} else if (leftover.length === 0) {
+				nudgedWorktree = "";
+			}
 
 			// 漏发版提醒（2026-11-08 加）：发版自动衔接只挂在 /commit 流程末尾，
 			// 走 PR + auto-merge 的链路没有环节回头检查——turn-diff 当天静默积压 7 个版本。

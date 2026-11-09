@@ -47,6 +47,14 @@ const SECRET_PATTERNS: Array<{ id: string; re: RegExp }> = [
 	{ id: "Google OAuth secret", re: /\bGOCSPX-[A-Za-z0-9_-]{20,}/ },
 	{ id: "Slack token", re: /\bxox[baprs]-[A-Za-z0-9-]{10,}/ },
 	{ id: "本机 ark key", re: /\b(?:msk|mark)-[A-Za-z0-9._-]{24,}/ },
+	// ---- 隐私类（2026-11-08 第二批：只覆盖能正则化的部分）----
+	{ id: "手机号", re: /(?:^|[^0-9])1[3-9]\d{9}(?:[^0-9]|$)/ },
+	{ id: "身份证号", re: /\b\d{6}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b/ },
+	{ id: "本机绝对路径", re: /\/Users\/[A-Za-z0-9._-]+\// },
+	{
+		id: "财务金额",
+		re: /(?:月薪|年薪|工资|收入|亏损|盈利|本金|存款|负债|总资产|净值)[^0-9\n]{0,10}(?:\d{1,3}(?:,\d{3})+|\d{5,})(?:\s*(?:元|万|USD|HKD|US\$|HK\$))?/,
+	},
 ];
 
 /** 从命令里把「要公开的文本」抽出来：内联参数值与 -F / --notes-file 指向的文件。 */
@@ -121,7 +129,7 @@ export default function (pi: ExtensionAPI) {
 				return {
 					block: true,
 					reason:
-						"[public-text-guard] 拦截：待公开的文本里发现了格式型密钥——\n" +
+						"[public-text-guard] 拦截：待公开的文本里发现了格式型密钥或隐私标识——\n" +
 						[...new Set(hits)].map((h) => `  - ${h}`).join("\n") +
 						"\n即使命令带了 AI_SENSITIVE_CHECKED 标记也不放行。请把密钥实值删掉 / 改成占位符后重试" +
 						"（真实值只放本机被忽略的配置或 ~/.dev/private/）。",
