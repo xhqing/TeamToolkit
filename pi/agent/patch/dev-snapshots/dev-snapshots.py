@@ -32,6 +32,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -98,7 +99,13 @@ TARGETS = {
     "private": {"root": PRIVATE, "kind": "whole"},
 }
 
-TAR_NAME_RE = re.compile(r"^(pi-agent|private)-\d{8}-\d{6}\.tar\.gz$")
+TAR_NAME_RE = re.compile(r"^(pi-agent|private)-\d{8}-\d{6}\.tar\.gz(\.enc)?$")
+
+# 云端加密（2026-11-09 用户要求）：private 快照里有交易凭证等敏感数据，
+# 不再明文传飞书云盘——上传前 AES-256 加密，密钥存 macOS Keychain。
+ENC_SUFFIX = ".enc"
+KEYCHAIN_SERVICE = "pi-dev-snapshots"
+KEYCHAIN_ACCOUNT = "encryption-key"
 
 
 def _lark_bin() -> str:
@@ -285,6 +292,49 @@ def _find_token(text: str) -> str | None:
     return None
 
 
+def snapshot_key() -> str:
+    """从 Keychain 取快照加密口令；没有就生成一个并存入（首次）。
+
+    重要：这把口令丢了，云端加密备份就恢复了了。首次生成后请自己另存一份
+    （比如放进密码库），轮换需同时处理云端旧快照。
+    """
+    r = sh(["security", "find-generic-password", "-s", KEYCHAIN_SERVICE,
+            "-a", KEYCHAIN_ACCOUNT, "-w"], check=False)
+    if r.returncode == 0 and r.stdout.strip():
+        return r.stdout.strip()
+    key = base64.b64encode(os.urandom(32)).decode()
+    sh(["security", "add-generic-password", "-s", KEYCHAIN_SERVICE,
+        "-a", KEYCHAIN_ACCOUNT, "-w", key, "-U"])
+    print("  [NEW] 已生成快照加密口令并存进 Keychain（请自行另存一份，丢了云端备份就废了）")
+    return key
+
+
+def encrypt_archive(arch: Path) -> Path:
+    """加密快照包（口令经 stdin 传入，不出现在进程列表里）。"""
+    enc = arch.with_name(arch.name + ENC_SUFFIX)
+    r = subprocess.run(
+        ["openssl", "enc", "-aes-256-cbc", "-pbkdf2", "-salt",
+         "-in", str(arch), "-out", str(enc), "-pass", "stdin"],
+        input=snapshot_key() + "\n", text=True, capture_output=True,
+    )
+    if r.returncode != 0:
+        raise SystemExit(f"[ERR] 加密失败：{r.stderr[:200]}")
+    return enc
+
+
+def decrypt_archive(enc: Path) -> Path:
+    """解密下载到的快照包（.enc → .tar.gz）。"""
+    out = enc.with_name(enc.name[: -len(ENC_SUFFIX)])
+    r = subprocess.run(
+        ["openssl", "enc", "-d", "-aes-256-cbc", "-pbkdf2",
+         "-in", str(enc), "-out", str(out), "-pass", "stdin"],
+        input=snapshot_key() + "\n", text=True, capture_output=True,
+    )
+    if r.returncode != 0:
+        raise SystemExit(f"[ERR] 解密失败（Keychain 里的口令不对？）：{r.stderr[:200]}")
+    return out
+
+
 def feishu_upload(local: Path, folder: str) -> bool:
     out = sh([LARK, "drive", "+upload", "--file", f"./{local.name}",
               "--folder-token", folder, "--as", "user"], cwd=str(local.parent))
@@ -378,8 +428,10 @@ def cmd_snapshot(args) -> int:
             root_tok = feishu_root_token()
             dev_tok = feishu_ensure_folder(root_tok, "dev-snapshots")
             target_tok = feishu_ensure_folder(dev_tok, target)
-            print(f"  [UP ] 上传到飞书 dev-snapshots/{target}/ …")
-            remote_ok = feishu_upload(arch, target_tok)
+            print(f"  [UP ] 上传到飞书 dev-snapshots/{target}/（AES-256 加密）…")
+            enc = encrypt_archive(arch)
+            remote_ok = feishu_upload(enc, target_tok)
+            enc.unlink(missing_ok=True)
             if not remote_ok:
                 raise SystemExit("[ERR] 上传失败")
             print("  [OK] 云端上传完成")
@@ -473,6 +525,9 @@ def cmd_restore(args) -> int:
             print(f"[ERR] 下载失败：{out.stdout[:200]} {out.stderr[:200]}")
             return 1
         local = SNAP_LOCAL / pick["name"]
+        if local.name.endswith(ENC_SUFFIX):
+            print("[INFO] 云端快照是加密的，先解密…")
+            local = decrypt_archive(local)
     print(f"[RESTORE] {local} -> {TARGETS[target]['root']}")
     if args.dry_run:
         return 0
