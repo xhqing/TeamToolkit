@@ -32,7 +32,7 @@
 
 import { execSync } from "node:child_process";
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { Box, Text } from "pi-tui";
+import { Box, Spacer, Text } from "pi-tui";
 
 const AUTH_MARK = "AI_AUTHORIZED_COMMIT";
 // 与 git-commit-guard.ts 同源的 commit 匹配（含 git -C <path> commit 形态）。
@@ -129,10 +129,12 @@ export default function (pi: ExtensionAPI) {
 		box.addChild(
 			new Text(theme.fg("dim", "实测 git status（本扩展执行，不参与模型上下文）"), 0, 0),
 		);
-		for (const r of data.results) {
+		data.results.forEach((r, i) => {
+			// 多个 worktree 之间空一行，视觉上区分各自的状态块（2026-11-09 用户要求）
+			if (i > 0) box.addChild(new Spacer(1));
 			box.addChild(new Text(theme.fg("accent", r.dir), 0, 0));
 			box.addChild(new Text(">> git status\n" + r.status, 0, 0));
-		}
+		});
 		return box;
 	});
 
