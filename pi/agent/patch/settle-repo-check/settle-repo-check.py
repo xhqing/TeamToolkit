@@ -134,6 +134,20 @@ def unpublished_repos(agent, rows):
     return out
 
 
+def _sweep_projects(agent, rows):
+    """巡检要看的仓库清单：Agent 名下全部子项目 + Agent 项目自身仓库。
+
+    为什么加自身仓库（2026-11-09）：旧版只扫注册表里的「子项目映射」行，Agent 项目
+    自己的 worktree 从来不在扫描范围内——turn-diff 那轮把 worktree 建在
+    FullStackEngineerAgent 上（分支 chore/subproject-turn-diff），PR 早已合并、
+    目录却一直留着，巡检报不出来。用户当天追问「任务都做完了为什么 worktree 还在」。
+    """
+    projs = [proj for a, proj in rows if a == agent]
+    if agent not in projs:
+        projs.insert(0, agent)
+    return projs
+
+
 def stale_worktrees(agent, rows):
     """已合并、且工作区干净的残留 worktree（可清理）。
 
@@ -141,11 +155,11 @@ def stale_worktrees(agent, rows):
     「靠人/AI 记得做」的步骤，没有工具提醒——turn-diff 当天堆了 13 个 worktree，
     没人发现。这里只**报告**（不自动删）：能判断「已合并 + 干净」就够了，删不删
     交给主人决定，避免误删在途 worktree。
+
+    扫描范围见 `_sweep_projects()`（含 Agent 项目自身仓库，2026-11-09 补齐）。
     """
     out = []
-    for a, proj in rows:
-        if a != agent:
-            continue
+    for proj in _sweep_projects(agent, rows):
         d = os.path.join(DEV, proj)
         if not os.path.isdir(os.path.join(d, ".git")):
             continue
