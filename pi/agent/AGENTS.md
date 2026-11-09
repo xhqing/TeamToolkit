@@ -67,6 +67,7 @@
 **铁律（按顺序执行）**：
 
 1. **开工先建 worktree（2026-11-03 强化：任何项目里的任何写操作，第一步就是生成 worktree）**：任何任务（含文档、杂事）动代码前，先在主仓库同级建独立 worktree + 功能分支（`git worktree add ../<仓库名>-<事项> -b <分支名>`），**改动只在 worktree 的分支上做**；不在主工作区里改、不在 main 上改。目的：避免同一工作区被多个会话同时写而互相污染（2026-11-02 用户立规的直接起因）。
+   - **worktree 目录名必须「本仓库名 + 事项」（2026-11-09 用户立，工具强制）**：格式 `<仓库名>-<事项>`，例如 `~/Developer/turn-diff-fix-empty-diff`、`~/Developer/cmux-double-paste`、`~/Developer/FullStackEngineerAgent-rename-subproject`。**禁止用「其它项目名 / Agent 项目名 + 子项目名」拼**——像 `~/Developer/FullStackEngineerAgent-turn-diff` 这种名字，用户一眼看不出它到底是 turn-diff 子项目的 worktree、还是 FullStackEngineerAgent 主仓库的分支（它是后者），在文件系统里失去归属感。两条硬判据：① 名字里的**第一个项目名必须是本仓库名**；② **事项 slug 不许恰好等于另一个项目 / 子项目的名字**（`FullStackEngineerAgent-turn-diff` 这种「事项撞上子项目名」的形态同样禁止，改成 `FullStackEngineerAgent-rename-subproject` 这类能看出在做什么的写法）。**子项目的工作就在子项目仓库的 worktree 里做**：`git -C ~/Developer/<子项目> worktree add ~/Developer/<子项目>-<事项> -b <分支>`，不要跑到 Agent 项目仓库里给子项目建 worktree。工具强制：`worktree-name-guard.ts` 拦截违规的 `git worktree add` / `git worktree move`。
    - **漏了这一步也不留尾巴（2026-11-05 用户立）**：main 工作区上已经冒出改动时，不用问、不用汇报——直接 `worktree-adopt.py` 把改动搬进新 worktree（见「Git 写操作」节的自动搬运条），再走 add / commit。
    - **local main 只剩两个职责（2026-11-03 用户立）**：① **生成 worktree**；② **被 remote main 快进同步**（`git merge --ff-only origin/main`）。除此之外 main 上**不做任何写操作**——不改文件、不 `git add`、不 `git commit`。工具强制：`git-main-guard.ts` 对 main 分支上的 `git add` / `git commit` 一律拦截；add / commit skill 的**自动触发在 main 上被禁用**（只在非 main 分支自动触发）。
    - **⚠️ worktree 内跑 git 一律用 `git -C <worktree 绝对路径> <子命令>`，不要写 `cd <worktree> && git ...`（2026-11-03 立）**：`git-main-guard.ts` 判断「在哪个仓库 / 哪个分支」时只认两种来源——命令里显式的 `-C` 参数、进程的当前工作目录（pi 会话 cwd）；**它不跟踪命令里的 `cd`**。而会话 cwd 通常停在主仓库（main 分支），所以 `cd ../xxx-worktree && git commit` 会被误判成「在 main 上提交」而拦截。写成 `git -C /abs/path/to/worktree commit ...` 即可正确识别分支。**被误拦时不要加 `# AI_AUTHORIZED_COMMIT_MAIN` 绕过**——那个标记只用于用户当轮明确授权、不能用来自行为误判开逃生门；正确动作是改用 `-C` 指定 worktree 路径。
@@ -85,7 +86,7 @@
 - 非团队仓库（临时脚本目录、一次性试验仓库、无远程仓库）不受本条限制，但仍受「Git 写操作必须先征得同意」约束。
 - 新建项目的 `git init` 与首次建远程不受本条限制（那时还没有 remote main 可锁）。
 
-**配套工具强制**：`~/.pi/agent/extensions/git-main-guard.ts`——拦截两类操作：① `git push` 的 refspec 指向 `main` / `master`（含裸 `git push`、`git push origin`、`HEAD:main` 等形态）；② 在 `main` / `master` 分支上的 `git commit`（含 `git -C <path>` 形态）。仅对带 GitHub remote 的仓库生效，逃生标记分别为 `# AI_AUTHORIZED_PUSH_MAIN` / `# AI_AUTHORIZED_COMMIT_MAIN`，仅限用户当轮授权。
+**配套工具强制**：`~/.pi/agent/extensions/git-main-guard.ts`——拦截两类操作：① `git push` 的 refspec 指向 `main` / `master`（含裸 `git push`、`git push origin`、`HEAD:main` 等形态）；② 在 `main` / `master` 分支上的 `git commit`（含 `git -C <path>` 形态）。仅对带 GitHub remote 的仓库生效，逃生标记分别为 `# AI_AUTHORIZED_PUSH_MAIN` / `# AI_AUTHORIZED_COMMIT_MAIN`，仅限用户当轮授权。`~/.pi/agent/extensions/worktree-name-guard.ts`——拦截违反 worktree 命名规则的 `git worktree add` / `git worktree move`（前缀不是本仓库名、或事项名撞上另一个项目名），逃生标记 `# AI_AUTHORIZED_WORKTREE_NAME`（仅限用户当轮授权）。
 
 **详细开发循环**（Issue 先行、测试先行、CI 门禁、发版链）见 `~/.pi/agent/skills/dev-workflow/SKILL.md`；团队仓库保护现状与批量配置方法见 `~/.pi/agent/docs/repo-branch-protection.md`。
 
