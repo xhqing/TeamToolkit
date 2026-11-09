@@ -163,7 +163,7 @@ Copyright (c) <起始年份>[-<最新年份>] xhqing and contributors
 
 **为什么必须有**：版权行改成 `xhqing and contributors` 之后，如果不把「贡献者保留著作权 + 贡献按 MIT/CC BY 授权」写清楚，就会出现「声明说有多元权利主体、但没人知道各自是什么权利」的空档——这既是对贡献者不诚实，也给项目埋下权利瑕疵。这两份文件就是把话说清楚的地方。
 
-**模板位置**：`~/.pi/agent/patch/contributing-template/`（`CONTRIBUTING.md` / `CONTRIBUTING_cn.md`，按项目许可证选对应版本；模板里的许可证段落两种项目都写清楚了，按需保留对应那一条）。新建项目时直接拷过去（不要重新编），存量项目在迁移版权行时一并补上。
+**模板位置**：`~/.pi/agent/patch/contributing-template/`（`CONTRIBUTING.md` / `CONTRIBUTING_cn.md`）。模板正文含占位符 `{{LICENSE_NAME}}`，**拷过去后必须按项目根 `LICENSE.md` 的实际许可证名称替换**（映射表见该目录的 `README.md`）——**不要假设项目是 MIT**（2026-11-09 踩过：一个批量脚本硬编码 MIT，把 `cmux` 的 GPL-3.0-or-later 和 `ToolCallingRules` 的 PolyForm Noncommercial 都写成了 MIT）。认不出的许可证**暂停问用户**，不得猜。新建项目直接拷模板（不要重新编），存量项目在迁移版权行时一并补上。
 
 ### 两种许可证的文件怎么写
 
