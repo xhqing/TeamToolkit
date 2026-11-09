@@ -111,7 +111,7 @@ AI 对 git 暂存区（staging area / index）**自主能做的只有只读查�
 
 ## 「发布」「最新版」默认指 GitHub Release
 
-用户提到「发布」「发版」「最新版」「升级到最新版」等且**未指明渠道**时，**默认指 GitHub Release**（tag + Release 及其 vsix / 二进制等产物），不是 VSCode Marketplace、也不是 Open VSX。**适用范围只限用户自己的项目**（目前只发 GitHub Release）；别人的项目按其实际发布渠道（Marketplace / Open VSX / 官网）判断，不默认往 GitHub Release 靠。用户明确指定渠道时按指定的来。升级已安装扩展：`gh release view -R <owner>/<repo>` 看最新 tag 与 assets → 下载 vsix → `code --install-extension <vsix> --force`。
+用户提到「发布」「发版」「最新版」「升级到最新版」等且**未指明渠道**时，**默认指 GitHub Release**（tag + Release 及其 vsix / 二进制等产物），不是 VSCode Marketplace、也不是 Open VSX。**适用范围只限用户自己的项目**（目前只发 GitHub Release）；别人的项目按其实际发布渠道（Marketplace / Open VSX / 官网）判断，不默认往 GitHub Release 靠。用户明确指定渠道时按指定的来。升级已安装扩展：`gh release view -R <owner>/<repo>` 看最新 tag 与 assets → 下载 vsix → `code --install-extension <vsix> --force`。**注（2026-11-09）：VSCode 已退役，这条升级路径只在用户明确要求维护 VSCode 扩展时走；团队日常环境是 cmux，见「工作环境：cmux 优先，VSCode 退役」节。**
 
 ## commit skill 的触发与终止
 
@@ -299,7 +299,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 - 不属于项目本身、不应被 git 跟踪的临时产物（生成的图片 / LOGO / 预览页 / 演示 HTML / 一次性脚本及输出 / 调试快照 / 给用户看一眼或临时验证的文件）一律放**项目根 `tmp/`** 下（可按用途分子目录），不放项目正式目录（`src/`、`docs/`、`assets/` 等）。
 - **新建 `tmp/` 时必须确认 `tmp/` 已写入项目 `.gitignore`**（已有则检查、没有则追加，没有 `.gitignore` 则新建），绝不让临时产物被 git 跟踪。
-- 汇报时给 `tmp/...` 的**项目相对路径**（VSCode 工作区内链接可点）；用户要求保留为正式文件时再迁移到正式目录。
+- 汇报时给 `tmp/...` 的**项目相对路径**（cmux / 终端里可直接点开）；用户要求保留为正式文件时再迁移到正式目录。
 
 ### 私有内容目录 `~/.dev/private`（2026-11-05 用户立，工具强制）
 
@@ -373,11 +373,18 @@ pi 加载扩展时**只要有一个文件解析失败就 `exit(1)`**——打印
 - 自检：`npm list -g <pkg>` 出现 `-> .../Projects/...` 箭头即违规，立即按发布 + 重装纠正；`ps` 查常驻进程脚本路径指向开发目录即违规。
 - 某修复尚未发版时正式环境就是用不上它——这是隔离的固有代价，不构成跳过发布流程的理由。边界：开发目录内部自测（不起全局命令、不做常驻指向）不受限。
 
-### VSCode 进程与远程窗口（钩子已硬拦截）
+### 工作环境：cmux 优先，VSCode 退役（2026-11-09 用户立，工具强制）
 
-- **杀 VSC 进程前必须先问**：任何会让 VSCode 退出 / 重启的手段（`pkill`、`kill`、`killall`、osascript 强制结束等）先向用户说明范围与原因，授权后命令加 `# AI_AUTHORIZED_KILL_VSC` 标记放行。查询类（`ps`）不受限。
-- **远程连接强制新窗口**：触发 VSCode Remote-SSH / Remote Tunnel 用 `code --folder-uri "vscode-remote://ssh-remote+<host>/<远端路径>" --new-window`，禁止 `open vscode://vscode-remote` URI（会复用用户当前窗口、顶替工作现场）。
-- 两条均由 pi 端守卫扩展（`~/.pi/agent/extensions/session-guard.ts` 等）硬拦截兜底，文本说明为什么。
+用户 2026-11-09 立规：「团队整体工作流在任何时候以后都不使用 VSCode，逐渐实现从 VSCode 到 cmux 的过渡，只要碰到需要 VSCode 的时候就考虑能不能在 cmux 里面实现同样的功能。」立规的直接起因：AI 让用户「在 VSCode 里确认 README 渲染效果」，而他的工作环境早已是 **cmux**（自建终端 / 面板，`~/Developer/cmux`，日常跑着多个 pi 会话）——**别再让用户去开 VSCode 窗口**。
+
+- **一律先想 cmux**：需要看渲染效果（Markdown / 图片 / diff）、跑命令、开面板、看输出，都先在 **cmux** 里完成。cmux 缺的能力，优先推动在 cmux 里实现（提需求、自己写补丁——cmux 是 Atlas 名下的子项目），而不是退回去用 VSCode。
+- **禁止主动启动或驱动 VSCode**：不执行 `code .` / `code <文件>` / `code --install-extension` / `code --folder-uri` / `codef`（全屏打开 VSCode 的 CLI），不用 `open` 开 VSCode 窗口。要用户「自己看一眼」时，给的是 **cmux 里的操作路径**；说「你在 VSCode 里确认一下」属违规。
+- **验证渲染效果以 cmux 为准**：某个 README / Markdown / 图片显示是否正常，验的是 **cmux 里**的效果——那才是用户真实会看到的界面。
+- **存量 VSCode 扩展项目照常维护**：`ghostty-launcher`、`mp4-player` 这两个 VSCode 扩展仍是名下产品，构建 / 发版 / 修 bug 不受影响；只是不再把它们（或别的项目）当成**日常验证工具**。`vsce-install` skill 已标停用，仅在用户明确要求装 VSCode 扩展时才用。
+- **过渡期保护条款（仍然有效，别删）**：
+  - **杀 VSC 进程前必须先问**：任何会让 VSCode 退出 / 重启的手段（`pkill`、`kill`、`killall`、osascript 强制结束等）先向用户说明范围与原因，授权后命令加 `# AI_AUTHORIZED_KILL_VSC` 标记放行。查询类（`ps`）不受限——用户可能还有 VSCode 窗口开着，误杀同样会打断他。
+  - **远程连接强制新窗口**：若用户当轮明确要求用 VSCode Remote-SSH / Remote Tunnel，用 `code --folder-uri "vscode-remote://ssh-remote+<host>/<远端路径>" --new-window`，禁止 `open vscode://vscode-remote` URI（会复用用户当前窗口、顶替工作现场）。
+- **工具强制**：`~/.pi/agent/extensions/vscode-retire-guard.ts` 拦两类——① **启动 / 驱动 VSCode**：`code`（VSCode CLI）/ `open -a "Visual Studio Code"` / `open vscode://` / 直接跑 VSCode 可执行文件，逃生门 `# AI_AUTHORIZED_VSCODE`；② **杀 VSCode 进程**：`pkill` / `killall` 目标含 `Visual Studio Code` / `Code Helper`，逃生门 `# AI_AUTHORIZED_KILL_VSC`。两个标记均仅限用户当轮明确授权。`codef`（全屏打开 VSCode 的 CLI）仍归 `focus-guard.ts` 管（主要问题是抢焦点）。
 
 ### 本机屏幕焦点禁止抢夺（未经授权禁止；取得当次授权可执行；钩子已硬拦截）
 
@@ -472,7 +479,7 @@ KeePass 数据库（`*.kdbx`）与密钥文件（`~/Key/` 下）是**丢了就�
 
 ### 跨机协作：macmini 值班会话（2026-10-17 用户立）
 
-- **重活默认分流到 macmini（2026-11-03 用户立，工具强制）**：本机是用户**此刻正在用**的 MacBook Air（8 核 / 8GB），macmini 是 12 核 x64 / 32GB 的常驻算力机，与本机共享 `~/.pi/agent` 与 `~/.dev/private` 两个目录（项目代码走 GitHub、各自 clone，2026-11-05 起 `~/Developer` 不再同步）。**每条指令先判断一次「里面的重活要不要放 macmini」**：预计占本机 CPU / 内存十几秒以上的编译、构建、测试套件、音视频转码、批量渲染、数据回测、大文件扫描 / 大下载，一律用 `macmini_run` 工具在远端跑（长任务传 `background:true`、之后 tail 日志取结果），不要在本机硬扛；几秒内结束的短命令、需要 GUI / VSCode / osascript / 焦点 / 剪贴板、需要 arm64 产物或本机 `node_modules`、git 写与 gh 发版、操作未镜像路径（`~/Downloads`、`/Volumes`、`~/Library` 等）的留本机。判断标准是**用户的本机要流畅**，不是「尽量多用远端」。判定细则、远端工具链实况与常见重活跑法见 skill `macmini-use`；配套工具强制见 `~/.pi/agent/extensions/macmini-use/`（每轮注入分流判断 + 拦重型本机命令，逃生门 `# AI_LOCAL_OK: <理由>`；macmini 上不生效）。**用 macmini 时 pi 输入框下方会亮一行「🖥  当前使用的是 macmini」（前台调用 / `/macmini …` / `ssh mac-mini …` / `background:true` 的后台任务），用完自动撤——亮着就代表那个时刻确实在占用远端算力（2026-11-04 用户立）。**
+- **重活默认分流到 macmini（2026-11-03 用户立，工具强制）**：本机是用户**此刻正在用**的 MacBook Air（8 核 / 8GB），macmini 是 12 核 x64 / 32GB 的常驻算力机，与本机共享 `~/.pi/agent` 与 `~/.dev/private` 两个目录（项目代码走 GitHub、各自 clone，2026-11-05 起 `~/Developer` 不再同步）。**每条指令先判断一次「里面的重活要不要放 macmini」**：预计占本机 CPU / 内存十几秒以上的编译、构建、测试套件、音视频转码、批量渲染、数据回测、大文件扫描 / 大下载，一律用 `macmini_run` 工具在远端跑（长任务传 `background:true`、之后 tail 日志取结果），不要在本机硬扛；几秒内结束的短命令、需要 GUI / cmux / osascript / 焦点 / 剪贴板、需要 arm64 产物或本机 `node_modules`、git 写与 gh 发版、操作未镜像路径（`~/Downloads`、`/Volumes`、`~/Library` 等）的留本机。判断标准是**用户的本机要流畅**，不是「尽量多用远端」。判定细则、远端工具链实况与常见重活跑法见 skill `macmini-use`；配套工具强制见 `~/.pi/agent/extensions/macmini-use/`（每轮注入分流判断 + 拦重型本机命令，逃生门 `# AI_LOCAL_OK: <理由>`；macmini 上不生效）。**用 macmini 时 pi 输入框下方会亮一行「🖥  当前使用的是 macmini」（前台调用 / `/macmini …` / `ssh mac-mini …` / `background:true` 的后台任务），用完自动撤——亮着就代表那个时刻确实在占用远端算力（2026-11-04 用户立）。**
 - **删除红线（2026-11-05 架构改造后）**：macmini 上的项目目录只是普通 clone（可从 GitHub 重建），删它无害；真正要护住的是两个共享目录 `~/.pi/agent` 与 `~/.dev/private`——它们**允许改删里面的内容**（2026-11-05 用户明示），但改前必须有一次新鲜飞书快照（`~/.pi/agent/patch/dev-snapshots/dev-snapshots.py`，由 `extensions/snapshot-guard.ts` 强制），并且**两个目录根本身永远不许删**（删同步根会让对端状态难以收拾）；其它路径的远端递归删除仍默认拒绝（`macmini_run` 需带 `# AI_REMOTE_RM_OK`）。
 
 macmini 上配有一个**常驻值班会话**（intercom 名：`macmini`，由 launchd 守护、掉线自动重拉）。本机各 agent 需要借用 macmini 的资源/环境时，用以下标准命令呼叫（**本机 → macmini**）：

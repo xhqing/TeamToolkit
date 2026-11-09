@@ -1,6 +1,6 @@
 ---
 name: macmini-use
-description: 把重活分流到 macmini 常驻算力机（12 核 x64 / 32GB，与本机共享 ~/.pi/agent 与 ~/.dev/private；项目代码走 GitHub、各自 clone），给用户正在用的 8 核 / 8GB MacBook 减负。MUST USE 当任务里包含预计占用本机 CPU / 内存十几秒以上的编译、构建、测试套件、音视频转码、批量渲染、数据回测、大文件扫描或大下载时；当用户说「放 macmini 跑」「别卡本机」「用 macmini 的资源」「本机太卡」时；当需要在 x64 / 大内存 / 长时间常驻的环境里跑东西时。当你不确定某个任务该不该分流、或需要远端工具链 / 路径映射 / 结果回传的具体跑法时，也读本 skill。NOT for：几秒内结束的短命令、需要本机 GUI / VSCode / osascript / 焦点 / 剪贴板 / Keychain、需要 arm64 产物或本机 node_modules、需要操作本机专属路径（~/Downloads、~/Library、~/.ssh）。
+description: 把重活分流到 macmini 常驻算力机（12 核 x64 / 32GB，与本机共享 ~/.pi/agent 与 ~/.dev/private；项目代码走 GitHub、各自 clone），给用户正在用的 8 核 / 8GB MacBook 减负。MUST USE 当任务里包含预计占用本机 CPU / 内存十几秒以上的编译、构建、测试套件、音视频转码、批量渲染、数据回测、大文件扫描或大下载时；当用户说「放 macmini 跑」「别卡本机」「用 macmini 的资源」「本机太卡」时；当需要在 x64 / 大内存 / 长时间常驻的环境里跑东西时。当你不确定某个任务该不该分流、或需要远端工具链 / 路径映射 / 结果回传的具体跑法时，也读本 skill。NOT for：几秒内结束的短命令、需要本机 GUI / cmux / osascript / 焦点 / 剪贴板 / Keychain、需要 arm64 产物或本机 node_modules、需要操作本机专属路径（~/Downloads、~/Library、~/.ssh）。
 ---
 
 # macmini-use：把重活分流到 macmini
@@ -24,7 +24,7 @@ macmini 上跑，再把结果带回来。**
 | 大下载（模型、数据集、大安装包） | macmini | 只要结果文件别忘回传 |
 | 批量 PDF / HTML 渲染（Chrome headless） | macmini（批量时） | 单份几秒的留本机 |
 | 单条命令、读文件、grep、git status、跑一个测试文件 | **本机** | 十几秒内结束的分流是净亏 |
-| 需要 GUI / VSCode / osascript / 焦点 / 剪贴板 / Keychain / 安装扩展 | **本机** | 远端没有用户眼前的那个界面 |
+| 需要 GUI / cmux / osascript / 焦点 / 剪贴板 / Keychain | **本机** | 远端没有用户眼前的那个界面 |
 | 需要 arm64 产物、本机原生模块、本机 node_modules | **本机** | 远端是 x64，编出来在本机跑不了 |
 | 提交 / 推送 / PR / Release / CI | 两台都行 | macmini 已恢复正常 git 读写（HTTPS + gh token，remote 已改 https）；同样受 remote main 锁定，改动走分支 + PR + CI |
 | 操作 `~/Downloads`、`/Volumes`、`~/Library`、`~/Key`、`~/.ssh` 等本机专属路径 | **本机** | macmini 上没有这些数据 |
