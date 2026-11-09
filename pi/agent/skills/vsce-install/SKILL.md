@@ -1,9 +1,11 @@
 ---
 name: vsce-install
-description: 干净地安装/升级 VSCode 扩展（VSCE）到最新版。当用户要求「安装/升级/更新/重装 VSCode 扩展」「装最新版扩展」「升级 VSCE」「重装扩展」时触发。默认从 GitHub Release 取最新版 vsix，并强制执行「卸载历史版本 → 删残留目录 → 清 contribution 缓存 → 重装」四步，避免历史版本残留导致 view 类型解析冲突（典型症状：webview view 报 "There is no data provider registered that can provide view data"，点活动栏图标打不开面板）。
+description: 已停用（2026-11-09 用户立：团队工作流不再使用 VSCode，日常界面迁到 cmux）——仅在用户当轮明确要求安装 / 升级 VSCode 扩展时才用。干净地安装/升级 VSCode 扩展（VSCE）到最新版。当用户要求「安装/升级/更新/重装 VSCode 扩展」「装最新版扩展」「升级 VSCE」「重装扩展」时触发。默认从 GitHub Release 取最新版 vsix，并强制执行「卸载历史版本 → 删残留目录 → 清 contribution 缓存 → 重装」四步，避免历史版本残留导致 view 类型解析冲突（典型症状：webview view 报 "There is no data provider registered that can provide view data"，点活动栏图标打不开面板）。
 ---
 
 # VSCE Install — 干净安装/升级 VSCode 扩展
+
+> ⚠️ **已停用（2026-11-09 用户立）**：团队整体工作流不再使用 VSCode，日常界面已迁到 **cmux**（见全局 `~/.pi/agent/AGENTS.md`「工作环境：cmux 优先，VSCode 退役」）。本 skill **只在用户当轮明确要求**安装 / 升级某个 VSCode 扩展时执行；AI 不得主动提议装 VSCode 扩展，也不得用「在 VSCode 里看效果」当验证手段。正文保留作过渡期参考。
 
 ## 为什么需要这个 skill
 
