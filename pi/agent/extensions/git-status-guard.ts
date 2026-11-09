@@ -1,37 +1,38 @@
 /**
- * commit skill 第 11 步工具强制（pi 端）：/commit 流程收尾的 `git status`
- * 汇报必须基于真实执行，禁止凭推断拼造输出。
+ * commit skill 收尾的 git status 汇报（pi 端工具强制）。
  *
- * 背景（2026-09-21 事故）：一次 /commit 汇报收尾时 AI 没有实际执行
- * `git status`，而是凭上下文手工拼了一段假输出贴进代码块——既猜错了
- * 工作区状态，还拼出 `git cast -A` 这种真实 git 不会输出的提示语。用户
- * 立规要求工具强制，本扩展即配套下限防线（元规则「规矩必须配套工具强
- * 制」）；文本纪律（skill 第 11 步「实际执行 + 原样输出」）仍在场，本
- * 扩展只兜住「忘执行 / 贴错 / 编造」三种失守。
+ * 背景（2026-09-21 事故）：一次 /commit 汇报收尾时 AI 没有实际执行 `git status`，
+ * 而是凭上下文手工拼了一段假输出贴进代码块——既猜错了工作区状态，还拼出
+ * `git cast -A` 这种真实 git 不会输出的提示语。用户立规要求工具强制，本扩展即
+ * 配套下限防线（元规则「规矩必须配套工具强制」）。
  *
- * 强制锚点：带 AI_AUTHORIZED_COMMIT 标记的 `git commit`（即 /commit
- * skill、用户当轮明确授权、或 /add 预检完全干净后自动衔接的 commit——
- * 与 git-commit-guard.ts 的授权判定同源）。敏感扫描 / cache 检测命中
- * 即终止的场景没有 commit 发生、无锚点，仍靠文本纪律（强制下限不追求
- * 覆盖所有路径）。
+ * 2026-11-09 改版（用户定稿）：**不再要求 AI 在回复里手贴 `git status`**。
+ * 理由：手贴费输出 token、可能编造、还会被 TUI 流式渲染的残影坑到（曾出现
+ * `Your branch is` 与完整行并存的显示错乱，见 xhqing/pi-harness#61）。改为：
+ *   - AI 没贴 → 本扩展在 run 收尾把**实测**结果写成持久记录（appendEntry，只进
+ *     TUI 聊天记录、**不参与 LLM 上下文**，不污染后续任何一轮）；
+ *   - AI 贴了 → 照旧与实测比对，不符即整体替换并附说明（防编造下限防线不撤）。
  *
  * 三层防线：
- * 1. tool_result：授权 commit 执行后在工具结果末尾追加提醒——收尾必须
- *    实际执行 `git status` 并把输出原样贴进 `>> git status` 代码块；
- * 2. message_end：assistant 消息含 `>> git status` 代码块时，本扩展在
- *    会话 cwd 实测 `git status` 与代码块内容比对（规范化换行与行尾空
- *    白后逐字比对），不符即替换为实测真实输出并加警示行——AI 编造、
- *    贴过期输出、贴 `--short` 等变体都会被纠正；
- * 3. agent_settled：run 结束时若从未出现 status 代码块（AI 整段忘了），
- *    实测 `git status` 并 notify 用户真实输出 + 指出 AI 未执行第 11 步。
+ * 1. tool_result：带 AI_AUTHORIZED_COMMIT 标记的 commit 执行后追加提醒——收尾由本
+ *    扩展自动记录实测 status，AI 不必手贴；若仍要贴，需与实测一致。
+ * 2. message_end：assistant 消息含 `>> git status` 代码块时实测比对（规范化换行与
+ *    行尾空白后逐字比），不符即替换为实测输出并加警示行。
+ * 3. agent_settled：本 run 有授权 commit 且 AI 从未贴块 → 收集本 run 触及的所有 git
+ *    目标目录（`git -C` / `cd`），逐个实测 `git status`，用 pi.appendEntry 写入持久
+ *    记录 + registerEntryRenderer 渲染进聊天记录，并 notify 一句「已写入」。
  *
- * 替换后的消息进入会话历史，AI 下一轮看到的就是真实输出，不留假账。
- * 判定与执行全程防御性 catch：本扩展失灵时不阻塞会话（与 git-commit-
- * guard / test-cases-guard 一致）。
+ * 为什么用 appendEntry 而不是 sendMessage：sendMessage 注入的是 custom message，
+ * 官方文档明确「participate in LLM context」——会把这段 status 塞进模型下一轮的
+ * 上下文。本记录只用于**用户事后核对**，不需要模型看到，所以用 appendEntry（文档：
+ * custom entries do NOT participate in LLM context）。
+ *
+ * 判定与执行全程防御性 catch：本扩展失灵时不阻塞会话。
  */
 
 import { execSync } from "node:child_process";
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { Box, Text } from "pi-tui";
 
 const AUTH_MARK = "AI_AUTHORIZED_COMMIT";
 // 与 git-commit-guard.ts 同源的 commit 匹配（含 git -C <path> commit 形态）。
@@ -41,12 +42,13 @@ const SEGMENT_SPLIT = /&&|\|\||;|\n|\|/;
 const GIT_COMMIT_SEGMENT = /^git(?:\s+-\S+(?:\s+[^\s-][^\s]*)?)*\s+commit(?![A-Za-z0-9_-])/;
 // 最终回复里的 status 代码块：``` [语言标注] 换行 >> git status 换行 输出体 ```
 const STATUS_BLOCK = /```[^\n]*\n>> git status\n([\s\S]*?)```/;
+// appendEntry 的 customType
+const ENTRY_TYPE = "git-status-guard";
 
 const REMINDER =
-	"\n\n[git-status-guard] 本次 run 已发生授权 commit：收尾汇报必须实际执行 " +
-	"`git status` 工具命令，把输出原样贴进最终回复的 `>> git status` 代码块" +
-	"（不加工、不截断）。最终消息里的代码块将与本扩展实测输出比对，不符会" +
-	"被替换为真实输出。";
+	"\n\n[git-status-guard] 本次 run 已发生授权 commit：收尾时本扩展会自动把**实测** " +
+	"`git status` 写成一条持久记录（只进聊天记录、不参与模型上下文），你**不必**手贴。" +
+	"若仍想自己贴 `>> git status` 代码块，内容须与实测一致——不符会被替换并加说明。";
 
 const REPLACED_NOTE =
 	"> [git-status-guard] 上方代码块已替换为本扩展实测的真实 `git status` " +
@@ -72,29 +74,30 @@ function runGitStatus(cwd: string): string | null {
 }
 
 /**
- * 从命令里取最近一次 git 目标目录（2026-11-04 增）：`git -C <path>` 优先、`cd <path>` 次之。
- * 背景：会话 cwd 常在 main 主工作区、实际提交在 worktree 里（AI 建的工作区），
- * 此时第 11 步贴的是 `git -C <worktree> status` 的输出；只按 ctx.cwd 比对会误判成「编造」并替换错对象。
+ * 从命令里取所有 git 目标目录（按出现顺序，最后一个即最近）：`git -C <path>` 与 `cd <path>` 都算。
+ * 背景：会话 cwd 常在 main 主工作区、实际提交在 worktree 里；一次 run 也可能动多个仓库
+ * （2026-11-09 一次改名动了 15 个仓库），所以收尾要把这些目标逐个实测。
  */
-function commandTarget(command: string, cwd: string): string | null {
+function commandTargets(command: string, cwd: string): string[] {
 	const toAbs = (raw: string): string => {
 		let p = raw.trim().replace(/^["']|["']$/g, "");
 		if (p === "~" || p.startsWith("~/")) p = (process.env.HOME ?? "~") + p.slice(1);
 		if (p.startsWith("/")) return p;
 		return `${cwd.replace(/\/+$/, "")}/${p}`;
 	};
-	let target: string | null = null;
+	const out: string[] = [];
 	for (const raw of command.split(SEGMENT_SPLIT)) {
 		const seg = raw.trim();
 		if (!seg) continue;
 		const cd = /^cd\s+(.+)$/.exec(seg);
-		if (cd) target = toAbs(cd[1].split(/\s+/)[0]);
+		if (cd) out.push(toAbs(cd[1].split(/\s+/)[0]));
 		if (/^git\b/.test(seg)) {
-			const m = /\s-C\s*("[^"]*"|'[^']*'|\S+)/.exec(seg);
-			if (m) target = toAbs(m[1]);
+			const re = /\s-C\s*("[^"]*"|'[^']*'|\S+)/g;
+			let hit: RegExpExecArray | null;
+			while ((hit = re.exec(seg)) !== null) out.push(toAbs(hit[1]));
 		}
 	}
-	return target;
+	return out;
 }
 
 /** 规范化：统一换行、去行尾空白、整体 trim 后逐字比对。 */
@@ -107,15 +110,37 @@ function normalize(s: string): string {
 		.trim();
 }
 
+interface GitStatusData {
+	at: number;
+	results: { dir: string; status: string }[];
+}
+
 export default function (pi: ExtensionAPI) {
 	let armed = false; // 本次 agent run 内发生过授权 commit
 	let sawStatusBlock = false; // 本次 run 内 assistant 消息出现过 status 代码块
-	let statusTarget: string | null = null; // 最近一次 bash 命令里的 git 目标目录（worktree 场景）
+	let lastTarget: string | null = null; // 最近一次 bash 命令里的 git 目标目录（worktree 场景）
+	const targets = new Set<string>(); // 本次 run 触及的全部 git 目标目录
+
+	// 持久记录渲染：只进聊天记录，不参与 LLM 上下文
+	pi.registerEntryRenderer<GitStatusData>(ENTRY_TYPE, (entry, _opts, theme) => {
+		const data = entry.data ?? { at: Date.now(), results: [] };
+		const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
+		box.addChild(new Text(theme.bold(theme.fg("accent", "git-status-guard")), 0, 0));
+		box.addChild(
+			new Text(theme.fg("dim", "实测 git status（本扩展执行，不参与模型上下文）"), 0, 0),
+		);
+		for (const r of data.results) {
+			box.addChild(new Text(theme.fg("accent", r.dir), 0, 0));
+			box.addChild(new Text(">> git status\n" + r.status, 0, 0));
+		}
+		return box;
+	});
 
 	pi.on("agent_start", async () => {
 		armed = false;
 		sawStatusBlock = false;
-		statusTarget = null;
+		lastTarget = null;
+		targets.clear();
 	});
 
 	// 置位锚点：授权 commit 命令进入执行；同时记录 git 目标目录
@@ -124,8 +149,11 @@ export default function (pi: ExtensionAPI) {
 			if (isToolCallEventType("bash", event)) {
 				const command = event.input.command ?? "";
 				if (isAuthorizedCommit(command)) armed = true;
-				const target = commandTarget(command, process.cwd());
-				if (target) statusTarget = target;
+				const list = commandTargets(command, process.cwd());
+				if (list.length > 0) {
+					lastTarget = list[list.length - 1] ?? lastTarget;
+					for (const t of list) targets.add(t);
+				}
 			}
 		} catch {
 			// 防御性放行
@@ -139,10 +167,7 @@ export default function (pi: ExtensionAPI) {
 			const input = event.input as { command?: string };
 			if (!isAuthorizedCommit(input.command ?? "")) return;
 			return {
-				content: [
-					...event.content,
-					{ type: "text" as const, text: REMINDER },
-				],
+				content: [...event.content, { type: "text" as const, text: REMINDER }],
 			};
 		} catch {
 			// 防御性放行
@@ -162,7 +187,7 @@ export default function (pi: ExtensionAPI) {
 				const pasted = STATUS_BLOCK.exec(part.text)?.[1] ?? "";
 				// 候选目标：本次 run 里最近的 git 目标目录（worktree）优先，其次会话 cwd。
 				// 贴出的内容匹配任一候选即放过；都不匹配时替换为第一个可实测的目标（优先 worktree）。
-				const candidates = [statusTarget, ctx.cwd].filter((p): p is string => Boolean(p));
+				const candidates = [lastTarget, ctx.cwd].filter((p): p is string => Boolean(p));
 				let real: string | null = null;
 				let matched = false;
 				for (const candidate of candidates) {
@@ -190,22 +215,27 @@ export default function (pi: ExtensionAPI) {
 		}
 	});
 
-	// 第三层：run 收尾仍无 status 代码块 → 实测并直接曝光给用户
+	// 第三层：run 收尾没贴块 → 实测并写成持久记录（不进 LLM 上下文）
 	pi.on("agent_settled", async (_event, ctx) => {
 		try {
 			if (!armed) return;
 			armed = false;
 			const missed = !sawStatusBlock;
 			sawStatusBlock = false;
-			if (!missed) return;
-			const real = runGitStatus(statusTarget ?? ctx.cwd);
-			if (real === null) return;
+			const dirs = targets.size > 0 ? [...targets] : [ctx.cwd];
+			if (!missed) return; // AI 已贴过（且第二层保证其内容与实测一致）→ 不重复记录
+
+			const results: { dir: string; status: string }[] = [];
+			for (const dir of dirs) {
+				const status = runGitStatus(dir);
+				if (status !== null) results.push({ dir, status });
+			}
+			if (results.length === 0) return;
+
+			pi.appendEntry<GitStatusData>(ENTRY_TYPE, { at: Date.now(), results });
 			ctx.ui.notify(
-				"[git-status-guard] /commit 流程已结束，但 AI 未按 skill 第 11 步贴出 " +
-					"`git status` 输出。以下为本扩展实测的真实输出：\n\n```\n" +
-					real +
-					"\n```",
-				"warning",
+				"[git-status-guard] 已把实测 git status 写入会话记录（不参与模型上下文，可随时回看）",
+				"info",
 			);
 		} catch {
 			// 防御性放行
