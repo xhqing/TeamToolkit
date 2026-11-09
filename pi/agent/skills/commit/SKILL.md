@@ -132,7 +132,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
    - **只补不删**：不改动用户已有的 LOGO/徽章/正文（**语言基调修正除外**：把 `README.md` 里「本该用英文却写成中文」的正文改为英文是允许的，特殊场景的中文保留不动）。README 双语 + LOGO + 徽章 + 版权署名段全齐 → 写 `<!-- commit-skill: readme-standard = ok -->` + 日期行。
 
    **9b. LICENSE.md**（标记 `license`）：根目录**只保留 `LICENSE.md`**，不与其它格式 license 文件重复。
-   - 无 `LICENSE.md` → 创建。**先按全局 `~/.pi/agent/AGENTS.md`「项目许可证与版权声明」节判定项目性质**：软件项目（含 agent 项目）用标准 MIT 全文；非软件项目（书籍 / 文章等以阅读为目的的文字）用 CC BY 4.0（正文取官方 `https://creativecommons.org/licenses/by/4.0/legalcode.txt`，不手写）；**无法判断属于哪一类时暂停并向用户确认，不得自行推断**。版权声明行一律写 `Copyright (c) <年份> xhqing and contributors`。已存在 `LICENSE.md` 的版权人写法统一由 9g 处理。
+   - 无 `LICENSE.md` → 创建。**先按全局 `~/.pi/agent/AGENTS.md`「项目许可证与版权声明」节判定**：① **fork / copy 项目**（有上游仓库来历）→ 按「许可证继承」表定——上游与 MIT / CC BY 4.0 兼容则用 MIT / CC BY 4.0，**不兼容则原样继承上游许可证**（GPL 系就整份 GPL 全文，不降级、不替换、不询问）；② 自研项目 → 软件项目（含 agent 项目）用标准 MIT 全文，非软件项目（书籍 / 文章等以阅读为目的的文字）用 CC BY 4.0（正文取官方 `https://creativecommons.org/licenses/by/4.0/legalcode.txt`，不手写）；③ 既不是 fork、又无法判断软件 / 非软件时，暂停并向用户确认。版权声明行一律写 `Copyright (c) <年份> xhqing and contributors`；**fork 项目必须保留上游版权行，我们的行追加在它下面**（不替换）。已存在 `LICENSE.md` 的版权人写法统一由 9g 处理。
    - 创建后、或 `LICENSE.md` 已存在时，若根目录还有其它格式 license 文件（`LICENSE`、`LICENSE.txt` 等）→ **删除冗余**，只留 `LICENSE.md`。
    - `LICENSE.md` 存在且无冗余 → 写 `<!-- commit-skill: license = ok -->` + 日期行。
 
