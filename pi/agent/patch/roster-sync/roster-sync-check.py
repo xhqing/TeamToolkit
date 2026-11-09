@@ -12,6 +12,10 @@ ark-key-pool / NewsScoreStudy 三项，README 全无）。
 
 它做什么
 --------
+除了两份 README 的集合比对，还会校验注册表里每个 Agent 项目的 `README.md`
+是否真的挂着 `Type-AI Agent` 徽章——2026-11-09 用户立：**项目是不是 Agent 项目看
+README 的 Type 徽章，不看项目名是否以 `Agent` 结尾**，所以徽章缺失 = 数据错误。
+
 读三份文件做集合比对：
 
 1. registry 的「智能体命名注册表」表（名称 / 项目）→ Agent 项目全集
@@ -90,10 +94,11 @@ def parse_registry(text: str) -> dict:
             if project:
                 agents[project] = cells[0].strip().strip("*`")
         elif any("子项目" in h for h in header):
-            # 子项目映射：| Agent 项目（拟人名） | 子项目（仓库） | 说明 |
-            agent_cell = cells[0]
+            # 子项目映射：| Agent 项目 | 子项目（仓库） | 说明 |
+            # 第一列形如 `assistant-agent（Kit）`：取括号前的项目名（不再要求以 Agent 结尾）
             repo_cell = cells[1].strip()
-            m = re.match(r"([A-Za-z0-9_]+Agent)", agent_cell)
+            agent_cell = cells[0].strip().strip("`* ")
+            m = re.fullmatch(r"([A-Za-z0-9][A-Za-z0-9._-]*)", re.split(r"[（(]", agent_cell)[0].strip())
             if not m:
                 continue
             if "~~" in line:
@@ -135,6 +140,27 @@ def parse_readme(text: str) -> dict:
 # --------------------------------------------------------------------------- #
 def lower_map(mapping: dict[str, set[str]]) -> dict[str, set[str]]:
     return {k.lower(): v for k, v in mapping.items()}
+
+
+# --------------------------------------------------------------------------- #
+# Agent 项目的判据：README 必须挂 Type-AI Agent 徽章（2026-11-09 用户立）
+# --------------------------------------------------------------------------- #
+AI_AGENT_BADGE = re.compile(r"badge/Type-AI(?:%20| )Agent")
+
+
+def check_agent_badges(agents: dict[str, str]) -> list[dict]:
+    """注册表里的 Agent 项目逐个查 README：缺文件或缺 `Type-AI Agent` 徽章都算错。"""
+    issues = []
+    for project in sorted(agents, key=str.lower):
+        readme = HOME / "Developer" / project / "README.md"
+        try:
+            text = readme.read_text(encoding="utf-8")
+        except OSError:
+            issues.append({"project": project, "reason": "README.md 不存在"})
+            continue
+        if not AI_AGENT_BADGE.search(text):
+            issues.append({"project": project, "reason": "README.md 缺 Type-AI Agent 徽章"})
+    return issues
 
 
 def compare(registry: dict, readme: dict, label: str, allowlist: dict) -> dict:
@@ -253,6 +279,8 @@ def main(argv: list[str]) -> int:
         r["missing_agents"] or r["extra_agents"] or r["missing_subprojects"] or r["extra_subprojects"]
         for r in reports
     )
+    badge_issues = check_agent_badges(registry["agents"])
+    drift = drift or bool(badge_issues)
 
     if as_json:
         print(
@@ -261,6 +289,7 @@ def main(argv: list[str]) -> int:
                     "ok": not drift,
                     "registry": str(registry_path),
                     "reports": reports,
+                    "badge_issues": badge_issues,
                     "skipped_readmes": skipped,
                 },
                 ensure_ascii=False,
@@ -286,6 +315,8 @@ def main(argv: list[str]) -> int:
                 print(f"  ⏸️  已豁免：{e['kind']} {e['agent']} → {target}（{e['reason']}）")
         if skipped:
             print("\n跳过（文件不存在）：" + "、".join(skipped))
+        for b in badge_issues:
+            print(f"  ❌ Agent 项目徽章：{b['project']} — {b['reason']}")
         if drift:
             print("\n[roster-sync] 漂移未修复：按 2026-10-26 用户规则，registry 改动必须与 xhqing README" " 名册在同一批里更新（英文 + 中文两份都要改）。")
 

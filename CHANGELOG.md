@@ -8,6 +8,29 @@
 
 - **镜像同步（2026-11-09）**：从全局 `~/.pi/agent` 单向发布。
   **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
+  **改了什么**：18 个文件——
+  - `pi/agent/AGENTS.md`
+  - `pi/agent/docs/agents-registry.md`
+  - `pi/agent/docs/capability-sync.md`
+  - `pi/agent/docs/new-agent-scaffold.md`
+  - `pi/agent/docs/repo-branch-protection.md`
+  - `pi/agent/extensions/agent-call.ts`
+  - `pi/agent/extensions/agent-wait-banner.ts`
+  - `pi/agent/extensions/background-tasks.ts`
+  - `pi/agent/extensions/roster-sync-guard.ts`
+  - `pi/agent/extensions/version-guard.ts`
+  - `pi/agent/patch/duty-macmini/duty.conf`
+  - `pi/agent/patch/private-links/README.md`
+  - `pi/agent/patch/private-links/manifest.tsv`
+  - `pi/agent/patch/roster-sync/roster-sync-check.py`
+  - `pi/agent/patch/settle-repo-check/settle-repo-check.py`
+  - `pi/agent/skills/commit/SKILL.md`
+  - `pi/agent/skills/keep-awake/SKILL.md`
+  - `pi/agent/skills/md2pdf/references/pitfalls.md`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
+- **镜像同步（2026-11-09）**：从全局 `~/.pi/agent` 单向发布。
+  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
   **改了什么**：1 个文件——
   - `pi/agent/docs/macmini-mirror.md`
   **回归风险**：无（只同步内容，不改本仓库自身逻辑）。

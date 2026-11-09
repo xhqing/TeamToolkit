@@ -28,13 +28,13 @@
 
 ### 补齐前（2026-11-03 上午实测）
 
-37 个仓库里只有 **9 个** strict 合格（TeamToolkit、ExecutiveAssistantAgent、cmux、codef、ghostty-launcher、ghostty、mp4-player、pi-harness、XPilot），其余 **28 个** 的保护里 `required_status_checks` 为 `null`——**根本没挂 required check**，所以 strict 参数不存在（不是 strict=false，是无从谈起）。
+37 个仓库里只有 **9 个** strict 合格（TeamToolkit、assistant、cmux、codef、ghostty-launcher、ghostty、mp4-player、pi-harness、XPilot），其余 **28 个** 的保护里 `required_status_checks` 为 `null`——**根本没挂 required check**，所以 strict 参数不存在（不是 strict=false，是无从谈起）。
 
 28 个的细分：
 
 - **有 CI 却没挂成门禁（2 个）**：`TradingProofs`（`ci.yml` → check 名 `build`）、`vscode-copy-anywhere`（`ci.yml` → check 名 `validate`）。
 - **`xhqing`（1 个）**：只有 `traffic.yml`，那是定时采集任务、不是 PR CI（定时任务的检查名绝不能挂 required，会永久卡住合并）。（2026-11-04 补充：该定时采集任务已随「停用流量采集」一并删除，现在本仓库的 PR 检查是 `validate`。）
-- **既无 CI 也无门禁（25 个）**：16 个 Agent 项目（ProductStrategistAgent、ProductProducerAgent、SiteBuilderAgent、GrowthMarketerAgent、DigiVendAgent、DataAnalystAgent、DayTradingAgent、QuantStrategistAgent、BackendEngineerAgent、FullStackEngineerAgent、NeuralCoreAgent、ApplyOptimizerAgent、LegalAgent、SocialMediaManagerAgent、TestEngineerAgent、cuAgent）+ 9 个子项目（CC-Bridge、ark-key-pool、macmini-tmux、dotfiles、AgentCortex、ToolCallingRules、Intraday、Swing、gridtrader）。
+- **既无 CI 也无门禁（25 个）**：16 个 Agent 项目（ProductStrategistAgent、ProductProducerAgent、SiteBuilderAgent、GrowthMarketerAgent、DigiVendAgent、DataAnalystAgent、trading-agent、quant-agent、BackendEngineerAgent、FullStackEngineerAgent、NeuralCoreAgent、apply-agent、LegalAgent、social-agent、TestEngineerAgent、cuAgent）+ 9 个子项目（CC-Bridge、ark-key-pool、macmini-tmux、dotfiles、AgentCortex、ToolCallingRules、Intraday、Swing、gridtrader）。
 
 ### 补齐后（2026-11-03 当晚，用户追加要求全部执行最新标准）
 
@@ -68,7 +68,7 @@
 ## 现状（2026-10-04 实测）
 
 - **已开保护（7 个）**
-  - 试点（2026-10-04）：`xhqing/TeamToolkit`、`xhqing/ExecutiveAssistantAgent`、`xhqing/zcode-cli`
+  - 试点（2026-10-04）：`xhqing/TeamToolkit`、`xhqing/assistant-agent`、`xhqing/zcode-cli`
   - 更早：`xhqing/codef`、`xhqing/ghostty`、`xhqing/ghostty-launcher`、`xhqing/pi`
 - **未开保护**：其余 public 仓库（直推 main 可用；技能里「已开保护 → push 被拒 → 走 PR 兜底」的分支不触发）
 - **无法开保护**：private 仓库（GitHub 免费版不支持分支保护 / rulesets，API 直接报「Upgrade to GitHub Pro」）
@@ -104,7 +104,7 @@
 
 **已铺开范围**（2026-11-02 实测，脚本逐仓 `PUT …/branches/<default>/protection`）：
 
-- **public 仓库（全部已锁）**：18 个 Agent 项目 + 19 个子项目。参数统一为：PR 必过（0 approvals）、`enforce_admins=true`、禁 force / 禁删除、线性历史、`allow_squash_merge=true` + `allow_merge_commit/rebase_merge=false` + `allow_auto_merge=true` + `delete_branch_on_merge=true`；原有 required check 的仓库保留其 context 并补 `strict=true`（`TeamToolkit` / `ExecutiveAssistantAgent` = `validate`，`ghostty-launcher` = `Test & Check`，`codef` = `test`，`ghostty` = `build-macos`，`mp4-player` = `build`，`pi-harness` = `build-check-test`，`XPilot` = `test`）。
+- **public 仓库（全部已锁）**：18 个 Agent 项目 + 19 个子项目。参数统一为：PR 必过（0 approvals）、`enforce_admins=true`、禁 force / 禁删除、线性历史、`allow_squash_merge=true` + `allow_merge_commit/rebase_merge=false` + `allow_auto_merge=true` + `delete_branch_on_merge=true`；原有 required check 的仓库保留其 context 并补 `strict=true`（`TeamToolkit` / `assistant` = `validate`，`ghostty-launcher` = `Test & Check`，`codef` = `test`，`ghostty` = `build-macos`，`mp4-player` = `build`，`pi-harness` = `build-check-test`，`XPilot` = `test`）。
 - **cmux**：保护已开（PR 必过 + 线性 + 禁 force/删除 + admins 受限），但 required check 暂为空——fork 的 Actions 还没启用，加了会冻死 main；启用后再补 `checks`（见 cmux `DEVELOPMENT.md` §9.6）。
 - **private 仓库（GitHub 免费版无法开保护，API 直接 403）**：`dotfiles`、`ToolCallingRules`、`xhs-mentor-scam`。这些仓库靠本地 `git-main-guard.ts` 硬拦 + 流程约束。要真正上服务端保护需升级 GitHub Pro 或改 public（用户决定）。
 - **暂未锁的例外**：`xhs-mentor-scam` —— 该仓有一个 launchd 每 5 分钟执行的 `autosave.sh` **直接 push main**（备份用途，单写者、无 CI）。锁了会让自动备份静默失败，待决定：改造 autosave 推 `autosave` 分支，或保留豁免。

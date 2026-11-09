@@ -29,7 +29,7 @@
  *       2) ask 类调用（`agent_call` 默认 / `intercom` action=ask）阻塞中；
  *       3) 其它扩展上报的活跃活动（pi.events 事件 `agent-wait-banner:activity`，
  *          载荷 `{ source: string, active: boolean }`）——项目扩展可用它把自家
- *          后台任务接进提醒（当前接入：DayTradingAgent 的 `background_run`）。
+ *          后台任务接进提醒（当前接入：trading-agent 的 `background_run`）。
  *   - **清窗**：
  *       - 用户输入（message_start role=user）→ 全部清空（自愈兜底）；
  *       - send 类消息写明「无需回复」（无需回信）→ 不点亮提醒（主动判断，见文末修订）；

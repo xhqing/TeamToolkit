@@ -54,7 +54,7 @@ def registry_rows():
         return []
     rows = []
     for line in m.group(1).splitlines():
-        if not line.startswith("|") or line.startswith("|---") or "Agent 项目（拟人名）" in line:
+        if not line.startswith("|") or line.startswith("|---") or ("Agent 项目" in line and "子项目" in line):
             continue
         cells = [c.strip() for c in line.strip("|").split("|")]
         if len(cells) >= 3:
