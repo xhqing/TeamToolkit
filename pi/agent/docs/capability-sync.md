@@ -7,7 +7,7 @@
 ## 一、它是什么、归谁
 
 `TeamToolkit`（原 `CapabilityManagerAgent`，2026-11-05 更名）是**智能体团队通用能力底座的唯一开源出口**。
-它已经从「Agent 项目」降级为**普通项目**，归 **Kit**（ExecutiveAssistantAgent）负责；原来的 Prometheus
+它已经从「Agent 项目」降级为**普通项目**，归 **Kit**（assistant）负责；原来的 Prometheus
 会话不再维护它，发布动作由脚本完成。
 
 - 仓库：`github.com/xhqing/TeamToolkit`（旧地址 `CapabilityManagerAgent` 自动重定向）

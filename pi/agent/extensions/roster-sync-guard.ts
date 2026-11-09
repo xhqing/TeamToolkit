@@ -16,7 +16,7 @@
  *   1. 某次工具调用写到了 `agents-registry.md`（write / edit / bash 命中路径）→ 调用
  *      结束立即比对；发现漂移就当场插话，促其**同一批**补齐两份 README。
  *   2. 每轮收尾（agent_settled）→ 再比对一次兜底。Kit 会话（cwd 在
- *      ExecutiveAssistantAgent 或 xhqing 仓库里）会注入提醒促其处理；其它会话只弹通知
+ *      assistant 或 xhqing 仓库里）会注入提醒促其处理；其它会话只弹通知
  *      不插话——xhqing 名册是 Kit 的活，不该让别的 agent 跑去改别人的仓库。
  *
  * 防循环 / 防噪音：同一批漂移只插话一次（签名去重），漂移清空或换了一批才重新提醒。
@@ -33,7 +33,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 const CHECKER = join(homedir(), ".pi", "agent", "patch", "roster-sync", "roster-sync-check.py");
 const REGISTRY = join(homedir(), ".pi", "agent", "docs", "agents-registry.md");
 const KIT_DIRS = [
-	join(homedir(), "Developer", "ExecutiveAssistantAgent"),
+	join(homedir(), "Developer", "assistant"),
 	join(homedir(), "Developer", "xhqing"),
 ];
 
@@ -45,6 +45,9 @@ type Drift = {
 };
 
 type Report = Drift & { readme: string; allowlisted: unknown[] };
+
+/** 注册表登记的 Agent 项目必须挂 Type-AI Agent 徽章（2026-11-09 用户立，判据看徽章不看名字）。 */
+type BadgeIssue = { project: string; reason: string };
 
 /** 跑一次比对；返回漂移摘要（无漂移 / 出错返回 null）。 */
 function runCheck(): { sig: string; text: string } | null {
@@ -59,7 +62,7 @@ function runCheck(): { sig: string; text: string } | null {
 		out = stdout;
 	}
 
-	let data: { ok?: boolean; reports?: Report[] };
+	let data: { ok?: boolean; reports?: Report[]; badge_issues?: BadgeIssue[] };
 	try {
 		data = JSON.parse(out);
 	} catch {
@@ -86,6 +89,10 @@ function runCheck(): { sig: string; text: string } | null {
 			lines.push(`${r.readme}：${s.agent} 多出子项目 ${s.repo}`);
 			sigParts.push(`sub-${s.repo}`);
 		}
+	}
+	for (const b of data.badge_issues ?? []) {
+		lines.push(`Agent 项目徽章：${b.project} — ${b.reason}`);
+		sigParts.push(`badge+${b.project}`);
 	}
 	if (lines.length === 0) return null;
 	return { sig: sigParts.sort().join("|"), text: lines.join("；") };

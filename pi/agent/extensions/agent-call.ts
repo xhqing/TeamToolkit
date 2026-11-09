@@ -73,8 +73,10 @@ function sleep(ms: number): Promise<void> {
  * worktree」时才会被 pi 加载；把子项目任务放在 Agent 项目会话里按路径做，等于让 Worker 在
  * 没有本项目规则的情况下干活。Leader 只负责 local main 同步、建 worktree、收尾清理。
  *
- * 校验仍按 `~/.pi/agent/docs/agents-registry.md`：Agent 名单取注册表出现的 XxxAgent，子项目名单取
- * 「子项目映射」表第二列；worktree 用 `.git` 文件里的 `gitdir:` 反查主仓库，主仓库必须是已登记子项目。
+ * 校验仍按 `~/.pi/agent/docs/agents-registry.md`：Agent 名单取「智能体命名注册表」的「项目（仓库）」列，
+ * 子项目名单取「子项目映射」表第一列（`assistant-agent（Kit）` 取括号前的项目名）与第二列；**不再依赖
+ * 「项目名以 Agent 结尾」这个旧命名约定**（2026-11-09 用户立：性质看 README 的 Type 徽章，名字只求简单）。
+ * worktree 用 `.git` 文件里的 `gitdir:` 反查主仓库，主仓库必须是已登记子项目。
  * 注册表不可读时退回旧的标记文件检查（AGENTS.md / .pi）。
  */
 const REGISTRY = join(homedir(), ".pi", "agent", "docs", "agents-registry.md");
@@ -90,9 +92,10 @@ function cleanCell(raw: string): string {
 	return raw.replace(/\*\*/g, "").replace(/`/g, "").trim();
 }
 
-function extractAgentName(cell: string): string | undefined {
-	const m = /^([A-Za-z][A-Za-z0-9]*Agent)$/.exec(cell) ?? /^([A-Za-z][A-Za-z0-9]*Agent)（/.exec(cell);
-	return m?.[1];
+/** 从「项目（仓库）」/「Agent 项目」单元格取项目名：去掉括号里的主管 agent 与反引号、加粗符号。 */
+function extractProjectName(cell: string): string | undefined {
+	const name = cleanCell(cell).split(/[（(]/)[0]?.trim() ?? "";
+	return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name) ? name : undefined;
 }
 
 /** 解析注册表：Agent 名单 + 「子项目映射」表的子项目名单。 */
@@ -101,27 +104,31 @@ function readRegistry(): RegistryInfo | undefined {
 		const text = readFileSync(REGISTRY, "utf8");
 		const agents = new Set<string>();
 		const subprojects = new Map<string, string>();
-		let inSubprojectTable = false;
+		let table: "agents" | "subprojects" | undefined;
 		for (const line of text.split("\n")) {
 			const trimmed = line.trim();
 			if (!trimmed.startsWith("|")) {
-				inSubprojectTable = false;
+				table = undefined;
 				continue;
 			}
 			const cells = trimmed.split("|").slice(1, -1).map(cleanCell);
 			if (cells.every((c) => c === "" || /^:?-{2,}:?$/.test(c))) continue; // 分隔行
-			if (/Agent\s*项目/.test(cells[0] ?? "") && /子项目/.test(cells[1] ?? "")) {
-				inSubprojectTable = true;
+			// 表头判定：不再依赖项目名后缀，只看列名
+			if (/^名称$/.test(cells[0] ?? "") && /项目/.test(cells[1] ?? "")) {
+				table = "agents";
 				continue;
 			}
-			if (inSubprojectTable) {
-				const sub = cells[1] ?? "";
-				const owner = extractAgentName(cells[0] ?? "");
-				if (owner && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(sub)) subprojects.set(sub.toLowerCase(), owner);
+			if (/Agent\s*项目/.test(cells[0] ?? "") && /子项目/.test(cells[1] ?? "")) {
+				table = "subprojects";
+				continue;
 			}
-			for (const cell of cells) {
-				const name = extractAgentName(cell);
-				if (name) agents.add(name);
+			if (table === "agents") {
+				const project = extractProjectName(cells[1] ?? "");
+				if (project) agents.add(project);
+			} else if (table === "subprojects") {
+				const sub = cells[1] ?? "";
+				const owner = extractProjectName(cells[0] ?? "");
+				if (owner && /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(sub)) subprojects.set(sub.toLowerCase(), owner);
 			}
 		}
 		return agents.size > 0 || subprojects.size > 0 ? { agents, subprojects } : undefined;

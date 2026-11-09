@@ -1,6 +1,6 @@
 # 四大坑详解与定制指南
 
-来源：2026-09-01 三份中文个人文档 PDF 的实际事故排查（MD → pandoc → Chrome headless 打印链路），每个坑都有像素级扫描数据佐证。排查与修复全过程记录在 ExecutiveAssistantAgent 的本地变更日志。
+来源：2026-09-01 三份中文个人文档 PDF 的实际事故排查（MD → pandoc → Chrome headless 打印链路），每个坑都有像素级扫描数据佐证。排查与修复全过程记录在 assistant-agent 的本地变更日志。
 
 ## 坑 1：pandoc 默认窄栏样式（最常见、最隐蔽）
 

@@ -49,4 +49,4 @@ pgrep -f "caffeinate -s" && pmset -g assertions | grep -i PreventSystemSleep
 
 ## 根因背景（为什么是 caffeinate -s）
 
-2026-07-24 DayTradingAgent 盯盘复盘：盯盘期间系统睡眠（合盖 / 维护）会暂停所有进程——富途 OpenD 的市场快照接口无 timeout、卡到 TCP 超时约 15 分钟才返回、整段采样空窗，代理、网络 CLI 同断。`caffeinate -s` 创建的 `PreventSystemSleep` assertion 能防住这两类系统级睡眠，是 macOS 上软件层面防合盖睡眠的标准做法；实现逻辑源自 DayTradingAgent 的 keep-awake skill（2026-08-17 提炼为全局通用能力）。DayTradingAgent 侧的盯盘场景已把防睡眠并入 trade 盯盘流程（preflight 无条件启用、停盯自动解除），不与本 skill 冲突——那边是盯盘专用链路，本 skill 是任意场景手动启用/停用的全局通用版。
+2026-07-24 trading-agent 盯盘复盘：盯盘期间系统睡眠（合盖 / 维护）会暂停所有进程——富途 OpenD 的市场快照接口无 timeout、卡到 TCP 超时约 15 分钟才返回、整段采样空窗，代理、网络 CLI 同断。`caffeinate -s` 创建的 `PreventSystemSleep` assertion 能防住这两类系统级睡眠，是 macOS 上软件层面防合盖睡眠的标准做法；实现逻辑源自 trading-agent 的 keep-awake skill（2026-08-17 提炼为全局通用能力）。trading-agent 侧的盯盘场景已把防睡眠并入 trade 盯盘流程（preflight 无条件启用、停盯自动解除），不与本 skill 冲突——那边是盯盘专用链路，本 skill 是任意场景手动启用/停用的全局通用版。

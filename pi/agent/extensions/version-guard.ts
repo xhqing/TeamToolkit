@@ -1,7 +1,7 @@
 /**
  * 版本一致性守卫（pi 端，tool_call 拦截）：`VERSION` ↔ 群公告版本号必须一致。
  *
- * 2026-10-02 用户立规（SocialMediaManagerAgent / 原 CommunityManagerAgent 项目规则，硬性规定）：项目根的
+ * 2026-10-02 用户立规（social-agent / 原 CommunityManagerAgent 项目规则，硬性规定）：项目根的
  * `VERSION` 与 `docs/community/announcement.txt` 的「版本：」行是同一套编号，
  * bump 一个必须同步 bump 另一个；两者不一致时 commit / tag 一律拦截。为什么
  * 要工具强制：两个版本号此前分属「两套体系」（不比对），实际运行中长期背离

@@ -4,7 +4,7 @@
 
 ## 智能体命名注册表（避免重名 + 跨 agent 推荐）
 
-下列是已存在的智能体。**新起名称前先查此表，全局不可重复**（名称规则：以 `Agent` 结尾、前缀尽可能简单，如 `cuAgent`；历史 agent 多为拟人名）。执行任务时，若发现某子任务更适合另一个 agent，应主动推荐 / 移交给它。
+下列是已存在的智能体。**新起名称前先查此表，全局不可重复**（项目名规则：**Agent 项目一律 `<职责>-agent`**——全小写、连字符、前缀尽可能简单且一眼看得出职责，如 `assistant-agent` / `quant-agent`；2026-11-09 用户立。非 Agent 项目仍按「尽可能简单、能体现职责」起名，如 `vscode-copy-anywhere`）。名称（人格名）另行登记，与项目名是两回事。执行任务时，若发现某子任务更适合另一个 agent，应主动推荐 / 移交给它。
 
 | 名称 | 项目（仓库） | 职称 Title | 主要职责 |
 |---|---|---|---|
@@ -14,17 +14,30 @@
 | **Buzz** | GrowthMarketerAgent | 增长营销 | 引流：各渠道引流内容 + 链接（X / IG / YouTube / 小红书 / 知乎 / B 站） |
 | **Vendy** | DigiVendAgent | 电商运营 | 成交：上架 / 定价执行 / 履约 / 售后纠纷 / 多平台铺货 / 对账 |
 | **Echo** | DataAnalystAgent | 数据分析师 | 复盘：归因（决策→业绩）+ 分发建议 + 累积 playbook |
-| **Kit** | ExecutiveAssistantAgent | 总经理助理 | 通用助手：用户的第一助理、团队多面手，几乎任何事务都接得住（不分组、直属用户；找单找岗接活归 Hopkins）。**2026-10-31 起接管原电脑管家（Alfred / DeviceStewardAgent）的职责**：本地电脑 / 远程服务器 / 云电脑的资源监控与管理建议（进程 / 内存 / 存储治理） |
-| **Victor** | DayTradingAgent | 日内交易员 | 信号：港股 / 美股盘中盯盘 → 分析标的 + 计算仓位与止损 → 发出交易信号（信号模式，不下单，人工执行） |
-| **Mark** | QuantStrategistAgent | 量化策略师 | 量化策略：设计可回测的交易策略代码 → 历史回测标定可信度（离线开发，不盯盘不下单）；2026-10-17 由 Markowitz 更名为 Mark（取自现代投资组合理论之父 Harry Markowitz 的常用名） |
+| **Kit** | assistant-agent | 总经理助理 | 通用助手：用户的第一助理、团队多面手，几乎任何事务都接得住（不分组、直属用户；找单找岗接活归 Hopkins）。**2026-10-31 起接管原电脑管家（Alfred / DeviceStewardAgent）的职责**：本地电脑 / 远程服务器 / 云电脑的资源监控与管理建议（进程 / 内存 / 存储治理） |
+| **Victor** | trading-agent | 日内交易员 | 信号：港股 / 美股盘中盯盘 → 分析标的 + 计算仓位与止损 → 发出交易信号（信号模式，不下单，人工执行） |
+| **Mark** | quant-agent | 量化策略师 | 量化策略：设计可回测的交易策略代码 → 历史回测标定可信度（离线开发，不盯盘不下单）；2026-10-17 由 Markowitz 更名为 Mark（取自现代投资组合理论之父 Harry Markowitz 的常用名） |
 | **Anvil** | BackendEngineerAgent | 后端开发工程师 | 后端：负责所有后端开发工作（服务端逻辑 / API / 数据库 / 系统架构 / 桥接服务），目前在手 CC-BRIDGE（Claude Code 上游桥接框架），独立于销售流水线 |
 | **Atlas** | FullStackEngineerAgent | 全栈开发工程师 | 全栈：负责横跨前后端的完整开发（前端界面 / 后端服务 / 构建发布工程化），目前在手 ghostty-launcher、codef、pi-harness、ghostty、mp4-player、XPilot 等项目（详见下方映射表），独立于销售流水线 |
 | **Ada** | NeuralCoreAgent | AI 算法工程师 | 算法：设计 / 迭代 / 评测深度推理引擎（目前在手 AgentCortex——Infinite / Rapid / Incisive 三套推理引擎规则 + 评测体系），独立于销售流水线 |
-| **Hopkins** | ApplyOptimizerAgent | 投递转化率优化师 | 工作接单全链路（专门负责：找单找岗、投递、转化一条龙，原由 Kit 承接）——任务池投标与招聘平台求职（电鸭、BOSS直聘等）同为并行接单策略、同属一条投递漏斗：投递材料工程（接单的标书 + 求职的简历与打招呼话术，模板库 + 单变量 A/B 测试）、漏斗追踪（投递 → 回应 → 沟通 / 面试 → 成单 / offer）、转化率归因、报价与薪资策略测试、渠道淘汰（多渠道数据触发不凭感觉）；名字取自「科学广告之父」Claude Hopkins（简历即自我广告、话术即文案、漏斗归因即本行），直属用户、不属任何小组（工作接单，单人）；项目原名 BidOptimizerAgent |
+| **Hopkins** | apply-agent | 投递转化率优化师 | 工作接单全链路（专门负责：找单找岗、投递、转化一条龙，原由 Kit 承接）——任务池投标与招聘平台求职（电鸭、BOSS直聘等）同为并行接单策略、同属一条投递漏斗：投递材料工程（接单的标书 + 求职的简历与打招呼话术，模板库 + 单变量 A/B 测试）、漏斗追踪（投递 → 回应 → 沟通 / 面试 → 成单 / offer）、转化率归因、报价与薪资策略测试、渠道淘汰（多渠道数据触发不凭感觉）；名字取自「科学广告之父」Claude Hopkins（简历即自我广告、话术即文案、漏斗归因即本行），直属用户、不属任何小组（工作接单，单人）；项目原名 BidOptimizerAgent |
 | **Justin** | LegalAgent | 法务Agent | 法务：负责整个团队所有跟合同和收款相关的事项——合同起草审查、收款结构设计（分期付款）、交易对手尽调、证据链留存、纠纷应对、合规备忘；名字取自编纂《民法大全》的查士丁尼大帝，直属用户、不属任何小组（纯法务，跨组服务全部小组；财务职能暂时空缺） |
-| **Gatsby** | SocialMediaManagerAgent | 社媒运营官 | 社媒矩阵：运营群主本人的社媒账号矩阵——YouTube（横向长视频 + 纵向中短视频）/ 小红书（图文 + 纵向中短视频）/ 公众号 / 小绿书（公众号贴图）/ 视频号（纵向中短视频）/ 微信社群 / 个人微信朋友圈；社群的运营理念与方法（群规迭代、新人欢迎流程、话题日历、内容整理、运营复盘）由 Gatsby 主导产出，群主为辅助、引导和执行角色（微信内一切操作由群主落地）；名字取自《了不起的盖茨比》的传奇派对主人 Jay Gatsby，不分组、直属用户（2026-10-14 由「社群运营官」升级为「社媒运营官」；项目名 2026-10-15 由 CommunityManagerAgent 更名为 SocialMediaManagerAgent） |
+| **Gatsby** | social-agent | 社媒运营官 | 社媒矩阵：运营群主本人的社媒账号矩阵——YouTube（横向长视频 + 纵向中短视频）/ 小红书（图文 + 纵向中短视频）/ 公众号 / 小绿书（公众号贴图）/ 视频号（纵向中短视频）/ 微信社群 / 个人微信朋友圈；社群的运营理念与方法（群规迭代、新人欢迎流程、话题日历、内容整理、运营复盘）由 Gatsby 主导产出，群主为辅助、引导和执行角色（微信内一切操作由群主落地）；名字取自《了不起的盖茨比》的传奇派对主人 Jay Gatsby，不分组、直属用户（2026-10-14 由「社群运营官」升级为「社媒运营官」；项目名 2026-10-15 由 CommunityManagerAgent 更名为 social-agent） |
 | **Hopper** | TestEngineerAgent | 软件测试工程师 | 测试：全团队软件项目的功能测试与回归防护网——需求转验收用例（用例先行）、存量项目从事故补回归用例（先红后绿）、用例库与 CI（GitHub Actions）维护、交付验收判定；持用例定义权，与开发 agent 的实现权、CI 的裁决权三权分立（开发 agent 禁改用例迁就实现）；名字取自史上第一个计算机 bug 的发现者、「debug」一词推广者 Grace Hopper，隶属基础设施小组 |
 | **cuAgent** | cuAgent | 电脑操作员 | 计算机操作用户代理：用 computer-use 能力（GUI 自动化——看屏幕 / 点击 / 输入 / 拖拽）代替用户操作本机电脑界面；独立工具型 agent、不分组、直属用户，独立于销售流水线；能力仅限本项目内启用（2026-10-09 建立，远程仓库待建） |
+
+## Agent 项目的判定与命名标准（2026-11-09 用户立，同日两次修订定稿）
+
+**判定与命名是两件事，各有一套规矩：**
+
+**① 判定——一个项目是不是 Agent 项目，只看 `README.md` 的 `Type` 徽章**：值是 `AI Agent`（shields.io 形如 `![](https://img.shields.io/badge/Type-AI%20Agent-FF1493)`；带 `.svg`、`?style=…`、包在 `<img>` 或 Markdown 链接里都算同一枚）就是 Agent 项目；值是 `Project` / `Cli` / `pi extension` / `VSCode Extension` 等任何其它值的，都**不是**。
+
+**② 命名——Agent 项目的名字一律 `<职责>-agent`**：全小写、连字符、前缀尽可能简单且一眼看得出职责（如 `assistant-agent` / `quant-agent` / `social-agent` / `trading-agent` / `apply-agent`）。非 Agent 项目不受此约束，仍按「尽可能简单、体现职责」起名（如 `vscode-copy-anywhere`、`ark-key-pool`）；不为凑后缀加字，也不为求短而丢语义（`README.md` 压成 `R.md` 这种是过度简化）。
+
+- **为什么这么定**（两次修订的经过）：2026-11-09 用户先把总经理助理项目从 `ExecutiveAssistantAgent` 改名为 `assistant`（理由是项目名只求简单、性质由 README 声明）；随即改口定稿——**名字里要带 agent**，于是正式规定 `<职责>-agent`、全小写。结论：名字既要不啰嗦（`<职责>-agent` 够短），又要一眼分类（后缀标出这是 Agent 项目）；性质仍由徽章声明，不拿名字当判据。
+- **存量项目**：仍叫 `XxxAgent`（大驼峰）的 Agent 项目，**由用户逐个项目指定新名后再改**；不要自作主张批量改名——GitHub 仓库名、本地目录、跨仓库引用、私有目录、名册、会话 cwd、launchd 路径都是连锁改动，成本高、必须用户点头。
+- **Agent 项目必须挂徽章**：注册表里登记为 Agent 的项目，`README.md` 一律要有 `Type-AI Agent` 徽章（新建时按 `docs/new-agent-scaffold.md` 的徽章规范挂上；缺的算数据错误）。
+- **工具读哪里**：`agent_call` / `agent_wake` 的目录校验在启动时读**本文件的两张表**（为一次校验去读 17 个仓库的 README 太重），因此「改名 / 改性质」= 同时改 README、本文件登记、`xhqing` 名册三处，必须一致。`patch/roster-sync/roster-sync-check.py` 会逐个校验注册表里的 Agent 项目是否真有 `Type-AI Agent` 徽章，缺则报错。
 
 ## 销售流水线与三小组
 
@@ -34,7 +47,7 @@
 
 凡是新建一个 **Agent 项目**（即属于上方注册表范畴的团队 agent），**无需每次征得同意**，直接做两件事：
 
-1. 把「名称 + 项目（仓库）+ 职称 Title + 主要职责」加进上方「智能体命名注册表」表格（名称先查重，全局不可重复；新建 agent 按命名规则起名——以 `Agent` 结尾、前缀尽可能简单）；
+1. 把「名称 + 项目（仓库）+ 职称 Title + 主要职责」加进上方「智能体命名注册表」表格（名称先查重，全局不可重复；项目名按命名规则起名——**Agent 项目一律 `<职责>-agent`**，全小写、连字符，前缀尽可能简单且体现职责）；
 2. 在上方「销售流水线与三小组」段补上该 agent 的位置（在流水线内，还是独立于流水线）。
 
 **为什么免确认**：新建一个 agent 项目本身就已明确要把它纳入团队；注册表是团队的元数据，追加新成员是建立该 agent 的固有一步，每次都问一遍是多余的反 confirm。
@@ -67,14 +80,14 @@
 
 **子项目映射（完整清单，权威）**：当前全部 Agent → 子项目对应关系如下表，新增 / 变更子项目时以此表为准，并同步更新对应 Agent 项目 `AGENTS.md` 的「子项目清单」节，保持一致。表中每个子项目根目录都应带**本仓库实体** `AGENTS.md`（项目定位 / 负责 Agent / Worker 边界 / 规则索引）与 `.pi/APPEND_SYSTEM.md`（本项目硬约束，Worker 会话靠它加载），**不挂软链接、不写跨仓库 `settings.json` 路径**，随仓库提交，见上方规则第 1、2、3 条。
 
-**宿主机归属（2026-10-17 用户立，2026-10-31 修订）**：字面口径是「每个 Agent 只允许存在于一个宿主机」，但**自 2026-10-28 两机建立全量双向镜像后，所有项目在两台机器上都有副本**，因此 2026-10-31 起 `xhqing` 名册的 Host machine 列统一写 **`macmini&macbook`**。该原则现在的实际含义是「**活跃写操作只在一台机器上做**」（避免同一 git 仓库两边同时写导致 `.git` 冲突），不再是「另一台没有副本」。历史：默认全部在本机（MacBook Air）；**已迁移到 macmini 的**：**Mark**（QuantStrategistAgent 及当时的三个子项目仓库 Intraday / Swing / gridtrader，2026-10-17 整体迁移；本机已归档 `~/Archive-Migrated/`、不再保留活跃副本）。跨机呼叫已迁移 Agent 的方式见全局 `AGENTS.md`「跨机协作」节。
+**宿主机归属（2026-10-17 用户立，2026-10-31 修订）**：字面口径是「每个 Agent 只允许存在于一个宿主机」，但**自 2026-10-28 两机建立全量双向镜像后，所有项目在两台机器上都有副本**，因此 2026-10-31 起 `xhqing` 名册的 Host machine 列统一写 **`macmini&macbook`**。该原则现在的实际含义是「**活跃写操作只在一台机器上做**」（避免同一 git 仓库两边同时写导致 `.git` 冲突），不再是「另一台没有副本」。历史：默认全部在本机（MacBook Air）；**已迁移到 macmini 的**：**Mark**（quant-agent 及当时的三个子项目仓库 Intraday / Swing / gridtrader，2026-10-17 整体迁移；本机已归档 `~/Archive-Migrated/`、不再保留活跃副本）。跨机呼叫已迁移 Agent 的方式见全局 `AGENTS.md`「跨机协作」节。
 
-**Mark 已迁回本机（2026-10-26 用户决定）**：Mark 全部项目（QuantStrategistAgent 及当时的三个子项目仓库）已由用户从 macmini **拷回本机**，`~/Developer/` 下的本机目录即**权威源**（已逐个核实与本机之外副本同一提交）。**macmini 上的同名目录与 4 个 Mark 常驻会话（`Mark` / `Mark-Intraday` / `Mark-Swing` / `Mark-gridtrader`，`duty.conf` 未改）暂时保留、不再权威**——用户 2026-10-26 明确选择「两边都不动、只改本机口径」。
+**Mark 已迁回本机（2026-10-26 用户决定）**：Mark 全部项目（quant-agent 及当时的三个子项目仓库）已由用户从 macmini **拷回本机**，`~/Developer/` 下的本机目录即**权威源**（已逐个核实与本机之外副本同一提交）。**macmini 上的同名目录与 4 个 Mark 常驻会话（`Mark` / `Mark-Intraday` / `Mark-Swing` / `Mark-gridtrader`，`duty.conf` 未改）暂时保留、不再权威**——用户 2026-10-26 明确选择「两边都不动、只改本机口径」。
 
 - **2026-10-28 起两机已建立全量双向镜像**（`~/Developer` + `~/.pi/agent` 逐字节同步，见 `docs/macmini-mirror.md`）：macmini 上的改动**会同步回流本机**，原「不会回流本机」的说法失效。为避免 `.git` 冲突，**同一个仓库同一时间只在一台机器上做 git 写操作**；macmini 的 GitHub 访问已于 2026-11-05 恢复，提交 / 发版仍建议统一在本机做。非「必须用 macmini 环境（32GB / x64）」的任务，仍建议在本机会话里做。
 - macmini 仍作远程算力 / 环境使用（值班会话 `macmini`），只是不再承载 Mark 的身份与项目。
 
-| Agent 项目（拟人名） | 子项目（仓库） | 说明 |
+| Agent 项目 | 子项目（仓库） | 说明 |
 |---|---|---|
 | BackendEngineerAgent（Anvil） | CC-BRIDGE | Claude Code 上游桥接框架（Node.js） |
 | FullStackEngineerAgent（Atlas） | ghostty-launcher | VSCode 状态栏一键唤起外部 Ghostty 终端的扩展（在跑激活已有窗口 / 未跑带工作区目录启动，零依赖、仅 macOS） |
@@ -84,31 +97,31 @@
 | FullStackEngineerAgent（Atlas） | cmux | cmux 终端（基于 Ghostty 内核的 macOS 终端，面向 AI coding agents）的**自建分叉仓库**（`github.com/xhqing/cmux`，fork 自 manaflow-ai/cmux，2026-10-31 建立、由 Atlas 负责）：不等上游把关闭确认类改动合并，按我们自己的偏好改（关闭带运行进程的工作区 / 标签页不再强制确认），以「上游 release tag 为基线 + 最小补丁」的方式持续同步上游 |
 | FullStackEngineerAgent（Atlas） | turn-diff | 看「这一轮 AI 改了什么」的 pi 扩展 + 命令行：每轮记 git 基线、轮次结束算增量并落盘，`/turn-diff` 与 `turn-diff` 随时读（项目 `~/Developer/turn-diff`；2026-11-07 由 diff-view 更名并把范围收敛为「只做本轮 diff」，cmux 面板能力已移除） |
 | FullStackEngineerAgent（Atlas） | mp4-player | VSCode 视频播放扩展（上游 Brodazz/mp4-player 的独立仓库：编辑器标签页内带音频播放视频，内置 ffmpeg WebAssembly 做音频解码与格式转码；2026-10-09 移交 Atlas，开发目录 ~/Developer/mp4-player） |
-| ExecutiveAssistantAgent（Kit） | xhqing | 用户 GitHub 个人主页仓库 |
-| ExecutiveAssistantAgent（Kit） | vscode-copy-anywhere | 让 VSCode 资源管理器里复制的文件能粘到任意 App 的 macOS 后台小工具（Finder / 微信 / 浏览器上传框等；后台把 VSCode 私有剪贴板格式转成系统格式；2026-10-08 建立、2026-10-09 登记；2026-10-30 由 `copybridge` 改名为现名——原名看不出用途） |
-| ExecutiveAssistantAgent（Kit） | ark-key-pool | pi 的火山方舟 Agent Plan 多 Key 自动切换扩展（不同账号的 Key 组成池，额度耗尽 / Key 失效自动切下一个，冷却跨进程共享；项目 `~/Developer/ark-key-pool`，2026-10-22 建立；已开源 github.com/xhqing/ark-key-pool（2026-10-22，v0.1.0）） |
-| ExecutiveAssistantAgent（Kit） | macmini-tmux | 在 Mac mini 上方便使用 tmux 的 CLI 封装（`macmini tmux` 不带参数时每次新开会话、名字自动递增 `session#N`；`-s` 按名字接上 / 新建、`-a` 接回最近会话、`-l` 列表；另可透传任意命令到 macmini；项目 `~/Developer/macmini-tmux`，2026-10-29 建立；已开源 github.com/xhqing/macmini-tmux（2026-10-29，v0.1.0）） |
-| ExecutiveAssistantAgent（Kit） | TeamToolkit | 全团队通用能力底座的开源镜像（原 CapabilityManagerAgent，2026-11-05 更名并降级为普通项目；仓库内 `pi/agent/` 逐字节镜像全局 `~/.pi/agent/`；发布改为 macmini 单 pusher，见 `docs/capability-sync.md`） |
-| ExecutiveAssistantAgent（Kit） | dotfiles | 按 App 分类的个人配置文件仓库（项目 `~/Developer/dotfiles`，2026-10-31 建立，远程 `github.com/xhqing/dotfiles`；2026-11-02 按「团队项目一律 public」改公开并锁 main）：配置文件在仓库里只存一份，安装时软链到系统位置，新机器 clone + `./install.sh` 一键恢复；目前收录 ghostty / cmux 两个 App，**`ghostty/config` 被 Ghostty 与 cmux 共用**（cmux 基于 libghostty 读同一份配置），共用关系在仓库根 README 的「共用配置文件」表与各 App 目录 README 里注明 |
+| assistant-agent（Kit） | xhqing | 用户 GitHub 个人主页仓库 |
+| assistant-agent（Kit） | vscode-copy-anywhere | 让 VSCode 资源管理器里复制的文件能粘到任意 App 的 macOS 后台小工具（Finder / 微信 / 浏览器上传框等；后台把 VSCode 私有剪贴板格式转成系统格式；2026-10-08 建立、2026-10-09 登记；2026-10-30 由 `copybridge` 改名为现名——原名看不出用途） |
+| assistant-agent（Kit） | ark-key-pool | pi 的火山方舟 Agent Plan 多 Key 自动切换扩展（不同账号的 Key 组成池，额度耗尽 / Key 失效自动切下一个，冷却跨进程共享；项目 `~/Developer/ark-key-pool`，2026-10-22 建立；已开源 github.com/xhqing/ark-key-pool（2026-10-22，v0.1.0）） |
+| assistant-agent（Kit） | macmini-tmux | 在 Mac mini 上方便使用 tmux 的 CLI 封装（`macmini tmux` 不带参数时每次新开会话、名字自动递增 `session#N`；`-s` 按名字接上 / 新建、`-a` 接回最近会话、`-l` 列表；另可透传任意命令到 macmini；项目 `~/Developer/macmini-tmux`，2026-10-29 建立；已开源 github.com/xhqing/macmini-tmux（2026-10-29，v0.1.0）） |
+| assistant-agent（Kit） | TeamToolkit | 全团队通用能力底座的开源镜像（原 CapabilityManagerAgent，2026-11-05 更名并降级为普通项目；仓库内 `pi/agent/` 逐字节镜像全局 `~/.pi/agent/`；发布改为 macmini 单 pusher，见 `docs/capability-sync.md`） |
+| assistant-agent（Kit） | dotfiles | 按 App 分类的个人配置文件仓库（项目 `~/Developer/dotfiles`，2026-10-31 建立，远程 `github.com/xhqing/dotfiles`；2026-11-02 按「团队项目一律 public」改公开并锁 main）：配置文件在仓库里只存一份，安装时软链到系统位置，新机器 clone + `./install.sh` 一键恢复；目前收录 ghostty / cmux 两个 App，**`ghostty/config` 被 Ghostty 与 cmux 共用**（cmux 基于 libghostty 读同一份配置），共用关系在仓库根 README 的「共用配置文件」表与各 App 目录 README 里注明 |
 | FullStackEngineerAgent（Atlas） | XPilot | Xray-core 节点管理 CLI（Python）：代理节点真实流量测速与连通性检测 → 自动选路（纯延迟 / 纯带宽 / 混合）→ 故障转移 → 订阅刷新（2026-10-26 由 NetOpsAgent / Hermes 移交 Atlas，原负责 Agent 已注销） |
 | NeuralCoreAgent（Ada） | AgentCortex | 深度推理引擎规则集（三套推理引擎：Infinite / Rapid / Incisive） |
 | NeuralCoreAgent（Ada） | ToolCallingRules | LLM 工具调用规则集（2026-11-02 按「团队项目一律 public」由私有改公开并锁 main；22 条规则 / 7 类，注入 system prompt 以减少 function calling 的参数格式错误与不安全重试、提升调用准确率；PolyForm-Noncommercial；2026-10-31 用户决定由 Ada 接手负责，此前是未登记的历史独立项目） |
-| DayTradingAgent（Victor） | TradingProofs | 交易数学的 Lean 4 + Mathlib 机器可验证证明（从固定比例下注的累计收益率推导开始，覆盖强数定律指数增长率 / 凯利最优 f\* /「两倍凯利」边界；与实盘执行完全隔离，2026-10-11 立项） |
+| trading-agent（Victor） | TradingProofs | 交易数学的 Lean 4 + Mathlib 机器可验证证明（从固定比例下注的累计收益率推导开始，覆盖强数定律指数增长率 / 凯利最优 f\* /「两倍凯利」边界；与实盘执行完全隔离，2026-10-11 立项） |
 
-> **Mark（QuantStrategistAgent）名下已无子项目仓库（2026-11-08）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）。
+> **Mark（quant-agent）名下已无子项目仓库（2026-11-08）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）。
 
 - **已注销 / 已退役的 Agent**：**Hermes**（NetOpsAgent，2026-10-26 用户决定）——原网络运维管理员，唯一子项目 XPilot 已移交 Atlas（FullStackEngineerAgent），项目本体退役、不再作为活跃 Agent 维护（GitHub 仓库 `xhqing/NetOpsAgent` 保留为存档；本地目录已于 2026-10-31 按用户要求删除）。
 - **已除名的 Agent（2026-10-31 用户决定，第二批）**：**Tinker**（PatchClaudeAgent，补丁维护匠）——用户要求「Tinker 这个 Agent 也除名，不需要了」；原职责是把自定义补丁重新应用到升级后的 VSCode Claude Code 扩展（自愈引擎），本次未指定接替者；项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/PatchClaudeAgent` 不再存在），GitHub 仓库 `xhqing/PatchClaudeAgent` 保留最新版为唯一源。
-- **已除名的 Agent（2026-11-05 用户决定）**：**Prometheus**（CapabilityManagerAgent，通用能力管家）——项目**降级为普通项目并更名 TeamToolkit**，归 **Kit**（ExecutiveAssistantAgent）负责；不再作为 Agent 维护（公告 / 维护逻辑改为 macmini 单向发布脚本，见 `docs/capability-sync.md`）。GitHub 仓库已由 `xhqing/CapabilityManagerAgent` 改名为 `xhqing/TeamToolkit`（旧 URL 自动重定向）。
-- **已除名的 Agent（2026-10-31 用户决定）**：**Alfred**（DeviceStewardAgent，电脑管家）——用户要求「可以从名册中除名了，以后他的工作由 Kit 处理」；职责已并入 **Kit**（ExecutiveAssistantAgent），项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/DeviceStewardAgent` 不再存在），GitHub 仓库 `xhqing/DeviceStewardAgent` 保留最新版为唯一源；原有子项目 ResourceMonitor 早已退役。
-- **已移出名册的子项目（2026-11-02 用户决定）**：**xhs-mentor-scam**（原属 Gatsby / SocialMediaManagerAgent）——仓库含第三方个人信息（合同、私信截图、真实姓名、举报材料），按 2026-11-02 立的「团队项目必须 public、私有仓库不得入队」规则不能留在团队；保持 private 作为用户个人项目，`autosave.sh` 自动备份照常。GitHub 仓库 `xhqing/xhs-mentor-scam` 与本地目录 `~/Developer/xhs-mentor-scam` 均保留。要恢复为团队项目，须先拆分 / 脱敏敏感材料并转为 public。
+- **已除名的 Agent（2026-11-05 用户决定）**：**Prometheus**（CapabilityManagerAgent，通用能力管家）——项目**降级为普通项目并更名 TeamToolkit**，归 **Kit**（assistant）负责；不再作为 Agent 维护（公告 / 维护逻辑改为 macmini 单向发布脚本，见 `docs/capability-sync.md`）。GitHub 仓库已由 `xhqing/CapabilityManagerAgent` 改名为 `xhqing/TeamToolkit`（旧 URL 自动重定向）。
+- **已除名的 Agent（2026-10-31 用户决定）**：**Alfred**（DeviceStewardAgent，电脑管家）——用户要求「可以从名册中除名了，以后他的工作由 Kit 处理」；职责已并入 **Kit**（assistant），项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/DeviceStewardAgent` 不再存在），GitHub 仓库 `xhqing/DeviceStewardAgent` 保留最新版为唯一源；原有子项目 ResourceMonitor 早已退役。
+- **已移出名册的子项目（2026-11-02 用户决定）**：**xhs-mentor-scam**（原属 Gatsby / social-agent）——仓库含第三方个人信息（合同、私信截图、真实姓名、举报材料），按 2026-11-02 立的「团队项目必须 public、私有仓库不得入队」规则不能留在团队；保持 private 作为用户个人项目，`autosave.sh` 自动备份照常。GitHub 仓库 `xhqing/xhs-mentor-scam` 与本地目录 `~/Developer/xhs-mentor-scam` 均保留。要恢复为团队项目，须先拆分 / 脱敏敏感材料并转为 public。
 - **已移出名册的子项目（2026-10-31 用户决定）**：**NewsScoreStudy**（Mark 负责的面试实操题研究仓库，私有远程 `github.com/xhqing/NewsScoreStudy` 保留；本地目录已于 2026-10-31 按用户要求删除）——用户要求「先从名册中移除」；因名册与子项目映射表必须内容一致，本表同步删除其登记（原属 Mark，2026-10-26 由 Victor 移交）。要恢复时在这两处同时加回并同步名册。
 - **除名 agent 的本地副本处理口径（2026-10-31 用户立）**：除名的 agent 项目**本地目录一律删除、不在本地保留备份**——只要 GitHub 仓库是最新版即可（删除前先确认工作区干净、与 `origin/main` 同步，避免丢本地改动）。需要查阅时从 GitHub 取。
 - **已取消 / 已退役的子项目（不再维护）**：GitComic、agent-team-playbook-src（Wright）；zcode-cli、zcode-vsce、cmux-launcher（Atlas）；channels-watch（Atlas，2026-10-17 退役）；ResourceMonitor（Alfred）；CyberRipple、blog（Kit）——本地项目资料删除，GitHub 远端仓库保留为存档（CyberRipple 原未建远端仓库，其组织总览内容已并入 `xhqing` 主页 README）。
 
 **名册同步（2026-10-26 用户立，硬性规定 + 工具强制）**：本文件任何改动——新增 / 删除 Agent 项目、子项目新增 / 删除 / 归属变更、Agent 迁机（宿主机归属变化）——必须**在同一批改动里**同步更新 `xhqing` 仓库（`~/Developer/xhqing`）README 的名册表格，也就是「Subprojects (🌐 public · 🔒 private)」那张表（**英文 `README.md` 与中文 `README_cn.md` 两份都要改**，双语文档同步）。不是「下次顺手改」，而是和 registry 改动一起做完。
 
-- **谁做**：名册归 Kit（ExecutiveAssistantAgent）负责，但**改动 registry 的那个会话有责任同批补齐**（或当场交给 Kit 处理），不得留到下一次。
+- **谁做**：名册归 Kit（assistant）负责，但**改动 registry 的那个会话有责任同批补齐**（或当场交给 Kit 处理），不得留到下一次。
 - **名册实时同步、不再逐次询问（2026-10-31 用户立，修订）**：名册就是本文件两张表的公开镜像——registry 改了什么，名册就同批改成什么，**不用问用户、不用等确认**。描述语由 Kit 按仓库实际情况直接撰写：一句话说清「它是什么 / 解决什么问题」，不夸大、不写与仓库无关的内容、不泄露个人信息与凭证。
   - **例外**：用户对**某个具体仓库**有过专项指示的，从其指示。**目前没有例外**——`NewsScoreStudy` 已于 2026-10-31 按用户要求从名册与子项目映射表中同时移除（见下方「已移出名册的子项目」），因此不再需要 allowlist 豁免。
   - **修订说明**：本条取代 2026-10-26 的两条旧规矩——①「描述语要先问用户」；②「私有仓库默认放空不写」。用户原话（2026-10-31）：「xhqing公开名册必须实时同步全局注册表，这个不用问，下次自动同步。」所以**私有仓库现在也照常列名册**，不再默认豁免。

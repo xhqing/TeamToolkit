@@ -8,8 +8,8 @@
 - **翻译场景的译法**：从其它语言**译入中文**（「中文」默认即指标准普通话和简体中文文字）时，必须采用**非直译的意译**——按中国人的阅读习惯和文化背景重新组织句子，不逐词逐句硬译，消除翻译腔；**译入英文**时，默认使用**标准且地道的美式英语**表达，同样不逐字硬译。用户明确指定其它目标变体或译法（如英式英语、明确要求直译）时，从其指定。
 - 回复**排版工整**：标题层级清晰，列表规整，段落之间空行分隔，代码块与表格格式正确，便于阅读。
 - 标点符号一律使用**简体中文标点**：逗号用「，」、句号用「。」、冒号用「：」、顿号用「、」、问号用「？」、感叹号用「！」，不要用英文标点（如 `,` `.` `:` `?` `!`）。中英文混排时，英文单词或数字与中文之间可留一个空格，但中文语句内部一律用中文标点。
-- **币种符号：美元一律写 `US$` 或 `USD`，港币一律写 `HK$` 或 `HKD`，禁止用裸 `$`（2026-11-04 用户立）**：裸 `$` 既没表明是哪种货币、又容易被误读成港币，凡涉及金额就写完整符号——`US$1,234.56` / `USD 1,234.56` / `HK$9,876.54` / `HKD 9,876.54`。**适用范围**：所有对话回复、所有落盘文件（文档 / 复盘 / CHANGELOG / TODO / 脚本输出与注释）、所有金额与费率数字。**边界**：① 用户原文引用、外部原文（网页 / 报告 / 新闻 / 第三方文档）里的 `$` 不改，那是别人写的；② 代码里作为字符串内容的 `$`（shell 变量、正则、模板语法）不受限，本条管的是「展示给人看的金额」；③ 纯数学式子里的货币无关符号照旧。**工具强制**：脚本输出侧——`DayTradingAgent` 的停盯总结 `CUR` 已改成 `US$`（金额前缀由常量统一控制，禁止在脚本里裸写 `$` 拼金额）。
-- **缩写约定**：用户输入「**CC**」即指 Claude Code，输入「**VSC**」即指 VSCode，输入「**VSCE**」即指 VSCode 扩展，输入「**CB**」即指 CodeBuddy，输入「**GH**」即指 GitHub，输入「**DSH**」即指 DeepSeek Harness（DeepSeek 开源的 agent harness，npm 包 `@deepseek-ai/dsh`），输入「**QSAgent**」即指 QuantStrategistAgent（Mark 的量化策略项目体系：主仓库 QuantStrategistAgent + 子项目 Intraday、Swing、gridtrader，仓库结构详见子项目映射表），输入「**DTAgent**」即指 DayTradingAgent（Victor 的日内交易盯盘项目）。缩写**大小写不敏感**——大小写同义（如「cc 会话」= Claude Code 会话）。遇到这些缩写直接按此解读，无需确认；若某缩写在上下文中明显指别的含义（如命令位置的 `gh` 指 GitHub CLI、编译器语境的 `cc` 指 C 编译器），按上下文实际含义辨别。
+- **币种符号：美元一律写 `US$` 或 `USD`，港币一律写 `HK$` 或 `HKD`，禁止用裸 `$`（2026-11-04 用户立）**：裸 `$` 既没表明是哪种货币、又容易被误读成港币，凡涉及金额就写完整符号——`US$1,234.56` / `USD 1,234.56` / `HK$9,876.54` / `HKD 9,876.54`。**适用范围**：所有对话回复、所有落盘文件（文档 / 复盘 / CHANGELOG / TODO / 脚本输出与注释）、所有金额与费率数字。**边界**：① 用户原文引用、外部原文（网页 / 报告 / 新闻 / 第三方文档）里的 `$` 不改，那是别人写的；② 代码里作为字符串内容的 `$`（shell 变量、正则、模板语法）不受限，本条管的是「展示给人看的金额」；③ 纯数学式子里的货币无关符号照旧。**工具强制**：脚本输出侧——`trading-agent` 的停盯总结 `CUR` 已改成 `US$`（金额前缀由常量统一控制，禁止在脚本里裸写 `$` 拼金额）。
+- **缩写约定**：用户输入「**CC**」即指 Claude Code，输入「**VSC**」即指 VSCode，输入「**VSCE**」即指 VSCode 扩展，输入「**CB**」即指 CodeBuddy，输入「**GH**」即指 GitHub，输入「**DSH**」即指 DeepSeek Harness（DeepSeek 开源的 agent harness，npm 包 `@deepseek-ai/dsh`），输入「**QSAgent**」即指 quant-agent（Mark 的量化策略项目体系：主仓库 quant-agent + 子项目 Intraday、Swing、gridtrader，仓库结构详见子项目映射表），输入「**DTAgent**」即指 trading-agent（Victor 的日内交易盯盘项目）。缩写**大小写不敏感**——大小写同义（如「cc 会话」= Claude Code 会话）。遇到这些缩写直接按此解读，无需确认；若某缩写在上下文中明显指别的含义（如命令位置的 `gh` 指 GitHub CLI、编译器语境的 `cc` 指 C 编译器），按上下文实际含义辨别。
 
 ## 输出风格
 
@@ -259,7 +259,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目 TeamToolkit，归 Kit）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，TeamToolkit 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
 
-- **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（以 `Agent` 结尾、前缀尽可能简单）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
+- **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（**Agent 项目一律 `<职责>-agent` 全小写、连字符**，Non-agent 项目按「尽可能简单、体现职责」；项目是不是 Agent 项目看 README 的 `Type` 徽章是否为 `AI Agent`）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
 - **跨 agent 移交 / 推荐子任务**：读 `~/.pi/agent/docs/agents-registry.md`（注册表：名称、项目、职责、销售流水线、三小组分组）。
 - **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 TeamToolkit 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。全局 `~/.pi/agent/` 是唯一权威源；**TeamToolkit**（原 CapabilityManagerAgent，2026-11-05 更名、降级为 Kit 名下的普通项目）是通用能力开源的**单一出口**，其 `pi/agent/` 逐字节镜像全局。**发布改为单 pusher**：只在 macmini 上单向生成镜像并推送（两台机器同时 PR 会造出重复提交），脚本 `patch/team-toolkit-publish/publish.py`；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 TeamToolkit 的 CHANGELOG。
 - **智能体专属文件：Agent 项目与子项目完全独立（2026-11-08 用户立，取代 2026-10-30「身份层软链接 + 能力层路径引用」）**：`AGENTS.md`、`AGENTS.override.md`、项目级 `.pi/` 这类「按工作目录加载、表征智能体身份」的文件，**每个项目只放本项目真实需要的内容**——Agent 项目放 Agent 自己的规则与工具，子项目放子项目自己的规则与工具，**两边之间不留链接、不留路径引用**。
@@ -493,12 +493,12 @@ ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom list'
 - **注意**：值班会话的 cwd 是 macmini 的 `~`（无项目上下文）；在 macmini 上产出的文件留在 macmini（本机如需取回需显式回传，如 `scp mac-mini:<路径> <本机路径>`）。
 - **同步范围（2026-11-05 架构改造：代码走 GitHub，只有两个目录用 Syncthing）**：`~/Developer` **不再同步**——每台机器各自 `clone`、各自开 worktree，靠 GitHub（push → PR → CI → merge → 本地 main 快进）交换代码；Syncthing 只同步两个目录：`~/.dev/private`（各项目私有内容**本体**，项目里放同名软链接，见「私有内容目录」节）与 `~/.pi/agent`（全局能力层）。macmini 为此恢复 GitHub 访问（用**独立凭证**，不与本机共用）。开工前先让 local main 与 `origin/main` 对齐、任务结束走完整提交 / PR / 合并链路，细节见 `docs/macmini-mirror.md` 与 commit / bump / release skill。
 - **macmini 的 git 权限（2026-11-05 起：从「严格只读」改为「正常读写」）**：旧的「严格 git 只读」（`extensions/git-readonly-guard.ts` + macmini 的 `core.hooksPath` 只读钩子）**前提已消失**——它当初是为了防「`.git` 被双向同步、两台机器同时写而互相损坏」；项目目录不再同步后，每台机器的 `.git` 各自独立。**已撤除（2026-11-05）**：`~/Developer` 共享关闭、macmini 的 38 个仓库已原地转正（`fetch` + `reset --hard origin/main`，不改目录、不重下依赖）之后，删掉了 `extensions/git-readonly-guard.ts` 并清掉 macmini 的 `core.hooksPath` 只读 hook。macmini 现在可以正常 `fetch` / 提交 / 推送，但**同样受 remote main 锁定约束**（改动走分支 + PR + CI）。**仍然生效**：remote main 锁定（`git-main-guard.ts`，两机一致）、一个分支只做一件事、改动走 PR + CI。
-- **已迁回的 Agent（2026-10-26 用户决定：Mark 全体系拷回本机，本机为权威源）**：**Mark**（QuantStrategistAgent 及子项目 Intraday / Swing / gridtrader，另有同日移交的 NewsScoreStudy）原于 2026-10-17 整体迁至 macmini；**2026-10-26 已由用户拷回本机**——`~/Developer/` 下的目录即权威源。macmini 上的同名目录与 4 个 Mark 常驻会话**保留但不再权威**（用户当日明确选择「两边都不动、只改本机口径」，属对单宿主规则的已知例外）；5 个会话仍列在 `duty.conf` 里（值班会话每 6h 重启、Mark 系不重启），但**非必须用 macmini 环境的任务一律不在那边做**：
+- **已迁回的 Agent（2026-10-26 用户决定：Mark 全体系拷回本机，本机为权威源）**：**Mark**（quant-agent 及子项目 Intraday / Swing / gridtrader，另有同日移交的 NewsScoreStudy）原于 2026-10-17 整体迁至 macmini；**2026-10-26 已由用户拷回本机**——`~/Developer/` 下的目录即权威源。macmini 上的同名目录与 4 个 Mark 常驻会话**保留但不再权威**（用户当日明确选择「两边都不动、只改本机口径」，属对单宿主规则的已知例外）；5 个会话仍列在 `duty.conf` 里（值班会话每 6h 重启、Mark 系不重启），但**非必须用 macmini 环境的任务一律不在那边做**：
 
 | 呼叫名（intercom） | 进驻项目（cwd） | 现行口径 |
 |---|---|---|
 | `macmini` | 值班会话（`~`，通用任务） | 正常使用（远程算力 / 环境） |
-| `Mark` | 主项目 QuantStrategistAgent | 保留但不权威；优先在本机会话做 |
+| `Mark` | 主项目 quant-agent | 保留但不权威；优先在本机会话做 |
 | `Mark-Intraday` | 子项目 Intraday | 同上 |
 | `Mark-Swing` | 子项目 Swing | 同上 |
 | `Mark-gridtrader` | 子项目 gridtrader | 同上 |

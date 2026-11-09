@@ -125,7 +125,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
    - **LOGO**：`README.md` 无图片引用或图片不存在 → 按 LOGO 生成规则创建 `assets/logo.svg`，并在两版顶部插入 `<div align="center"><img ...></div>`（已有居中 div 则在其中插入）。
    - **徽章**：`README.md` 无 `img.shields.io` → 在 LOGO 下方插入徽章行并同步两版。
    - **版权与署名**：两版底部缺「版权与许可证说明 + 署名方式 + 项目地址引用方式」→ 追加完整段（英文版 `## License & Attribution`，中文版 `## 版权与署名`）：① 版权 `Copyright (c) <年份> xhqing and contributors` + 许可证（链 `LICENSE.md`）；② 署名方式（致谢 + 保留版权声明 + 注明来源）；③ 项目地址引用（`origin` 的 GitHub URL，无 remote 则用 `https://github.com/<git user>/<目录名>`）。**版权人统一为 `xhqing and contributors` 格式；历史写法 `All Contributors` 由 9g 改为新格式，本步不重复扫描。**
-   - **项目类型推断**（定 Type 徽章 + LOGO 配色/emoji）：`package.json` 有 `engines.vscode` → VSCode Extension（`Type-VSCode%20Extension-0078D4`，蓝）；目录名以 `Agent` 结尾或 README/AGENTS.md 自述为 agent → AI Agent（`Type-AI%20Agent-FF1493`，按角色）；`package.json` 有 `main`/`exports` 且无上述特征 → Library（`Type-Library-9CF`，青）；否则 → Project（`Type-Project-lightgrey`，紫）。
+   - **项目类型推断**（定 Type 徽章 + LOGO 配色/emoji）：`package.json` 有 `engines.vscode` → VSCode Extension（`Type-VSCode%20Extension-0078D4`，蓝）；**项目自述为 agent（`AGENTS.md` 写明人格 / 职责，或 README 已挂 `Type-AI Agent` 徽章）→ AI Agent（`Type-AI%20Agent-FF1493`，按角色）**——**2026-11-09 用户立：性质看 `AGENTS.md` 自述 / README 徽章，不靠名字后缀推断；Agent 项目名一律 `<职责>-agent`（全小写）**；`package.json` 有 `main`/`exports` 且无上述特征 → Library（`Type-Library-9CF`，青）；否则 → Project（`Type-Project-lightgrey`，紫）。
    - **LOGO 生成**（`assets/logo.svg`）：640×200、圆角 `rx=28`、线性渐变、左侧大 emoji（按主题选，无把握用 `⚙️`）+ 项目名 + 副标题（`<类型> · <一句话描述>`）；结构对齐 DigiVendAgent logo.svg 模板。
    - **徽章组合**（标准三枚，固定为 **License / Version / Type**，不按 remote 区分数量、不依赖 remote）：① **License**——从 `LICENSE.md`/`package.json.license` 推断（MIT→`License-MIT-yellow`、Apache-2.0→`License-Apache_2.0-blue`、GPL-3.0→`License-GPL_v3-blue`，无则跳过本枚）；② **Version**——版本号取 `VERSION` 文件（VERSION 尚不存在时，按 9m「版本号取值顺序」兜底：`package.json` 顶层 `version` → 主 manifest 版本字段 → 已有 `CHANGELOG.md` 顶部最新实际版本标题 → `1.0.0`），徽章 URL 形如 `https://img.shields.io/badge/Version-<v>x.x.x-blue`（`<v>` 为可选前缀，版本号纯数字如 `1.2.3`）；③ **Type**——由上方「项目类型推断」定。三枚统一用静态 `badge` 端点（`img.shields.io/badge/...`），**不使用** `github/stars/`、`github/forks/`、`github/last-commit/` 等 GitHub 动态数值 / 时间徽章——这些随仓库变动的徽章不展示在 README，已存在的由第 9l 步负责清理。Version 徽章里的版本号后续由 9j（版本滞后 bump）/ 9k（版本号一致性同步）随 VERSION 一起更新。
    - **访问量徽章已取消（2026-11-04 用户决定，取代 2026-08-16 的 Visitors 例外）**：团队仓库 README 里那枚指向 `xhqing/xhqing` 的 `traffic/badges/<repo>.json` 的 shields.io endpoint 访问量徽章**不再使用，9a 不补挂**。用户 2026-11-04 停用了集中式流量采集，采集工作流、脚本、`traffic/` 数据目录与全部 24 个仓库的徽章同批删除；数据源没了之后徽章只会显示冻结的旧值、文案却仍写「Visits/day (14d)」，属于展示不实数据。**存量里发现这枚徽章的由 9l 删除整行**（详见 9l）。标准徽章仍固定 License / Version / Type 三枚。
@@ -147,12 +147,12 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
      - topics 推断：VSCode 扩展 → `vscode`/`vscode-extension`；性能监控 → `performance`/`monitoring`；macOS 依赖 → `macos`；TypeScript → `typescript`；Claude Code 构建 → `claude-code`；Agent → `ai-agent`。按实际命中选取，不强加。
    - 补全（或检测发现已配）后 → 写 `<!-- commit-skill: github-about = ok -->` + 日期行。
 
-   **9d. Agent 名称**（标记 `agent-persona`）：项目目录名以 `Agent` 结尾时，必须有一个**名称**并写进 README（项目核心内容为代表 Agent 能力的 skills / rules / memory / mcp 等，名字即 Agent 的身份）。历史惯例是**蕴含主要能力含义的拟人名**（如 Tinker / Hopper）；**2026-10-09 修订后，新建 agent 用简洁名**——以 `Agent` 结尾的目录名本身（前缀尽可能简单，如 `cuAgent`）即为名称。
-   - **触发**：目录名以 `Agent` 结尾。不以 `Agent` 结尾 → 跳过本项、不记录。
+   **9d. Agent 名称**（标记 `agent-persona`）：**项目是 Agent 项目时**（判据：`README.md` 的 `Type` 徽章是 `AI Agent`，或 `AGENTS.md` 自述为 agent），必须有一个**名称**并写进 README（项目核心内容为代表 Agent 能力的 skills / rules / memory / mcp 等，名字即 Agent 的身份）。历史惯例是**蕴含主要能力含义的拟人名**（如 Tinker / Hopper）；项目名与名称是两回事，**Agent 项目名一律 `<职责>-agent`（全小写、连字符、前缀简洁，2026-11-09 用户立）**。
+   - **触发**：`README.md` 有 `Type-AI Agent` 徽章或 `AGENTS.md` 自述为 agent。都不是 → 跳过本项、不记录。
    - **检测已有**：① 查全局 `~/.pi/agent/docs/agents-registry.md` 的「智能体命名注册表」，该仓库已在表中 → 名字即定，README 引用之；② 否则看 README（中英任一）是否已有 persona 说明块（如 `> **<Name>** — <一句话能力说明>` 形式）。两者皆无 → 视为缺名。
    - **缺名则定名**：
      - **查重**：新名不得与注册表已有名称（拟人名与项目名都查）重复，首字母尽量错开以利辨识；
-     - **定名**：**优先用简洁名**——以 `Agent` 结尾的目录名本身即名称（前缀尽可能简单，如 `cuAgent`，2026-10-09 修订）；用户要求起拟人名时按历史惯例（蕴含主要能力含义、双关优先，如 Tinker「修补匠」、Wright「制造匠」）；
+     - **定名**：**优先用简洁名**——项目名本身（前缀尽可能简单、能体现主要职责，如 `assistant`、`cuAgent`）即名称；用户要求起拟人名时按历史惯例（蕴含主要能力含义、双关优先，如 Tinker「修补匠」、Wright「制造匠」）；
      - **写入**：在两版 README 标题正下方加 persona 说明块（emoji + **名字** + 一句话能力说明），中英一致；
      - 定名后**把新名称追加进全局 `~/.pi/agent/docs/agents-registry.md` 的「智能体命名注册表」**（新起一行 `| **<名称>** | <仓库目录名> | <职称> | <主要职责> |`，不改已有行；若该 agent 不属销售流水线，在同文件「销售流水线与三小组」段补注其独立）；
    - 已有名字（注册表命中或 README persona 块已存在）或新起并写入后 → 写 `<!-- commit-skill: agent-persona = ok -->` + 日期行（注明名字）。
@@ -354,7 +354,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
 - `readme-standard` 标记：第 9a 步检测到 README 中英双语（`README.md` 以美式英文为主、`README_cn.md` 以简体中文为主） + LOGO + 徽章 + 版权署名段全齐时写入。
 - `license` 标记：第 9b 步检测到 `LICENSE.md` 存在（且无冗余）时写入。
 - `github-about` 标记：第 9c 步补全 About（或检测发现已配）后写入。
-- `agent-persona` 标记：第 9d 步检测到 README 已有名称（拟人名 / 简洁名，或新起并写入）后写入；仅以 `Agent` 结尾的项目适用。
+- `agent-persona` 标记：第 9d 步检测到 README 已有名称（拟人名 / 简洁名，或新起并写入）后写入；仅 `README.md` 带 `Type-AI Agent` 徽章（或 `AGENTS.md` 自述为 agent）的项目适用。
 - `automemory` 标记：**永久不写入**——9e 已随全局 AutoMemory 禁用而永久跳过（详见第 9e 步），缓存段不再出现该标记。
 - `attribution-name` 标记：第 9g 步检测到 README（中英两版）与 LICENSE.md 的版权人/署名引用名字均已统一为 `xhqing and contributors` 格式（或无可改位置）后写入。
 - `readme-link-text` 标记：第 9h 步检测到英文版 `README.md` 里指向 `README_cn.md` 的跳转链接文字已是「简体中文」（或英文版暂无该链接、留待 9a 补）后写入。
