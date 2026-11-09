@@ -243,12 +243,15 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
    - 两者均存在 → 无事可做。
    - 新建 / 确认存在后 → 写 `<!-- commit-skill: changelog-version = ok -->` + 日期行。
 
-   **9n. CONTRIBUTING 文件**（标记 `contributing`）：每个项目必须有 `CONTRIBUTING.md`（英文）与 `CONTRIBUTING_cn.md`（中文），写清两件事——① 贡献者的版权归贡献者本人（提交 PR 不构成著作权转让）；② 提交 PR 即视为按项目许可证（软件 MIT / 非软件 CC BY 4.0）授权本项目使用、修改、再分发其贡献。口径见全局 `~/.pi/agent/AGENTS.md`「贡献者版权与许可」节（2026-11-09 用户立）。
+   **9n. CONTRIBUTING 文件**（标记 `contributing`）：每个项目必须有 `CONTRIBUTING.md`（英文）与 `CONTRIBUTING_cn.md`（中文），写清两件事——① 贡献者的版权归贡献者本人（提交 PR 不构成著作权转让）；② 提交 PR 即视为按项目许可证授权本项目使用、修改、再分发其贡献。口径见全局 `~/.pi/agent/AGENTS.md`「贡献者版权与许可」节（2026-11-09 用户立）。
    - **触发**：所有项目（与 9a/9b 一致）。`xhqing` Profile 仓库随第 9 步开头例外整个跳过。
-   - **检测**：两个文件是否都存在、是否都含上述两个关键要素。
-     - **缺任一文件** → 从 `~/.pi/agent/patch/contributing-template/` 拷对应文件过去。**不要重新编写**——模板里「著作权转让须订立书面合同，而提交 PR 不构成合同」这类措辞是刻意逐字写死的，自由发挥容易把法律含义写歪。
-     - **文件存在但缺关键要素** → 按模板补齐缺的那段，不覆盖用户自己加的内容。
-   - 两文件齐备且含两个关键要素 → 写 `<!-- commit-skill: contributing = ok -->` + 日期行。
+   - **⚠️ 第一步永远是「读 `LICENSE.md` 判定项目实际许可证」，不是假设 MIT**（2026-11-09 用户立，起因：一个批量脚本硬编码 MIT，把 `cmux` 的 GPL-3.0-or-later 和 `ToolCallingRules` 的 PolyForm Noncommercial 都写成了 MIT——前者误导贡献者以为可商用，后者与项目「禁止商用」直接矛盾）。按 `~/.pi/agent/patch/contributing-template/README.md` 的映射表确定许可证名称；**认不出的许可证 → 暂停问用户，不得猜**。
+   - **检测**：两个文件是否都存在、是否含上述两个关键要素、是否还有未替换的 `{{LICENSE_NAME}}`、声明的许可证是否与 `LICENSE.md` 一致。
+     - **缺任一文件** → 从 `~/.pi/agent/patch/contributing-template/` 拷对应文件，**并把 `{{LICENSE_NAME}}` 替换成上一步判定出的实际许可证名称**（不替换就是错的）。**不要重新编写模板正文**——「著作权转让须订立书面合同，而提交 PR 不构成合同」这类措辞是刻意写死的，自由发挥容易把法律含义写歪。
+     - **文件存在但缺关键要素** → 按模板补齐缺的那段，用实际许可证名称。**补之前先确认它真的缺**：`ToolCallingRules` 原本已有完整许可条款（只是措辞与模板不同），被误判「缺要素」后塞进一段矛盾的 MIT，事后又得回滚。
+     - **存在 `{{LICENSE_NAME}}` 残留** → 拷贝后忘了替换，按实际许可证名称补上。
+     - **声明的许可证与 `LICENSE.md` 不符** → **以 `LICENSE.md` 为准改正**。这是真正的错误，会让贡献者按错误的条款授权自己的代码。
+   - 两文件齐备、含两个关键要素、无占位符残留、许可证名称与 `LICENSE.md` 一致 → 写 `<!-- commit-skill: contributing = ok -->` + 日期行。
 
    **9z. 等待 PR 合并并对齐本地 main（2026-09-22 用户立；仅第 8 步走了 PR 通道——main 兜底通道或功能 / 杂事 / bump 分支建 PR——的场景执行）**：等待 CI 全绿 + GitHub auto-merge 自动 squash 合并进 remote main，然后自动把本地 main 对齐到远端、清理已合并的本地与远端源分支。目标是每次 `/commit` 结束时仓库就是干净终态（本地 main = origin/main、旧分支已清），不留「PR 合并了但本地 main 悬在旧位置、下次 `/commit` 才由 0a 兜底对齐」的尾巴。为什么放在第 9 步之后：标配检测（9a~9m）全是本地操作、不依赖远端状态，先做完；等待 CI 期间无事可做；对齐完成后再走第 11 步 `git status`，收尾的 status 正好反映对齐后的最终状态（发版衔接见第 10 步）。
    - **只对本次流程 enable 了 auto-merge 的 PR 等待**：本流程建的 PR 均已 enable auto-merge（第 8 步）。若因故没 enable 成（PR 创建失败、auto-merge 开启失败、仓库 / 组织禁用 auto-merge 等）→ 跳过等待，如实报告原因后直接进第 10 步（commit/push 已完成，不受影响）。
