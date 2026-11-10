@@ -50,3 +50,4 @@ trading-agent	signals/equity-log.csv
 trading-agent	hooks/equity-baseline.local
 trading-agent	state/live_reference.json
 trading-agent	ledger
+ghostty	signing

@@ -72,6 +72,9 @@ KNOWN_IGNORES = [
     r"(^|/)models(/|$)",
     r"(^|/)output(/|$)",
     r"packages/ai/src/providers/data(/|$)",
+    r"(^|/)\.zig-cache(/|$)",
+    r"(^|/)zig-cache(/|$)",
+    r"(^|/)zig-out(/|$)",
 ]
 
 
