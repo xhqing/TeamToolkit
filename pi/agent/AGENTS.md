@@ -380,7 +380,7 @@ pi 加载扩展时**只要有一个文件解析失败就 `exit(1)`**——打印
 - **一律先想 cmux**：需要看渲染效果（Markdown / 图片 / diff）、跑命令、开面板、看输出，都先在 **cmux** 里完成。cmux 缺的能力，优先推动在 cmux 里实现（提需求、自己写补丁——cmux 是 Atlas 名下的子项目），而不是退回去用 VSCode。
 - **禁止主动启动或驱动 VSCode**：不执行 `code .` / `code <文件>` / `code --install-extension` / `code --folder-uri` / `codef`（全屏打开 VSCode 的 CLI），不用 `open` 开 VSCode 窗口。要用户「自己看一眼」时，给的是 **cmux 里的操作路径**；说「你在 VSCode 里确认一下」属违规。
 - **验证渲染效果以 cmux 为准**：某个 README / Markdown / 图片显示是否正常，验的是 **cmux 里**的效果——那才是用户真实会看到的界面。
-- **存量 VSCode 扩展项目照常维护**：`ghostty-launcher`、`mp4-player` 这两个 VSCode 扩展仍是名下产品，构建 / 发版 / 修 bug 不受影响；只是不再把它们（或别的项目）当成**日常验证工具**。`vsce-install` skill 已标停用，仅在用户明确要求装 VSCode 扩展时才用。
+- **存量 VSCode 扩展项目照常维护**：`ghostty-launcher`、`mp4-player` 这两个 VSCode 扩展仍是名下产品，构建 / 发版 / 修 bug 不受影响；只是不再把它们（或别的项目）当成**日常验证工具**。装 VSCode 扩展的 `vsce-install` skill 已于 2026-11-09 按用户要求删除（VSCode 退役，不再需要它）。
 - **过渡期保护条款（仍然有效，别删）**：
   - **杀 VSC 进程前必须先问**：任何会让 VSCode 退出 / 重启的手段（`pkill`、`kill`、`killall`、osascript 强制结束等）先向用户说明范围与原因，授权后命令加 `# AI_AUTHORIZED_KILL_VSC` 标记放行。查询类（`ps`）不受限——用户可能还有 VSCode 窗口开着，误杀同样会打断他。
   - **远程连接强制新窗口**：若用户当轮明确要求用 VSCode Remote-SSH / Remote Tunnel，用 `code --folder-uri "vscode-remote://ssh-remote+<host>/<远端路径>" --new-window`，禁止 `open vscode://vscode-remote` URI（会复用用户当前窗口、顶替工作现场）。
