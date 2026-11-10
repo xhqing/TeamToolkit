@@ -3,15 +3,15 @@
  *
  * 规矩：**worktree 目录名必须以「本仓库名」开头，形如 `<仓库名>-<事项>`**。
  * 禁止「其它项目名 / Agent 项目名 + 子项目名」的拼法——例如
- * `~/Developer/FullStackEngineerAgent-turn-diff` 会让人误以为是 turn-diff 子项目的
- * worktree，实际是 FullStackEngineerAgent 主仓库的分支，用户在文件系统里根本看不出归属。
+ * `~/Developer/dev-agent-turn-diff` 会让人误以为是 turn-diff 子项目的
+ * worktree，实际是 dev-agent 主仓库的分支，用户在文件系统里根本看不出归属。
  * 文本规则在全局 `~/.pi/agent/AGENTS.md`「开发流程：worktree + PR」节铁律 1。
  *
  * 判定方式（两种违规都拦）：
  * 1. 目标目录名的**最长前缀**（`T === D` 或 `T.startsWith(D + "-")`）不是本仓库名
  *    （D 取自目标父目录与 `~/Developer` 下的条目名）→ 违规，名字里的第一个项目名必须是本仓库；
  * 2. 前缀是本仓库名、但事项 slug **恰好等于另一个项目 / 目录的名字** →
- *    违规（`FullStackEngineerAgent-turn-diff` 这种「事项撞上子项目名」的形态同样看不出归属）。
+ *    违规（`dev-agent-turn-diff` 这种「事项撞上子项目名」的形态同样看不出归属）。
  *
  * 逃生门（仅限用户当轮明确授权，AI 不得自行添加）：命令末尾 `# AI_AUTHORIZED_WORKTREE_NAME`。
  * 判定失败时 fail-open：守卫失灵不阻塞会话。
@@ -32,7 +32,7 @@ const ADD_VALUE_OPTS = new Set(["-b", "-B", "--orphan", "--reason"]);
 const DENY =
 	"[worktree-name-guard] 拦截：worktree 目录名必须以「本仓库名」开头（2026-11-09 用户立规）。" +
 	"正确写法 `<仓库名>-<事项>`，例如 `~/Developer/turn-diff-fix-empty-diff`；" +
-	"禁止 `FullStackEngineerAgent-turn-diff` 这类「其它项目名 / Agent 项目名 + 子项目名」的拼法——" +
+	"禁止 `dev-agent-turn-diff` 这类「其它项目名 / Agent 项目名 + 子项目名」的拼法——" +
 	"那样看不出它是哪个项目的 worktree。子项目的工作就在子项目仓库的 worktree 里做：" +
 	"`git -C ~/Developer/<子项目> worktree add ~/Developer/<子项目>-<事项> -b <分支>`。" +
 	"确需例外时须用户当轮明确授权，并在命令末尾加 `# AI_AUTHORIZED_WORKTREE_NAME`。";

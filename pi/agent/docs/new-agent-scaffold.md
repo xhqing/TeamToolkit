@@ -2,7 +2,7 @@
 
 > 本文件由全局 `~/.pi/agent/AGENTS.md`「团队结构参考」指针节指向。**何时读**：新建 Agent 项目（含团队 agent 与独立工具型 agent）前必读，保证团队一致、开源安全。权威源在全局 `~/.pi/agent/docs/`，开源镜像在 TeamToolkit 仓库 `pi/agent/docs/`。
 
-**为什么**：agent 越来越多，统一脚手架避免重造轮子、避免泄露密钥。**怎么用**：复制已有 agent 项目（如 FullStackEngineerAgent）再按角色改写。
+**为什么**：agent 越来越多，统一脚手架避免重造轮子、避免泄露密钥。**怎么用**：复制已有 agent 项目（如 dev-agent）再按角色改写。
 
 ## 通用能力开源单一出口
 

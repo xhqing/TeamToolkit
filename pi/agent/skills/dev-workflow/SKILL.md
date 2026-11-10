@@ -53,7 +53,7 @@ git switch -c <分支名>
 **worktree 的价值**：多个功能（多个开发会话）并行时，同一目录里的改动、`git status`、测试运行会互相污染，分不清哪份改动属于哪个功能。每个功能独占一个 worktree 目录 + 分支，天然隔离。要点：
 
 - worktree 目录放主仓库**同级**（`~/Developer/<仓库名>-<功能名>`），不要嵌套在主仓库内（会被视为未跟踪内容，容易误提交）；
-- **目录名的第一个项目名必须是本仓库名（2026-11-09 用户立，工具强制）**：`<仓库名>-<事项>`，事项 slug 也不许恰好等于另一个项目 / 子项目的名字——`FullStackEngineerAgent-turn-diff` 这种名字会让人误以为是 turn-diff 子项目的 worktree，实际上它是 FullStackEngineerAgent 主仓库的分支，用户在文件系统里看不出归属。子项目的活就在子项目的 worktree 里干（`git -C <子项目> worktree add ../<子项目>-<事项>`），不要给子项目在 Agent 项目仓库里建 worktree。守卫：`~/.pi/agent/extensions/worktree-name-guard.ts`；
+- **目录名的第一个项目名必须是本仓库名（2026-11-09 用户立，工具强制）**：`<仓库名>-<事项>`，事项 slug 也不许恰好等于另一个项目 / 子项目的名字——`dev-agent-turn-diff` 这种名字会让人误以为是 turn-diff 子项目的 worktree，实际上它是 dev-agent 主仓库的分支，用户在文件系统里看不出归属。子项目的活就在子项目的 worktree 里干（`git -C <子项目> worktree add ../<子项目>-<事项>`），不要给子项目在 Agent 项目仓库里建 worktree。守卫：`~/.pi/agent/extensions/worktree-name-guard.ts`；
 - 每个 worktree 首次进入装依赖（`bun install --frozen-lockfile` / `npm ci`），node_modules 不共享；
 - 写全局共享目标的命令（如安装到系统位置的 sync 类脚本）不要在多个 worktree 并行跑；
 - 一个分支同一时刻只能存在于一个 worktree。

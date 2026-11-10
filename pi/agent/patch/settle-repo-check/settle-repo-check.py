@@ -139,7 +139,7 @@ def _sweep_projects(agent, rows):
 
     为什么加自身仓库（2026-11-09）：旧版只扫注册表里的「子项目映射」行，Agent 项目
     自己的 worktree 从来不在扫描范围内——turn-diff 那轮把 worktree 建在
-    FullStackEngineerAgent 上（分支 chore/subproject-turn-diff），PR 早已合并、
+    dev-agent 上（分支 chore/subproject-turn-diff），PR 早已合并、
     目录却一直留着，巡检报不出来。用户当天追问「任务都做完了为什么 worktree 还在」。
     """
     projs = [proj for a, proj in rows if a == agent]
