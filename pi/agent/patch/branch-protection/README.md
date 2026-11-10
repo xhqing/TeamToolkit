@@ -90,7 +90,7 @@ gh api repos/<owner>/<repo>/commits/main/check-runs \
 branch-protection.sh audit --owner xhqing
 
 # 审计一份列表（文件每行：仓库名 [分支]，省略分支默认 main）
-branch-protection.sh audit --owner xhqing ~/Developer/FullStackEngineerAgent/tmp/team-repos.txt
+branch-protection.sh audit --owner xhqing ~/Developer/dev-agent/tmp/team-repos.txt
 
 # 机器可读
 branch-protection.sh audit --owner xhqing --json

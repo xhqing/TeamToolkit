@@ -21,14 +21,14 @@ function check(name: string, ok: boolean, detail = ""): void {
 }
 
 // 1) 路径映射
-const a = mapPath("~/Developer/FullStackEngineerAgent");
-check("mapPath 本机 home → /Users/mac", a.remote === "/Users/mac/Developer/FullStackEngineerAgent" && a.mirrored);
+const a = mapPath("~/Developer/dev-agent");
+check("mapPath 本机 home → /Users/mac", a.remote === "/Users/mac/Developer/dev-agent" && a.mirrored);
 check("mapPath 远端路径原样保留", mapPath("/Users/mac/Developer/x").remote === "/Users/mac/Developer/x");
 check("mapPath /tmp 不标记为镜像", mapPath("/tmp/x").mirrored === false);
 
 // 2) 远端执行：PATH / Node 版本 / cwd
 const res = await execRemote(
-	buildScript("/Users/mac/Developer/FullStackEngineerAgent", "pwd; node -v; python3 -V; uname -m"),
+	buildScript("/Users/mac/Developer/dev-agent", "pwd; node -v; python3 -V; uname -m"),
 	{ timeoutMs: 30_000 },
 );
 check("ssh 执行成功", res.code === 0, res.stderr);

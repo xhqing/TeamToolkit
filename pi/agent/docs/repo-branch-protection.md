@@ -34,7 +34,7 @@
 
 - **有 CI 却没挂成门禁（2 个）**：`TradingProofs`（`ci.yml` → check 名 `build`）、`vscode-copy-anywhere`（`ci.yml` → check 名 `validate`）。
 - **`xhqing`（1 个）**：只有 `traffic.yml`，那是定时采集任务、不是 PR CI（定时任务的检查名绝不能挂 required，会永久卡住合并）。（2026-11-04 补充：该定时采集任务已随「停用流量采集」一并删除，现在本仓库的 PR 检查是 `validate`。）
-- **既无 CI 也无门禁（25 个）**：16 个 Agent 项目（ProductStrategistAgent、ProductProducerAgent、SiteBuilderAgent、GrowthMarketerAgent、DigiVendAgent、DataAnalystAgent、trading-agent、quant-agent、BackendEngineerAgent、FullStackEngineerAgent、NeuralCoreAgent、apply-agent、LegalAgent、social-agent、TestEngineerAgent、cuAgent）+ 9 个子项目（CC-Bridge、ark-key-pool、macmini-tmux、dotfiles、AgentCortex、ToolCallingRules、Intraday、Swing、gridtrader）。
+- **既无 CI 也无门禁（25 个）**：16 个 Agent 项目（ProductStrategistAgent、ProductProducerAgent、SiteBuilderAgent、GrowthMarketerAgent、DigiVendAgent、DataAnalystAgent、trading-agent、quant-agent、BackendEngineerAgent、dev-agent、NeuralCoreAgent、apply-agent、LegalAgent、social-agent、TestEngineerAgent、cuAgent）+ 9 个子项目（CC-Bridge、ark-key-pool、macmini-tmux、dotfiles、AgentCortex、ToolCallingRules、Intraday、Swing、gridtrader）。
 
 ### 补齐后（2026-11-03 当晚，用户追加要求全部执行最新标准）
 
