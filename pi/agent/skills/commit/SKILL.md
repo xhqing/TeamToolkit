@@ -138,7 +138,12 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
    **9b. LICENSE.md**（标记 `license`）：根目录**只保留 `LICENSE.md`**，不与其它格式 license 文件重复。
    - 无 `LICENSE.md` → 创建。**先按全局 `~/.pi/agent/AGENTS.md`「项目许可证与版权声明」节判定**：① **fork / copy 项目**（有上游仓库来历）→ 按「许可证继承」表定——上游与 MIT / CC BY 4.0 兼容则用 MIT / CC BY 4.0，**不兼容则原样继承上游许可证**（GPL 系就整份 GPL 全文，不降级、不替换、不询问）；② 自研项目 → 软件项目（含 agent 项目）用标准 MIT 全文，非软件项目（书籍 / 文章等以阅读为目的的文字）用 CC BY 4.0（正文取官方 `https://creativecommons.org/licenses/by/4.0/legalcode.txt`，不手写）；③ 既不是 fork、又无法判断软件 / 非软件时，暂停并向用户确认。版权声明行一律写 `Copyright (c) <年份> xhqing and contributors`；**fork 项目必须保留上游版权行，我们的行追加在它下面**（不替换）。已存在 `LICENSE.md` 的版权人写法统一由 9g 处理。
    - 创建后、或 `LICENSE.md` 已存在时，若根目录还有其它格式 license 文件（`LICENSE`、`LICENSE.txt` 等）→ **删除冗余**，只留 `LICENSE.md`。
-   - `LICENSE.md` 存在且无冗余 → 写 `<!-- commit-skill: license = ok -->` + 日期行。
+   - **已有 `LICENSE.md` 时也要校验类型是否与项目性质匹配（2026-11-11 增补，起因 blog 事故）**：跑 `python3 ~/.pi/agent/patch/license-check/license-check.py --repo <目标工作区>`——脚本按「谁消费它」判性质（软件 / 内容）并对照许可证，给出 `OK` / `MISMATCH` / `REVIEW`（fork 项目自动跳过，许可证随上游）。
+     - **`MISMATCH`**（内容型项目挂 MIT，或软件项目挂 CC BY）→ **本次 `/commit` 不终止，但必须在本轮汇报里单列一条**：现为什么、按性质应为哪个、改法（`LICENSE.md` 换全文 + 徽章 + 版权段 + 两份 CONTRIBUTING + CHANGELOG + patch 版本发版，走一次修正 PR）。**许可证是法律性变更，不静默改、也不静默放过**——用户点头即按 blog 2026-11-11 那次的完整改动面执行。
+     - **`REVIEW`**（脚本判不了）：自己看一眼再定，判据看**内容被谁消费**——被程序 / LLM 消费、改动会改变程序行为（规则集、提示词、技能、脚本）算软件；以阅读为目的（文章、书籍、教程）算内容。「拿不准 → 问用户」，不要猜。
+     - 判完把 `<!-- commit-skill: license = ok -->` 写成实际结果：`license = ok`（类型对得上）/ `license = mismatch`（待改，下次 `/commit` 继续提醒，直到改对）。
+     - **为什么要有这一步**：9b 以前只查「有没有 `LICENSE.md`」，**从不查类型对不对**——blog（文章型项目）因此挂着 MIT 近两年无人发现，2026-11-11 被用户当场指出。规则只有文本、没有工具层检查，就是会漏。
+   - `LICENSE.md` 存在、无冗余、且类型与项目性质匹配 → 写 `<!-- commit-skill: license = ok -->` + 日期行（注明许可证类型，如「MIT / CC BY 4.0，与项目性质匹配」）。
 
    **9c. GitHub About**（标记 `github-about`）：确保 GitHub repo About 有中英双语 description 与 topics。
    - **前置**：`origin` 指向 `github.com` 且 `gh` 已认证、且第 8 步 push 成功。任一不满足 → 跳过、不记录、如实报告（如「无 GitHub remote / push 未成功，跳过 About 检测」）。

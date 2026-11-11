@@ -231,7 +231,13 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 ### 存量项目
 
-2026-11-08 之前建的项目许可证类型无需变动（本就都是 MIT，正确），仅版权声明行由 `All Contributors` 改为上述格式。存量的版权行不强制一次性全改，按批次迁移——每个仓库走自己的 worktree + PR + CI 流程，不要用脚本跨仓库直推 main。
+存量项目的**版权行写法**不强制一次性全改，按批次迁移——每个仓库走自己的 worktree + PR + CI 流程，不要用脚本跨仓库直推 main。
+
+**但许可证类型必须按性质核，不因「建得早」而豁免（2026-11-11 修订，起因 blog 事故）**：2026-11-08 之前建的项目**不是**「本就都是 MIT、正确」——当时那条表述把「存量」误当成了「都是软件」，于是文章型项目 blog（2021 年建、主体是博客文章）一直挂着 MIT 无人发现，直到 2026-11-11 被用户当场指出。正确口径：**性质决定类型，建得早不改变性质**——内容型存量项目（文章、书籍、博客、教程）就该改成 CC BY 4.0，改动面与新建时一致（`LICENSE.md` 换全文 + 徽章 + 版权段 + 两份 CONTRIBUTING + CHANGELOG + patch 版本发版）。
+
+**工具强制（2026-11-11 立）**：
+- `python3 ~/.pi/agent/patch/license-check/license-check.py` —— 扫 `~/Developer` 下全部仓库，输出「仓库 / 许可证 / 性质 / 结论（OK / MISMATCH / REVIEW）」，`MISMATCH` 即类型与性质不对应；`--repo <路径>` 只查一个。粗筛，`REVIEW` 交人判（判据看内容被谁消费）。
+- `commit` skill 第 9b 步每次 `/commit` 都会对当前仓库跑一次这个脚本：`MISMATCH` 时在汇报里单列一条（不静默改、不静默放过），`REVIEW` 自查或问用户，结果写进 `.commit-cache.md` 的 `license` 标记（`ok` / `mismatch`）。
 
 ## 版本信息一致性（VERSION 文件为唯一权威）
 
@@ -273,7 +279,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 - **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（**Agent 项目一律 `<职责>-agent` 全小写、连字符**，Non-agent 项目按「尽可能简单、体现职责」；项目是不是 Agent 项目看 README 的 `Type` 徽章是否为 `AI Agent`）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
 - **跨 agent 移交 / 推荐子任务**：读 `~/.pi/agent/docs/agents-registry.md`（注册表：名称、项目、职责、销售流水线、三小组分组）。
-- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 agents-infra 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。全局 `~/.pi/agent/` 是唯一权威源（含 DSH 核心基础设施 `dsh/`）；**agents-infra**（沿革：CapabilityManagerAgent → 2026-11-05 降级为 Kit 名下的普通项目并更名 TeamToolkit → 2026-11-11 更名为 agents-infra）是通用能力开源的**单一出口**，其 `pi/agent/` 逐字节镜像全局、`dsh/` 镜像 `~/.pi/agent/dsh/`。**发布改为单 pusher**：只在 macmini 上单向生成镜像并推送（两台机器同时 PR 会造出重复提交），脚本 `patch/agents-infra-publish/publish.py`；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 agents-infra 的 CHANGELOG。
+- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 agents-infra 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。**pi-team** 的权威源是 `~/.pi/agent/`，由 macmini 的 `patch/agents-infra-publish/publish.py` 镜像到 `agents-infra/pi/agent/`；**dsh-team** 的权威源是 `~/.dsh/`，由 MacBook 的 `patch/agents-infra-publish/publish_dsh.py` 镜像到 `agents-infra/dsh/`。两个子树、两个单 pusher，路径不相交；不要用一台机器的脚本去推另一个子树；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 agents-infra 的 CHANGELOG。
 - **智能体专属文件：Agent 项目与子项目完全独立（2026-11-08 用户立，取代 2026-10-30「身份层软链接 + 能力层路径引用」）**：`AGENTS.md`、`AGENTS.override.md`、项目级 `.pi/` 这类「按工作目录加载、表征智能体身份」的文件，**每个项目只放本项目真实需要的内容**——Agent 项目放 Agent 自己的规则与工具，子项目放子项目自己的规则与工具，**两边之间不留链接、不留路径引用**。
   - **规则文件本体统一为 `AGENTS.md`、`CLAUDE.md` 弃用（2026-11-05 用户立）**：全局规则文件是 `~/.pi/agent/AGENTS.md`，各 Agent 项目的项目级规则文件本体一律是项目根的 `AGENTS.md`；**不再新建 / 保留 `CLAUDE.md` 实体副本，也不再挂 `AGENTS.md → CLAUDE.md` 软链接**（存量已全部改名）。依据：pi 的上下文文件候选顺序是 `AGENTS.override.md` > `AGENTS.md` > `CLAUDE.md`（`dist/core/resource-loader.js` 的 `loadContextFileFromDir()`），同一目录只加载第一个存在的文件——本体放在 `AGENTS.md` 后 `CLAUDE.md` 根本不参与加载，留着只是双份内容漂移的隐患。`.claude/` 目录本身仍按原口径「不新增、不维护」（2026-10-17 决定），其中的 `CLAUDE.md` 已迁出、不再是 agent 规则本体。
   - **子项目 `AGENTS.md` 是本仓库的实体文件**，写四件事：① 本项目是什么（一两句）；② 归哪个 Agent 负责；③ Worker 的角色边界（干完向谁汇报、不碰 local main、不建删 worktree）；④ 各类规则在哪（`.pi/APPEND_SYSTEM.md`、`DEVELOPMENT.md`、`CHANGELOG.md`、`TODO.md` 的索引）。**不写** Agent 项目的身份与规则副本——那些本来就不属于这个仓库。
