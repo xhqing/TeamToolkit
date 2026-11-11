@@ -5,7 +5,7 @@ description: Create new skills, modify and improve existing skills, and measure 
 
 # Skill Creator
 
-> **本地使用注记（2026-10-17）**：本 skill 的技能编写方法论（Progressive Disclosure、description 写法、references 组织等）照常使用。**触发评测已提供 pi 版**：`scripts/run_eval_pi.py`（用 `pi -p --mode json` 跑评测、检测 SKILL.md 被读取；自带空响应重试）——原 `run_eval.py` 依赖 Claude Code CLI，保留不用。涉及 Claude Code / Claude.ai / Cowork 的原文说明仅在对应环境适用。
+> **本地使用注记（2026-10-17）**：**本 skill 源自上游，正文里提到 Claude / Claude.ai / Cowork 的地方是上游原文、仅作参考**——本团队只用 pi，执行时按本段与 `run_eval_pi.py` 为准。 本 skill 的技能编写方法论（Progressive Disclosure、description 写法、references 组织等）照常使用。**触发评测已提供 pi 版**：`scripts/run_eval_pi.py`（用 `pi -p --mode json` 跑评测、检测 SKILL.md 被读取；自带空响应重试）；原先依赖 Claude Code CLI 的 `run_eval.py` / `improve_description.py` / `run_loop.py` 已于 2026-11-11 归档到本机私有目录（团队不再维护其它 harness，不修不补）。
 
 A skill for creating new skills and iteratively improving them.
 
@@ -435,9 +435,9 @@ In Claude.ai, the core workflow is the same (draft → test → review → impro
 
 **The iteration loop**: Same as before — improve the skill, rerun the test cases, ask for feedback — just without the browser reviewer in the middle. You can still organize results into iteration directories on the filesystem if you have one.
 
-**Description optimization**: This section requires the `claude` CLI tool (specifically `claude -p`) which is only available in Claude Code. Skip it if you're on Claude.ai.
+**Description optimization**: the脚本依赖 `claude -p`（仅 Claude Code 有），已于 2026-11-11 归档——本团队不再维护其它 harness，这一段仅作上游原文参考。de.ai.
 
-> **pi 版（2026-10-17 增）**：本机以 pi 为主——用 **`scripts/run_eval_pi.py`** 做触发评测（`pi -p --mode json` 跑查询 + 检测 SKILL.md 被读取；自带空响应重试，实测 pi 偶发空响应约 10-25%）。用法与 `run_eval.py` 对齐：
+> **pi 版（2026-10-17 增）**：本机以 pi 为主——用 **`scripts/run_eval_pi.py`** 做触发评测（`pi -p --mode json` 跑查询 + 检测 SKILL.md 被读取；自带空响应重试，实测 pi 偶发空响应约 10-25%）。用法：
 > ```bash
 > python3 scripts/run_eval_pi.py --eval-set eval.json --skill-path <skill目录> [--runs-per-query 3] [--num-workers 5]
 > ```
@@ -463,7 +463,6 @@ If you're in Cowork, the main things to know are:
 - For whatever reason, the Cowork setup seems to disincline Claude from generating the eval viewer after running the tests, so just to reiterate: whether you're in Cowork or in Claude Code, after running tests, you should always generate the eval viewer for the human to look at examples before revising the skill yourself and trying to make corrections, using `generate_review.py` (not writing your own boutique html code). Sorry in advance but I'm gonna go all caps here: GENERATE THE EVAL VIEWER *BEFORE* evaluating inputs yourself. You want to get them in front of the human ASAP!
 - Feedback works differently: since there's no running server, the viewer's "Submit All Reviews" button will download `feedback.json` as a file. You can then read it from there (you may have to request access first).
 - Packaging works — `package_skill.py` just needs Python and a filesystem.
-- Description optimization (`run_loop.py` / `run_eval.py`) should work in Cowork just fine since it uses `claude -p` via subprocess, not a browser, but please save it until you've fully finished making the skill and the user agrees it's in good shape.
 - **Updating an existing skill**: The user might be asking you to update an existing skill, not create a new one. Follow the update guidance in the claude.ai section above.
 
 ---

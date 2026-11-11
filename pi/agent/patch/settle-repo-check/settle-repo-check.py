@@ -11,7 +11,7 @@
                                               # stop_hook_active 时直接放行（防循环）
 
 逻辑：
-  - 由 cwd（Agent 项目目录，或某个子项目目录）在 ~/.claude/docs/agents-registry.md 的
+  - 由 cwd（Agent 项目目录，或某个子项目目录）在 ~/.pi/agent/docs/agents-registry.md 的
     「子项目映射」表里定位所属 Agent 与它的全部子项目；
   - 逐个 `git status --porcelain`（目录不存在 / 非 git 的跳过）；
   - cwd 不属于任何 Agent / 子项目 → 无此项、静默通过（exit 0）。

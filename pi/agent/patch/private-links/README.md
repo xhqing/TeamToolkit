@@ -23,7 +23,7 @@ python3 private-links.py restore 仓库 相对路径     # 取消接线（把本
 ## manifest.tsv 格式
 
 每行 `仓库名 <TAB> 仓库内相对路径`；相对路径支持 `*` 通配（如
-`trading-agent	.claude/skills/trade/live-unlock.*.local`）。`#` 开头是注释。
+`trading-agent	backup/trade/live-unlock.*.local`）。`#` 开头是注释。
 
 新增一项的标准动作：
 
