@@ -28,9 +28,19 @@
  * custom entries do NOT participate in LLM context）。
  *
  * 判定与执行全程防御性 catch：本扩展失灵时不阻塞会话。
+ *
+ * 2026-11-11 补充（用户要求）：收尾记录**末尾必须给出总结**——逐个仓库核对
+ * 「local main 与 origin/main 是否同步」+「是否存在未提交内容」，有问题的行用红色
+ * 字体（theme.fg("error")）、干净的行用绿色字体（theme.fg("success")），问题仓库排在
+ * 前面。背景：一次 run 可能触及十几个仓库（改名 / 批量同步场景），逐块的原始 status
+ * 太长，用户一眼看不出到底哪几个仓库没收拾干净。
+ * 口径说明：同步判断基于**本地 origin/main 缓存**（`git rev-list --left-right --count`），
+ * 不做联网 fetch——授权 commit 后刚 push 过，本地缓存即远端状态；无 main / origin/main
+ * 的仓库标红提示人工核对，不静默当作「已同步」。
  */
 
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
+import { basename } from "node:path";
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Box, Spacer, Text } from "pi-tui";
 
@@ -100,6 +110,84 @@ function commandTargets(command: string, cwd: string): string[] {
 	return out;
 }
 
+/** 在指定目录跑一条 git 命令，失败（非仓库 / 超时等）返回 null，不抛。 */
+function gitOut(dir: string, args: string[]): string | null {
+	try {
+		return execFileSync("git", ["-C", dir, ...args], {
+			encoding: "utf8",
+			timeout: 5000,
+		}).trim();
+	} catch {
+		return null;
+	}
+}
+
+/** 取本地或 origin 的主分支引用全名（main 优先，回退 master），不存在返回 null。 */
+function mainRef(dir: string, prefix: string): string | null {
+	for (const name of ["main", "master"]) {
+		const ref = `${prefix}/${name}`;
+		if (gitOut(dir, ["rev-parse", "--verify", "--quiet", ref]) !== null) return ref;
+	}
+	return null;
+}
+
+/** 单个仓库的收尾诊断：未提交项数 + local main 与 origin/main 的领先 / 落后。 */
+interface RepoDiag {
+	dir: string;
+	label: string;
+	branch: string;
+	dirty: number; // 未提交项数（含未跟踪文件）；-1 = 读取失败
+	ahead: number; // local main 领先 origin/main 的提交数
+	behind: number; // local main 落后 origin/main 的提交数
+	comparable: boolean; // false = 无法核对（无 main / 无 origin/main / 读取失败）
+	note: string; // 无法核对时的原因
+}
+
+function diagnose(dir: string): RepoDiag {
+	const branch = gitOut(dir, ["branch", "--show-current"]) ?? "";
+	const porcelain = gitOut(dir, ["status", "--porcelain"]);
+	const dirty = porcelain === null ? -1 : porcelain.split("\n").filter((l) => l.trim()).length;
+
+	const localRef = mainRef(dir, "refs/heads");
+	const remoteRef = mainRef(dir, "refs/remotes/origin");
+	let ahead = 0;
+	let behind = 0;
+	let comparable = false;
+	let note = "";
+	if (!localRef) note = "没有本地 main 分支，无法核对";
+	else if (!remoteRef) note = "没有 origin/main，无法核对远端";
+	else {
+		// left = 只在 origin/main 上的提交（落后），right = 只在 main 上的提交（领先）
+		const out = gitOut(dir, ["rev-list", "--left-right", "--count", `${remoteRef}...${localRef}`]);
+		const [behindRaw, aheadRaw] = (out ?? "").split(/\s+/);
+		const b = Number(behindRaw);
+		const a = Number(aheadRaw);
+		if (Number.isFinite(b) && Number.isFinite(a)) {
+			ahead = a;
+			behind = b;
+			comparable = true;
+		} else note = "无法读取 main 与 origin/main 的差异";
+	}
+	return { dir, label: basename(dir) || dir, branch, dirty, ahead, behind, comparable, note };
+}
+
+/** 总结行：有任何一个问题 → bad=true（渲染红色），全干净 → 绿色。 */
+function summaryLine(d: RepoDiag): { bad: boolean; text: string } {
+	const bits: string[] = [];
+	if (!d.comparable) bits.push(d.note);
+	else {
+		if (d.behind > 0) bits.push(`local main 落后 origin/main ${d.behind} 个提交`);
+		if (d.ahead > 0) bits.push(`local main 领先 origin/main ${d.ahead} 个提交（未推送）`);
+	}
+	if (d.dirty > 0) bits.push(`未提交 ${d.dirty} 项`);
+	else if (d.dirty < 0) bits.push("无法读取工作区状态");
+
+	const bad = bits.length > 0;
+	const branchHint = d.branch && d.branch !== "main" && d.branch !== "master" ? `（${d.branch}）` : "";
+	const detail = bad ? bits.join(" · ") : "local main 与 origin/main 同步 · 工作区干净";
+	return { bad, text: `${bad ? "❌" : "✅"} ${d.label}${branchHint}：${detail}` };
+}
+
 /** 规范化：统一换行、去行尾空白、整体 trim 后逐字比对。 */
 function normalize(s: string): string {
 	return s
@@ -113,6 +201,8 @@ function normalize(s: string): string {
 interface GitStatusData {
 	at: number;
 	results: { dir: string; status: string }[];
+	diags?: RepoDiag[]; // 收尾总结数据（旧记录可能没有）
+	summaryOnly?: boolean; // true = AI 已贴过 status，这条记录只放总结
 }
 
 export default function (pi: ExtensionAPI) {
@@ -127,7 +217,16 @@ export default function (pi: ExtensionAPI) {
 		const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
 		box.addChild(new Text(theme.bold(theme.fg("accent", "git-status-guard")), 0, 0));
 		box.addChild(
-			new Text(theme.fg("dim", "实测 git status（本扩展执行，不参与模型上下文）"), 0, 0),
+			new Text(
+				theme.fg(
+					"dim",
+					data.summaryOnly
+						? "收尾总结（git status 已在回复中贴出；本记录不参与模型上下文）"
+						: "实测 git status + 收尾总结（本扩展执行，不参与模型上下文）",
+				),
+				0,
+				0,
+			),
 		);
 		data.results.forEach((r, i) => {
 			// 多个 worktree 之间空一行，视觉上区分各自的状态块（2026-11-09 用户要求）
@@ -135,6 +234,23 @@ export default function (pi: ExtensionAPI) {
 			box.addChild(new Text(theme.fg("accent", r.dir), 0, 0));
 			box.addChild(new Text(">> git status\n" + r.status, 0, 0));
 		});
+
+		// 收尾总结（2026-11-11 用户要求）：问题仓库排前面、红色，干净的排后面、绿色
+		const diags = data.diags ?? [];
+		if (diags.length > 0) {
+			const bad = diags.filter((d) => summaryLine(d).bad);
+			const good = diags.filter((d) => !summaryLine(d).bad);
+			box.addChild(new Spacer(1));
+			const head =
+				bad.length > 0
+					? `—— 收尾总结：${diags.length} 个仓库，${bad.length} 个需要处理 ——`
+					: `—— 收尾总结：${diags.length} 个仓库，全部同步且干净 ——`;
+			box.addChild(new Text(theme.bold(theme.fg("accent", head)), 0, 0));
+			for (const d of [...bad, ...good]) {
+				const line = summaryLine(d);
+				box.addChild(new Text(theme.fg(line.bad ? "error" : "success", line.text), 0, 0));
+			}
+		}
 		return box;
 	});
 
@@ -217,7 +333,7 @@ export default function (pi: ExtensionAPI) {
 		}
 	});
 
-	// 第三层：run 收尾没贴块 → 实测并写成持久记录（不进 LLM 上下文）
+	// 第三层：run 收尾 → 实测并写成持久记录（不进 LLM 上下文），末尾附红/绿的仓库总结
 	pi.on("agent_settled", async (_event, ctx) => {
 		try {
 			if (!armed) return;
@@ -225,18 +341,28 @@ export default function (pi: ExtensionAPI) {
 			const missed = !sawStatusBlock;
 			sawStatusBlock = false;
 			const dirs = targets.size > 0 ? [...targets] : [ctx.cwd];
-			if (!missed) return; // AI 已贴过（且第二层保证其内容与实测一致）→ 不重复记录
 
 			const results: { dir: string; status: string }[] = [];
+			const diags: RepoDiag[] = [];
 			for (const dir of dirs) {
 				const status = runGitStatus(dir);
-				if (status !== null) results.push({ dir, status });
+				if (status === null) continue; // 非仓库 / 不可读 → 不进状态块，也不进总结
+				results.push({ dir, status });
+				diags.push(diagnose(dir));
 			}
 			if (results.length === 0) return;
 
-			pi.appendEntry<GitStatusData>(ENTRY_TYPE, { at: Date.now(), results });
+			// AI 已贴过 status（且第二层已核对与实测一致）→ 只补一条总结记录，不重复状态块
+			pi.appendEntry<GitStatusData>(
+				ENTRY_TYPE,
+				missed
+					? { at: Date.now(), results, diags }
+					: { at: Date.now(), results: [], diags, summaryOnly: true },
+			);
 			ctx.ui.notify(
-				"[git-status-guard] 已把实测 git status 写入会话记录（不参与模型上下文，可随时回看）",
+				missed
+					? "[git-status-guard] 已把实测 git status 与收尾总结写入会话记录（不参与模型上下文，可随时回看）"
+					: "[git-status-guard] 已把收尾总结写入会话记录（不参与模型上下文，可随时回看）",
 				"info",
 			);
 		} catch {
