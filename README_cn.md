@@ -1,24 +1,24 @@
 <div align="center">
-  <img src="assets/logo.svg" width="640" alt="TeamToolkit">
+  <img src="assets/logo.svg" width="640" alt="agents-infra">
 </div>
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
-[![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](#)
-[![Type](https://img.shields.io/badge/Type-Team%20Toolkit-FF1493.svg)](#)
+[![Version](https://img.shields.io/badge/Version-2.1.0-blue.svg)](#)
+[![Type](https://img.shields.io/badge/Type-Agents%20Infra-FF1493.svg)](#)
 
 </div>
 
-# TeamToolkit
+# agents-infra
 
-> 多智能体团队的共享工具箱：全局规则、技能、扩展、辅助脚本与配置，以一份开源镜像发布出来。
+> 多智能体团队里每个 agent 都跑在其上的基础设施：全局规则、技能、扩展、辅助脚本与配置，以一份开源镜像发布出来。
 
 [English](README.md)
 
-TeamToolkit 是**多智能体团队「共享能力层」的开源镜像**。用户级 `~/.pi/agent/` 目录下那些**不专属于某一个 agent、而是所有 agent 共用**的东西——全局规则（`AGENTS.md`）、技能、pi 扩展、`patch/` 下的辅助脚本、参考文档、第三方包清单——都在本仓库的 `pi/agent/` 下逐字节复现，与全局权威源保持一致。
+agents-infra 是**多智能体团队「共享能力层」的开源镜像**。用户级 `~/.pi/agent/` 目录下那些**不专属于某一个 agent、而是所有 agent 共用**的东西——全局规则（`AGENTS.md`）、技能、pi 扩展、`patch/` 下的辅助脚本、参考文档、第三方包清单——都在本仓库的 `pi/agent/` 下逐字节复现，与全局权威源保持一致。
 
-> **2026-11-05 更名**：本项目原为 `CapabilityManagerAgent`，由名为 Prometheus 的智能体角色维护；现在已**降级为普通项目**（不再有智能体人设），归团队的总经理助理（Kit）负责，发布动作改由单台机器上的脚本完成。旧地址会自动重定向。
+> **2026-11-11 更名**：本项目先后叫过三个名字——`CapabilityManagerAgent`（由名为 Prometheus 的智能体角色维护）→ `TeamToolkit`（2026-11-05 降级为普通项目时的名字）→ `agents-infra`（2026-11-11 定现名，让名字直接说清它是什么：全队共用的基础设施，而不是某个 agent 的工具箱）。现在它是**普通项目**（不再有智能体人设），归团队的总经理助理（Kit）负责，发布动作由单台机器上的脚本完成。旧地址会自动重定向。
 
 ---
 
@@ -40,7 +40,7 @@ TeamToolkit 是**多智能体团队「共享能力层」的开源镜像**。用�
 ## 核心工作方式：全局是权威源，单点发布
 
 ```
-~/.pi/agent  ──(单向 rsync)──►  TeamToolkit/pi/agent/  ──►  提交 → 分支 → PR → 自动合并
+~/.pi/agent  ──(单向 rsync)──►  agents-infra/pi/agent/  ──►  提交 → 分支 → PR → 自动合并
    （权威源，两机之间同步）              （发布镜像，只由一个设备推送）
 ```
 
@@ -56,8 +56,8 @@ TeamToolkit 是**多智能体团队「共享能力层」的开源镜像**。用�
 克隆下来直接读——文档与技能都是自包含的 Markdown，脚本是纯 Python / shell：
 
 ```bash
-git clone https://github.com/xhqing/TeamToolkit.git
-cd TeamToolkit
+git clone https://github.com/xhqing/agents-infra.git
+cd agents-infra
 ls pi/agent/skills        # 每个目录一个技能，内含 SKILL.md
 cat pi/agent/AGENTS.md    # 这些技能所遵循的工作规则
 ```
@@ -68,7 +68,7 @@ cat pi/agent/AGENTS.md    # 这些技能所遵循的工作规则
 
 ## 在团队中的位置
 
-TeamToolkit **不是 agent**，而是所有 agent 共同站立的地基：它们遵循的规则、复用的技能、以及防止误操作的护栏。它不属于销售流水线，也不属于任何工作小组。
+agents-infra **不是 agent**，而是所有 agent 共同站立的地基：它们遵循的规则、复用的技能、以及防止误操作的护栏。它不属于销售流水线，也不属于任何工作小组。
 
 ---
 
