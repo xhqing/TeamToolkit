@@ -1,12 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="200" viewBox="0 0 640 200" role="img" aria-label="CapabilityManagerAgent">
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="200" viewBox="0 0 640 200" role="img" aria-label="agents-infra">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#DC2626"/>
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#312E81"/>
+    </linearGradient>
+    <linearGradient id="brick" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.78"/>
     </linearGradient>
   </defs>
   <rect width="640" height="200" rx="28" ry="28" fill="url(#bg)"/>
-  <text x="105" y="100" font-size="96" text-anchor="middle" dominant-baseline="central">&#128293;</text>
-  <text x="180" y="92" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="700" fill="#ffffff">CapabilityManagerAgent</text>
-  <text x="182" y="126" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" fill="#ffffff" fill-opacity="0.92">Capability Manager · Team-wide ~/.claude/ backbone</text>
+  <g fill="url(#brick)">
+    <rect x="64" y="64" width="42" height="20" rx="6"/>
+    <rect x="110" y="64" width="42" height="20" rx="6"/>
+    <rect x="64" y="90" width="26" height="20" rx="6"/>
+    <rect x="94" y="90" width="26" height="20" rx="6"/>
+    <rect x="124" y="90" width="26" height="20" rx="6"/>
+    <rect x="64" y="116" width="42" height="20" rx="6"/>
+    <rect x="110" y="116" width="42" height="20" rx="6"/>
+  </g>
+  <text x="180" y="88" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="700" fill="#ffffff">agents-infra</text>
+  <text x="182" y="126" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="17" fill="#ffffff" fill-opacity="0.92">The infrastructure every agent runs on</text>
 </svg>
