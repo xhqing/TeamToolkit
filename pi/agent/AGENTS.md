@@ -113,6 +113,15 @@ AI 对 git 暂存区（staging area / index）**自主能做的只有只读查�
 
 用户提到「发布」「发版」「最新版」「升级到最新版」等且**未指明渠道**时，**默认指 GitHub Release**（tag + Release 及其 vsix / 二进制等产物），不是 VSCode Marketplace、也不是 Open VSX。**适用范围只限用户自己的项目**（目前只发 GitHub Release）；别人的项目按其实际发布渠道（Marketplace / Open VSX / 官网）判断，不默认往 GitHub Release 靠。用户明确指定渠道时按指定的来。升级已安装扩展：`gh release view -R <owner>/<repo>` 看最新 tag 与 assets → 下载 vsix → `code --install-extension <vsix> --force`。**注（2026-11-09）：VSCode 已退役，这条升级路径只在用户明确要求维护 VSCode 扩展时走；团队日常环境是 cmux，见「工作环境：cmux 优先，VSCode 退役」节。**
 
+## 提交必须走 commit skill（禁止裸 git commit，2026-11-11 用户立）
+
+**`git commit` 只能由 `/commit` 流程发出，禁止在 bash 里手写裸 commit。** 原因不是形式主义：commit skill 在提交前要做两门检测——**敏感内容扫描**（gitleaks 确定性扫描 + AI 语义扫描：财务状况、个人隐私标识、敏感叙述）与 **cache 检测**；手写裸 commit 直接跳过这两门，等于把安全阀绕开。2026-11-11 当天就绕过三轮（拆文章、登记子项目、补规则各一次），其中一轮因此漏了发版、靠 `settle-repo-check` 事后兜底才发现——漏发版只是可见的后果，**漏掉敏感扫描的后果是永久的**（一旦进 git 历史就只能重写全部历史 + force push）。
+
+- **正确姿势**：`/commit`（用户主动触发，或 `/add` 预检完全干净后的自动衔接）。流程内 commit 与 push 用 `&&` 串成一条，带 `# AI_AUTHORIZED_COMMIT` 标记。
+- **授权不免检**：用户当轮说「提交吧」也不构成跳过 skill 的理由——授权解决的是「能不能提交」，skill 解决的是「该不该提交」（扫描结果可能让这次提交不该发生）。两者都要过。
+- **工具强制**：`extensions/git-commit-guard.ts` 放行前查 `state/commit-gate.json` 这张闸门。闸门只由 `/commit` 流程用 `python3 ~/.pi/agent/patch/commit-gate/gate.py begin` 打开（默认 30 分钟），流程结束 / 失败 / 命中检测终止 / 用户中断都要 `gate.py end` 关上；裸 commit 会被直接拒，报错信息里给出开闸与关闸命令。
+- **边界**：本条只管「用什么流程提交」，不改变下方授权与暂存区规则；`~/.pi/agent` 这类不是 git 仓库的目录、以及脚本自己内部执行的 git 操作（如 TeamToolkit 发布脚本、`worktree-adopt.py`）不受影响。
+
 ## commit skill 的触发与终止
 
 - **触发来源两种（2026-10-01 修订）**：① 用户当前 `/commit` 指令——只看当前消息、不看历史（历史消息里的 `/commit` 不触发续跑或重跑）；当前消息字面含 `/commit` 仍要先理解意图——讨论 / 举例 / 引用不算，只有「用户当下明确要执行提交」才走流程；② add skill 预检完全干净后的自动衔接（2026-10-01 用户立）——本次 `/add` 预检结果「至少 1 个文件加入暂存区 + 需人工过目 0 个 + 不建议入库 0 个」时，由 add skill 直接进入本流程。除这两种来源外不得触发（不自发、不续跑、不自动进入）。
