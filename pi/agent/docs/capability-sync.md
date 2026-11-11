@@ -32,10 +32,14 @@
 **发布 = 单向镜像全局 → 仓库 → 提交 → 推送 → PR → 自动合并。**
 
 ```bash
-# 在 macmini 上（本机会话里用 ssh 或 macmini_run 调用都行）
+# pi/agent：在 macmini 上（本机会话里用 ssh 或 macmini_run 调用都行）
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py            # 发布（无变化则什么都不做）
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --check    # 只检查是否已一致
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改哪些文件
+
+# dsh/：在 MacBook 上（权威源 ~/.dsh，macmini 没有）
+python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py
+python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py --check
 ```
 
 脚本做的事（顺序固定）：
