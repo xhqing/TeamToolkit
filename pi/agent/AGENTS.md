@@ -78,7 +78,7 @@
    - **为什么 strict 是必须的**：非 strict 时，PR B 可以拿「旧 main」上通过的 CI 直接合并——PR A 刚合进 main 的新测试从未在 B 上跑过，回归防护网就漏了。strict 保证每个 PR 的 CI 都跑在「最新 main + 该 PR」的合并结果上，此前所有已合并 PR 的测试自动成为后来者的防护网。
    - **存量已全部补齐（2026-11-03 同日，用户追加要求「28 个不合规的仓库也统一执行最新标准」）**：全团队 37 个仓库（18 个 Agent 项目 + 19 个子项目）已 100% 合规——其中 26 个仓库补了统一的 `validate` 检查（仓库卫生 + 语法检查，加一份 `.github/workflows/validate.yml` + `.github/scripts/validate.py`），2 个已有 CI 的直接挂上现有检查。新建仓库照本条执行；随时可用 `~/.pi/agent/patch/branch-protection/branch-protection.sh audit` 核对。
 4. **分支命名**：`feat/<功能>`、`fix/<缺陷>`、`chore/<事项>`，一个分支只做一件事。
-5. **团队仓库必须是 public（2026-11-02 用户立）**：团队项目（Agent 项目 + 子项目）一律用公开仓库；**私有仓库不得作为团队项目**。发现私有仓库时：先做敏感信息检查（gitleaks 全历史 + AI 语义扫描——密钥 / 凭证 / 个人隐私 / 第三方个人信息 / 财务状况），**干净就直接改为 public 并补 main 保护**；含敏感信息的不入队（移出团队名册，或个人留存，不上服务端锁——GitHub 免费版对私有仓库也不提供分支保护，服务端只能靠本地 `git-main-guard.ts` 兑现）。
+5. **pi-team 仓库必须是 public（2026-11-02 用户立；2026-11-11 明确只管辖 pi-team）**：**pi-team（开源团队）**的项目（Agent 项目 + 子项目）一律用公开仓库；**私有仓库不得作为 pi-team 项目**。**闭源 / 私有项目归 dsh-team**（2026-11-11 用户立的独立团队，规则在 `~/.dsh/AGENTS.md`），**不在本文件管辖**——遇到 dsh-team 的私有仓库不要探测、不要登记、不要改可见性、不要试图转为 public。pi-team 范围内发现私有仓库时：先做敏感信息检查（gitleaks 全历史 + AI 语义扫描——密钥 / 凭证 / 个人隐私 / 第三方个人信息 / 财务状况），**干净就直接改为 public 并补 main 保护**；含敏感信息的不入队（移出团队名册，或个人留存，不上服务端锁——GitHub 免费版对私有仓库也不提供分支保护，服务端只能靠本地 `git-main-guard.ts` 兑现）。
 
 **边界与例外**：
 
@@ -266,6 +266,8 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 - **边界**：本条管「待办 / 未决 / 计划以后做」；已完成变更的记录（CHANGELOG）、当前规范的描述（SKILL.md）、陈述性代码注释不受限。敏感信息禁入 TODO 文件（占位符表述）；个人隐私类整体分流 local 版。
 
 ## 团队结构参考（按需读取，指针节）
+
+**两个团队完全独立（2026-11-11 用户立）**：**pi-team** 负责开源项目，规则在本文件；**dsh-team** 负责闭源项目，规则在 `~/.dsh/AGENTS.md`。两边不共用注册表、名册、镜像、技能、守卫；dsh-team 的项目不登记进 `docs/agents-registry.md`，也不进 `xhqing` 名册与 `agents-infra` 镜像；反过来，pi-team 的项目也不进 dsh-team。
 
 团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目、归 Kit，2026-11-11 该项目更名为 agents-infra）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，agents-infra 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
 
