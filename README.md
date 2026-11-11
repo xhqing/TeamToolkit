@@ -1,24 +1,24 @@
 <div align="center">
-  <img src="assets/logo.svg" width="640" alt="TeamToolkit">
+  <img src="assets/logo.svg" width="640" alt="agents-infra">
 </div>
 
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
-[![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](#)
-[![Type](https://img.shields.io/badge/Type-Team%20Toolkit-FF1493.svg)](#)
+[![Version](https://img.shields.io/badge/Version-2.1.0-blue.svg)](#)
+[![Type](https://img.shields.io/badge/Type-Agents%20Infra-FF1493.svg)](#)
 
 </div>
 
-# TeamToolkit
+# agents-infra
 
-> The shared toolkit of a multi-agent team: global rules, skills, extensions, helper scripts and configuration — published as one open-source mirror.
+> The infrastructure every agent in a multi-agent team runs on: global rules, skills, extensions, helper scripts and configuration — published as one open-source mirror.
 
 [简体中文](README_cn.md)
 
-TeamToolkit is the **open-source mirror of a multi-agent team's shared capability layer**. Everything under the user-level `~/.pi/agent/` directory that is **not specific to one agent but shared by all** — global rules (`AGENTS.md`), skills, pi extensions, helper scripts under `patch/`, reference docs, and the third-party package manifest — is reproduced here under `pi/agent/`, byte-identical to the global authoritative copy.
+agents-infra is the **open-source mirror of a multi-agent team's shared capability layer**. Everything under the user-level `~/.pi/agent/` directory that is **not specific to one agent but shared by all** — global rules (`AGENTS.md`), skills, pi extensions, helper scripts under `patch/`, reference docs, and the third-party package manifest — is reproduced here under `pi/agent/`, byte-identical to the global authoritative copy.
 
-> **Renamed on 2026-11-05.** This project was previously `CapabilityManagerAgent` and was maintained by an agent persona named Prometheus. It is now a **plain project** (no agent persona) owned by the team's executive assistant, and publishing is done by a single-pusher script on one machine. Old URLs redirect automatically.
+> **Renamed on 2026-11-11.** This project has carried three names: `CapabilityManagerAgent` (maintained by an agent persona named Prometheus) → `TeamToolkit` (2026-11-05, when it was demoted to a plain project) → `agents-infra` (2026-11-11, so the name states what it actually is: the shared infrastructure of the whole fleet, not one agent's toolkit). It is a **plain project** (no agent persona) owned by the team's executive assistant, and publishing is done by a single-pusher script on one machine. Old URLs redirect automatically.
 
 ---
 
@@ -40,7 +40,7 @@ Nothing here is a running dependency: the team loads `~/.pi/agent/` directly, an
 ## Core workflow: global is authoritative, single pusher publishes
 
 ```
-~/.pi/agent  ──(one-way rsync)──►  TeamToolkit/pi/agent/  ──►  commit → branch → PR → auto-merge
+~/.pi/agent  ──(one-way rsync)──►  agents-infra/pi/agent/  ──►  commit → branch → PR → auto-merge
    (authoritative, synced across machines)        (published mirror, one pusher only)
 ```
 
@@ -56,8 +56,8 @@ Nothing here is a running dependency: the team loads `~/.pi/agent/` directly, an
 Clone and read — the docs and skills are self-contained Markdown, and the scripts are plain Python/shell:
 
 ```bash
-git clone https://github.com/xhqing/TeamToolkit.git
-cd TeamToolkit
+git clone https://github.com/xhqing/agents-infra.git
+cd agents-infra
 ls pi/agent/skills        # one directory per skill, each with SKILL.md
 cat pi/agent/AGENTS.md    # the working rules these skills operate under
 ```
@@ -68,7 +68,7 @@ If you run [pi](https://github.com/earendil-works/pi), you can copy the parts yo
 
 ## Position in the team
 
-TeamToolkit is **not an agent** — it is the shared foundation every agent stands on: the rules they follow, the skills they reuse, the guards that keep them from doing something destructive. It sits outside the sales pipeline and outside any working group.
+agents-infra is **not an agent** — it is the shared foundation every agent stands on: the rules they follow, the skills they reuse, the guards that keep them from doing something destructive. It sits outside the sales pipeline and outside any working group.
 
 ---
 

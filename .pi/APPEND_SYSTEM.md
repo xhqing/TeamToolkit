@@ -1,4 +1,4 @@
-# TeamToolkit · 项目专属硬规则
+# agents-infra · 项目专属硬规则
 
 本文件由 pi 在 cwd 位于本仓库（或其 worktree / 临时 clone）时自动追加进系统提示。**只写本项目特有的约定**；全局规则与 Kit 的身份来自仓库根的 `AGENTS.md` 软链接，这里不复述、也不覆盖。
 
@@ -10,7 +10,7 @@
 
 1. **`pi/agent/` 是生成物，不要手工改。** 改了会被下一次发布覆盖，等于白做。要改内容先改全局 `~/.pi/agent`（那是唯一权威源），再走发布流程。
 2. **改全局目录前必须先做飞书快照**（`extensions/snapshot-guard.ts` 会拦）：`python3 ~/.pi/agent/patch/dev-snapshots/dev-snapshots.py snapshot pi-agent`。普通写入要求 30 分钟内的新鲜快照，删除 / 移动要求快照与当前内容完全一致；快照失败就不许改。
-3. **发布是单 pusher，只在 macmini 上跑**：`python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py`（`--check` 只比对、`--dry-run` 只列变更）。本机（MacBook）跑会被脚本按 hostname 拒绝——不要绕过：两台机器同时发布只会造出重复 PR、并可能把对端的本机私有配置推上公网。
+3. **发布是单 pusher，只在 macmini 上跑**：`python3 ~/.pi/agent/patch/agents-infra-publish/publish.py`（`--check` 只比对、`--dry-run` 只列变更）。本机（MacBook）跑会被脚本按 hostname 拒绝——不要绕过：两台机器同时发布只会造出重复 PR、并可能把对端的本机私有配置推上公网。
 4. **本机不保留本项目本地 clone**（用户 2026-11-05 决定）：查内容直接读 `~/.pi/agent`；确需改本仓库自身文件（README / CHANGELOG / `.pi/` 等）时用临时 clone，改完提交 → push 分支 → PR → 合并后删掉临时目录，不要长期常驻。
 5. **镜像边界**：`sessions/`、`state/`、`logs/`、`tmp/`、`intercom/`、`bin/`、`npm/` 与本机私有配置（`trust.json`、`mcp-project-approvals.json`、anysearch 的 `.env` / `runtime.conf`、backup 的 `endpoints/`、session-link 的三个本机配置文件）**不进镜像**；`*.log` / `*.lock` / `__pycache__/` / `*.sync-conflict-*` 同理。
 6. **敏感信息**：镜像会被公开发布（本仓库公开），全局目录里任何凭证、token、真实服务端点、个人隐私都不该进镜像——往 `~/.pi/agent` 新增文件前先判断它是否属于「clone 者能看懂且无害」的内容。

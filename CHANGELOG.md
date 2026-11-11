@@ -1,10 +1,15 @@
 # Changelog
 
-本项目（TeamToolkit，原 CapabilityManagerAgent）是智能体舰队通用能力底座的**开源镜像仓库**：`claude/`（2026-08-03 起从 `.claude/` 迁入）下的 `skills` / `CLAUDE.md` / `docs` 三部分（全局规则随 CLAUDE.md 走；原 `~/.claude/rules/` 目录已废弃删除，2026-09-14 起文档口径统一）与全局权威源 `~/.claude/` 逐字节一致（2026-08-04 起权威方向反转：全局为权威、本项目 `claude/` 为镜像）。本 CHANGELOG 记录**通用能力底座的变更**——即 `claude/`、`pi/agent/extensions/`、`pi/agent/npm/` 镜像范围的增删改，以及全局 ↔ 本项目镜像的同步动作。
+本项目（agents-infra，原名 TeamToolkit / CapabilityManagerAgent）是智能体舰队通用能力底座的**开源镜像仓库**：`claude/`（2026-08-03 起从 `.claude/` 迁入）下的 `skills` / `CLAUDE.md` / `docs` 三部分（全局规则随 CLAUDE.md 走；原 `~/.claude/rules/` 目录已废弃删除，2026-09-14 起文档口径统一）与全局权威源 `~/.claude/` 逐字节一致（2026-08-04 起权威方向反转：全局为权威、本项目 `claude/` 为镜像）。本 CHANGELOG 记录**通用能力底座的变更**——即 `claude/`、`pi/agent/extensions/`、`pi/agent/npm/` 镜像范围的增删改，以及全局 ↔ 本项目镜像的同步动作。
 
 > 按全局 CLAUDE.md「同步动作只记权威源的 CHANGELOG」规矩：通用能力的同步只记本文件，**不记到各业务 agent 项目**（如 DayTradingAgent 等）的 CHANGELOG，避免污染那些项目自己的变更记录。
 
 ## 2026-11-11
+
+- **更名（2026-11-11）：`TeamToolkit` → `agents-infra`**。
+  **为什么改**：用户指出「TeamToolkit」这个名字不合适——它读起来像某个 agent 的专属工具箱，看不出这是全队 17 个 agent 共用的基础设施。新名字 `agents-infra` 直接把「agent 们的基础设施」写进名字，也符合团队「非 agent 项目命名要尽可能简单、体现职责」的规范。
+  **改了什么**：① GitHub 仓库 `xhqing/TeamToolkit` 改名为 `xhqing/agents-infra`（旧 URL 由 GitHub 自动重定向）；② 发布机（macmini）上的 clone 目录 `~/Developer/TeamToolkit` 改名为 `~/Developer/agents-infra`，remote 指向新地址；③ 仓库根 `README.md` / `README_cn.md` 的标题、类型徽章（`Type-Team Toolkit` → `Type-Agents Infra`）、示意图路径、clone 指令与正文自称全部换新，沿革说明补成三段名字的历史（CapabilityManagerAgent → TeamToolkit → agents-infra）；④ 版本号 `2.0.0` → `2.1.0`（对外更名属新增级变更）；⑤ 全局权威源 `~/.pi/agent` 内的引用同批更新：`docs/capability-sync.md`、`docs/agents-registry.md`、`docs/new-agent-scaffold.md`、`docs/repo-branch-protection.md`、`AGENTS.md`、发布脚本目录 `patch/team-toolkit-publish/` → `patch/agents-infra-publish/`、`patch/npm-manifest/refresh.py`（环境变量 `TEAM_TOOLKIT_DIR` → `AGENTS_INFRA_DIR`）、`extensions/redundant-ask-guard.ts`、`skills/backup/` 文档说明；⑥ 团队其它仓库的引用（assistant-agent、xhqing 名册）同批更新。
+  **回归风险**：无代码逻辑变更，只是改名与文档同步。可能影响外部调用者的只有两处——旧 URL（已由 GitHub 重定向）与 `refresh.py` 的环境变量名（本机工具，无外部使用者）。
 
 - **镜像同步（2026-11-11）**：从全局 `~/.pi/agent` 单向发布。
   **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
