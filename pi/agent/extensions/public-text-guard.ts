@@ -88,7 +88,7 @@ const TAG_CREATE = new RegExp(
 // tag 推送：--tags / --follow-tags / refs/tags/ / refspec 形如 v1.2.3
 // 2026-10-04 修误伤：形如版本号的 refspec 必须是「裸 token」——前面不能是分支名字符
 // （字母数字 / `/` / `.` / `-`）：`git push origin chore/bump-v1.4.0` 是推分支、不是推 tag，
-// 旧写法不带前边界会把这种分支名误判为 tag 推送而拦下。（CC 钩子规则 6 同步修，用 `([^[:alnum:]/_.-]|^)` 表达同一约束。）
+// 旧写法不带前边界会把这种分支名误判为 tag 推送而拦下。(用 `([^[:alnum:]/_.-]|^)` 表达同一约束。)
 const TAG_PUSH = new RegExp(
 	GIT_PREFIX +
 		String.raw`push[^;&|\n]*(?:--tags(?![a-zA-Z0-9-])|--follow-tags(?![a-zA-Z0-9-])|refs/tags/|(?<![\w/.-])v?\d+\.\d+\.\d+(?![\w/.-]))`,

@@ -13,9 +13,8 @@
  *    闸门只由 `/commit` 流程（经 `patch/commit-gate/gate.py begin`）打开；流程结束或失败
  *    时用 `gate.py end` 关上。当天实测：绕过三轮当天就发生了，靠事后提醒兜不住。
  *
- * CC 侧（`~/.claude/hooks/`）自 2026-11-11 起**停止维护**（用户立规）：新规则只落 pi 端，
- * 不再改 CC 钩子；两边已经不同步，别拿 CC 的实现当参照。改规则时只需要同步改下面这个
- * 文件（外加 `patch/commit-gate/` 与 `skills/commit/SKILL.md`）。
+ * 团队只用 pi，其它 harness（Claude Code / CodeBuddy / Codex / DeepSeek Harness…）
+ * 自 2026-11-11 起一律不维护：本文件是**唯一实现**，不再有「另一端」需要同步。
  */
 
 import { readFileSync } from "node:fs";

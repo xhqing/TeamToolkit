@@ -64,7 +64,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
 2. **敏感内容扫描（`git commit` 前一次性硬性检查，针对暂存区已有内容，本次操作仅此一次）**：检查暂存区即将被提交（commit）的所有文件，是否含敏感或不宜入库内容。这些文件 = 暂存区已有内容（来源不限：`/add` 预检加入或用户手动 `git add`；本 skill 不执行 `git add`，故不扫工作区未暂存改动）。常见类别包括：
    - 凭证与密钥：`.env`、`.env.*`、`*.pem`、`*.key`、`id_rsa` 等私钥、API key、token、密码、数据库连接串；
    - 凭证目录：`.ssh/`、`.aws/`、`.gcloud/`、`secrets/`、`credentials/` 等；
-   - 本地私有配置：`.claude/` 中含个人设置/记忆的文件、`.idea/`、`.vscode/` 中含个人配置的文件；
+   - 本地私有配置：`settings.local.json`、`.idea/`、`.vscode/` 中含个人配置的文件；
    - **敏感行为记录（2026-08-23 扩充，防「网络出口相关行为记录」类泄漏——不只拦「值」、也拦把「身份 + 绕行手段」串成故事的行为叙述；本节规则描述一律用中性释义，不写字面词）**：
      - **公网 IP 字面量**：暂存内容中出现公网 IPv4 字面量（含 IP 串、`;` 分隔的 IP 清单）即告警——本地回环（127.x / 192.168.x / 10.x / 172.16-31.x / ::1）与已知公共服务 IP（如 8.8.8.8、1.1.1.1）除外；技术文档确需引用 IP 时逐个判断（测试网段 192.0.2.x / 198.51.100.x / 203.0.113.x 属文档示例地址、放行）；
      - **特定网络服务商标识**：订阅制网络服务商的名称（语义识别，字面词不入本文档）、其入口域名体系、节点代号（字母数字组合的代号系列）；
@@ -162,7 +162,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
    - 已有名字（注册表命中或 README persona 块已存在）或新起并写入后 → 写 `<!-- commit-skill: agent-persona = ok -->` + 日期行（注明名字）。
 
    **9e. AutoMemory 目录**（标记 `automemory`）：**永久跳过——不检测、不补全、不写标记**。
-   - **原因**：AutoMemory 已全局弃用（2026-07-20 用户立）。按全局 `~/.pi/agent/AGENTS.md` 约定，新建项目一律不配 AutoMemory——不建 `.claude/memory/`、不填 `autoMemoryDirectory`、`.gitignore` 不挂 memory 条目。
+   - **原因**：AutoMemory 已全局弃用（2026-07-20 用户立）。按全局 `~/.pi/agent/AGENTS.md` 约定，新建项目一律不配 AutoMemory——不建 `memory/`、不填 `autoMemoryDirectory`、`.gitignore` 不挂 memory 条目。
    - **因此本步不做任何检测与补全**：不创建/编辑 `.claude/settings.local.json`、不创建 `.claude/settings.local.example.json`、不向 `.gitignore` 写 memory 相关内容（`settings.local.json` 的忽略与 `.claude/memory/` 的入库由项目脚手架阶段处理，非本 skill 职责）。
    - `.commit-cache.md`**不写 `automemory` 标记**（该标记在本约定下永久不出现）。
    - **边界**：若日后重新启用 AutoMemory，恢复本步检测逻辑即可（届时需同步恢复「例外④ AutoMemory 配置」与缓存段 `automemory` 标记示例）。
