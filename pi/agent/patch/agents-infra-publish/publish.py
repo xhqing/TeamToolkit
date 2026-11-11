@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""把全局 `~/.pi/agent` 单向发布到 TeamToolkit 开源仓库（单 pusher：只在 macmini 上跑）。
+"""把全局 `~/.pi/agent` 单向发布到 agents-infra 开源仓库（单 pusher：只在 macmini 上跑）。
 
 为什么需要
 ----------
-`TeamToolkit`（原 CapabilityManagerAgent）是团队通用能力的唯一开源出口。镜像内容是从全局
+`agents-infra`（沿革：CapabilityManagerAgent → 2026-11-05 更名 TeamToolkit → 2026-11-11 更名
+ agents-infra）是团队通用能力的唯一开源出口。镜像内容是从全局
 `~/.pi/agent` **确定性生成**的，所以只能有一个机器生成并推送——两台机器都推就会造出两个
 提交、两个 PR，互相 rebase 纯属浪费；更麻烦的是全局目录里有若干「各机自维护」的配置，
 两边同时生成可能把对端的本机配置推上公网。
@@ -23,7 +24,7 @@
   publish.py            # 正常发布（无变化则直接退出）
   publish.py --check    # 只检查是否已一致，不写任何东西
   publish.py --dry-run  # 显示会同步哪些文件，不提交
-  publish.py --dir <仓库路径>   # 指定 TeamToolkit 仓库位置
+  publish.py --dir <仓库路径>   # 指定 agents-infra 仓库位置
 """
 
 from __future__ import annotations
@@ -45,7 +46,7 @@ from pathlib import Path
 
 HOME = Path.home()
 GLOBAL = HOME / ".pi" / "agent"
-REPO_DEFAULT = HOME / "Developer" / "TeamToolkit"
+REPO_DEFAULT = HOME / "Developer" / "agents-infra"
 MIRROR_SUB = Path("pi") / "agent"
 
 # 进镜像的五部分（顺序固定，便于 diff 阅读）
@@ -305,7 +306,7 @@ def commit_and_pr(repo: Path, files: list[str], branch: str) -> None:
     sh(["git", "-C", str(repo), "commit", "-q", "-m", msg])
     sh(["git", "-C", str(repo), "push", "-q", "-u", "origin", branch])
     title = f"chore: 镜像同步 {dt.date.today().isoformat()}（{len(files)} 个文件）"
-    body = "从全局 `~/.pi/agent` 单向发布，由 `patch/team-toolkit-publish/publish.py` 生成。\n\n" + \
+    body = "从全局 `~/.pi/agent` 单向发布，由 `patch/agents-infra-publish/publish.py` 生成。\n\n" + \
            "\n".join(f"- `{f}`" for f in files[:40])
     out = sh(["gh", "pr", "create", "--title", title, "--body", body, "--base", "main",
               "--head", branch], cwd=repo, check=False)
@@ -315,8 +316,8 @@ def commit_and_pr(repo: Path, files: list[str], branch: str) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="发布全局能力层镜像到 TeamToolkit")
-    ap.add_argument("--dir", default=str(REPO_DEFAULT), help="TeamToolkit 仓库路径")
+    ap = argparse.ArgumentParser(description="发布全局能力层镜像到 agents-infra")
+    ap.add_argument("--dir", default=str(REPO_DEFAULT), help="agents-infra 仓库路径")
     ap.add_argument("--check", action="store_true", help="只检查是否一致")
     ap.add_argument("--dry-run", action="store_true", help="演示同步内容，不提交")
     ap.add_argument("--allow-non-macmini", action="store_true",
@@ -330,7 +331,7 @@ def main() -> int:
 
     repo = Path(args.dir).expanduser()
     if not (repo / ".git").exists():
-        print(f"[ERR] 找不到仓库：{repo}（macmini 上应先 git clone github.com/xhqing/TeamToolkit）")
+        print(f"[ERR] 找不到仓库：{repo}（macmini 上应先 git clone github.com/xhqing/agents-infra）")
         return 2
 
     mirror = repo / MIRROR_SUB

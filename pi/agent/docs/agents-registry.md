@@ -1,6 +1,6 @@
 # 智能体命名注册表与团队结构
 
-> 本文件由全局 `~/.pi/agent/AGENTS.md`「团队结构参考」指针节指向。**何时读**：新建 Agent 项目前（名称查重）、判断某子任务该移交给哪个 agent 时、新增 / 变更 Agent 或子项目的注册信息时。权威源在全局 `~/.pi/agent/docs/`，开源镜像在 TeamToolkit 仓库 `pi/agent/docs/`。
+> 本文件由全局 `~/.pi/agent/AGENTS.md`「团队结构参考」指针节指向。**何时读**：新建 Agent 项目前（名称查重）、判断某子任务该移交给哪个 agent 时、新增 / 变更 Agent 或子项目的注册信息时。权威源在全局 `~/.pi/agent/docs/`，开源镜像在 agents-infra 仓库 `pi/agent/docs/`。
 
 ## 智能体命名注册表（避免重名 + 跨 agent 推荐）
 
@@ -101,7 +101,7 @@
 | assistant-agent（Kit） | vscode-copy-anywhere | 让 VSCode 资源管理器里复制的文件能粘到任意 App 的 macOS 后台小工具（Finder / 微信 / 浏览器上传框等；后台把 VSCode 私有剪贴板格式转成系统格式；2026-10-08 建立、2026-10-09 登记；2026-10-30 由 `copybridge` 改名为现名——原名看不出用途） |
 | assistant-agent（Kit） | ark-key-pool | pi 的火山方舟 Agent Plan 多 Key 自动切换扩展（不同账号的 Key 组成池，额度耗尽 / Key 失效自动切下一个，冷却跨进程共享；项目 `~/Developer/ark-key-pool`，2026-10-22 建立；已开源 github.com/xhqing/ark-key-pool（2026-10-22，v0.1.0）） |
 | assistant-agent（Kit） | macmini-tmux | 在 Mac mini 上方便使用 tmux 的 CLI 封装（`macmini tmux` 不带参数时每次新开会话、名字自动递增 `session#N`；`-s` 按名字接上 / 新建、`-a` 接回最近会话、`-l` 列表；另可透传任意命令到 macmini；项目 `~/Developer/macmini-tmux`，2026-10-29 建立；已开源 github.com/xhqing/macmini-tmux（2026-10-29，v0.1.0）） |
-| assistant-agent（Kit） | TeamToolkit | 全团队通用能力底座的开源镜像（原 CapabilityManagerAgent，2026-11-05 更名并降级为普通项目；仓库内 `pi/agent/` 逐字节镜像全局 `~/.pi/agent/`；发布改为 macmini 单 pusher，见 `docs/capability-sync.md`） |
+| assistant-agent（Kit） | agents-infra | 全团队通用能力底座的开源镜像（沿革：CapabilityManagerAgent → 2026-11-05 降级为普通项目并更名 TeamToolkit → 2026-11-11 更名为 agents-infra；仓库内 `pi/agent/` 逐字节镜像全局 `~/.pi/agent/`；发布改为 macmini 单 pusher，见 `docs/capability-sync.md`） |
 | assistant-agent（Kit） | dotfiles | 按 App 分类的个人配置文件仓库（项目 `~/Developer/dotfiles`，2026-10-31 建立，远程 `github.com/xhqing/dotfiles`；2026-11-02 按「团队项目一律 public」改公开并锁 main）：配置文件在仓库里只存一份，安装时软链到系统位置，新机器 clone + `./install.sh` 一键恢复；目前收录 ghostty / cmux 两个 App，**`ghostty/config` 被 Ghostty 与 cmux 共用**（cmux 基于 libghostty 读同一份配置），共用关系在仓库根 README 的「共用配置文件」表与各 App 目录 README 里注明 |
 | dev-agent（Atlas） | XPilot | Xray-core 节点管理 CLI（Python）：代理节点真实流量测速与连通性检测 → 自动选路（纯延迟 / 纯带宽 / 混合）→ 故障转移 → 订阅刷新（2026-10-26 由 NetOpsAgent / Hermes 移交 Atlas，原负责 Agent 已注销） |
 | NeuralCoreAgent（Ada） | AgentCortex | 深度推理引擎规则集（三套推理引擎：Infinite / Rapid / Incisive） |
@@ -113,7 +113,7 @@
 
 - **已注销 / 已退役的 Agent**：**Hermes**（NetOpsAgent，2026-10-26 用户决定）——原网络运维管理员，唯一子项目 XPilot 已移交 Atlas（dev-agent），项目本体退役、不再作为活跃 Agent 维护（GitHub 仓库 `xhqing/NetOpsAgent` 保留为存档；本地目录已于 2026-10-31 按用户要求删除）。
 - **已除名的 Agent（2026-10-31 用户决定，第二批）**：**Tinker**（PatchClaudeAgent，补丁维护匠）——用户要求「Tinker 这个 Agent 也除名，不需要了」；原职责是把自定义补丁重新应用到升级后的 VSCode Claude Code 扩展（自愈引擎），本次未指定接替者；项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/PatchClaudeAgent` 不再存在），GitHub 仓库 `xhqing/PatchClaudeAgent` 保留最新版为唯一源。
-- **已除名的 Agent（2026-11-05 用户决定）**：**Prometheus**（CapabilityManagerAgent，通用能力管家）——项目**降级为普通项目并更名 TeamToolkit**，归 **Kit**（assistant）负责；不再作为 Agent 维护（公告 / 维护逻辑改为 macmini 单向发布脚本，见 `docs/capability-sync.md`）。GitHub 仓库已由 `xhqing/CapabilityManagerAgent` 改名为 `xhqing/TeamToolkit`（旧 URL 自动重定向）。
+- **已除名的 Agent（2026-11-05 用户决定）**：**Prometheus**（CapabilityManagerAgent，通用能力管家）——项目**降级为普通项目并更名 agents-infra**，归 **Kit**（assistant）负责；不再作为 Agent 维护（公告 / 维护逻辑改为 macmini 单向发布脚本，见 `docs/capability-sync.md`）。GitHub 仓库沿革：`xhqing/CapabilityManagerAgent` → 2026-11-05 改名 `xhqing/TeamToolkit` → 2026-11-11 改名 `xhqing/agents-infra`（旧 URL 均由 GitHub 自动重定向）。
 - **已除名的 Agent（2026-10-31 用户决定）**：**Alfred**（DeviceStewardAgent，电脑管家）——用户要求「可以从名册中除名了，以后他的工作由 Kit 处理」；职责已并入 **Kit**（assistant），项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/DeviceStewardAgent` 不再存在），GitHub 仓库 `xhqing/DeviceStewardAgent` 保留最新版为唯一源；原有子项目 ResourceMonitor 早已退役。
 - **已移出名册的子项目（2026-11-02 用户决定）**：**xhs-mentor-scam**（原属 Gatsby / social-agent）——仓库含第三方个人信息（合同、私信截图、真实姓名、举报材料），按 2026-11-02 立的「团队项目必须 public、私有仓库不得入队」规则不能留在团队；保持 private 作为用户个人项目，`autosave.sh` 自动备份照常。GitHub 仓库 `xhqing/xhs-mentor-scam` 与本地目录 `~/Developer/xhs-mentor-scam` 均保留。要恢复为团队项目，须先拆分 / 脱敏敏感材料并转为 public。
 - **已移出名册的子项目（2026-10-31 用户决定）**：**NewsScoreStudy**（Mark 负责的面试实操题研究仓库，私有远程 `github.com/xhqing/NewsScoreStudy` 保留；本地目录已于 2026-10-31 按用户要求删除）——用户要求「先从名册中移除」；因名册与子项目映射表必须内容一致，本表同步删除其登记（原属 Mark，2026-10-26 由 Victor 移交）。要恢复时在这两处同时加回并同步名册。

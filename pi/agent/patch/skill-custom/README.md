@@ -39,4 +39,4 @@ tail ~/.pi/agent/patch/skill-custom/restore.log   # 最近动作
 
 - 上游大改结构导致锚点消失 → 脚本不硬写、桌面通知、现场留在 `conflicts/`，此时需人工处理（一般是更新片段或插入锚点）。
 - 上游若恰好改了与定制同一处（如 description）→ 以本机定制为准（覆盖），日志有记录。
-- 机制代码与定制片段（`restore.py`、`snippets/`、本文件）已开源镜像到 TeamToolkit 仓库的 `claude/patch/skill-custom/`（2026-09-25 起，逐字节一致）；运行产物（`restore.log` / `launchd.*.log` / `.lock` / `conflicts/`）只在本机、不进镜像。skill 本身的开源镜像（TeamToolkit/claude/skills/）同步仍走原流程。
+- 机制代码与定制片段（`restore.py`、`snippets/`、本文件）已开源镜像到 agents-infra 仓库的 `claude/patch/skill-custom/`（2026-09-25 起，逐字节一致）；运行产物（`restore.log` / `launchd.*.log` / `.lock` / `conflicts/`）只在本机、不进镜像。skill 本身的开源镜像（agents-infra/claude/skills/）同步仍走原流程。

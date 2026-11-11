@@ -1,18 +1,18 @@
-# team-toolkit-publish：全局能力层的单 pusher 发布
+# agents-infra-publish：全局能力层的单 pusher 发布
 
 > 配套规则见全局 `AGENTS.md`「维护全局通用能力」条与 `docs/capability-sync.md`。
 
 ## 一句话
 
-把 `~/.pi/agent`（五部分 + npm 清单）单向发布到 `TeamToolkit` 仓库（`pi/agent/`），
+把 `~/.pi/agent`（五部分 + npm 清单）单向发布到 `agents-infra` 仓库（`pi/agent/`），
 **只允许在 macmini 上跑**——两台机器都推会造成重复提交与分叉。
 
 ## 命令
 
 ```bash
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py            # 发布
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --check    # 只查是否一致
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --dry-run  # 看会改哪些文件
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py            # 发布
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --check    # 只查是否一致
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改哪些文件
 ```
 
 ## 它为什么这么做
@@ -50,7 +50,7 @@ python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --dry-run  # 看会改
 `refresh.py` 会把版本号写回去，所以清单只在**装了包的那台机器**上生成：
 
 ```bash
-python3 ~/.pi/agent/patch/npm-manifest/refresh.py --dst /tmp/team-toolkit-npm   # 在装包的机器上
-scp /tmp/team-toolkit-npm/* mac-mini:~/Developer/TeamToolkit/pi/agent/npm/      # 拷到发布机
-ssh mac-mini 'python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py'        # 正常发布
+python3 ~/.pi/agent/patch/npm-manifest/refresh.py --dst /tmp/agents-infra-npm   # 在装包的机器上
+scp /tmp/agents-infra-npm/* mac-mini:~/Developer/agents-infra/pi/agent/npm/      # 拷到发布机
+ssh mac-mini 'python3 ~/.pi/agent/patch/agents-infra-publish/publish.py'        # 正常发布
 ```

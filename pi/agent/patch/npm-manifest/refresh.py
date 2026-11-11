@@ -7,20 +7,20 @@
 备份方式是「声明 + 精确锁 + 人读清单」：新机器按清单即可精确重建同样的包。
 
 权威源：`~/.pi/agent/npm/`（其中 `package.json` / `package-lock.json` 由 pi 自动维护）
-镜像：  `<team-toolkit>/pi/agent/npm/`（TeamToolkit 仓库，即本机制的唯一出口；2026-11-05 起由 macmini 单 pusher 发布）
+镜像：  `<agents-infra>/pi/agent/npm/`（agents-infra 仓库，即本机制的唯一出口；2026-11-05 起由 macmini 单 pusher 发布）
 产物三件套：
   - package.json        （直接依赖声明，副本）
   - package-lock.json   （精确版本 + 下载地址 + 完整性哈希，副本；可复现安装）
   - PACKAGES.md         （本脚本生成：包名 / 精确版本 / 来源 / License / 用途）
 
-更新时机：装 / 删 / 升级 pi 包后跑一次本脚本刷新，然后按规矩记 TeamToolkit
+更新时机：装 / 删 / 升级 pi 包后跑一次本脚本刷新，然后按规矩记 agents-infra
 的 CHANGELOG 并提交。范围说明：目前只覆盖 npm 源安装的包（`~/.pi/agent/npm/`）；
 若将来出现 git: 或本地路径安装的包，需要另行扩展（git 源记录「仓库 + pinned ref」）。
 
 用法：
     refresh.py            # 同步（把三件套写入镜像目录）
     refresh.py --check    # 只校验镜像与当前本机是否一致（不写文件），不一致退出码 1
-    refresh.py --dst DIR  # 指定镜像目录（默认 ~/Developer/TeamToolkit/pi/agent/npm）
+    refresh.py --dst DIR  # 指定镜像目录（默认 ~/Developer/agents-infra/pi/agent/npm）
 """
 
 from __future__ import annotations
@@ -34,8 +34,8 @@ from pathlib import Path
 # 权威源：pi 的 npm 包目录（pi 自动维护 package.json / package-lock.json）
 SRC_NPM = Path.home() / ".pi" / "agent" / "npm"
 
-# 镜像默认位置：TeamToolkit 仓库的 pi/agent/npm/
-DEFAULT_DST = Path(os.environ.get("TEAM_TOOLKIT_DIR", Path.home() / "Developer" / "TeamToolkit")) / "pi" / "agent" / "npm"
+# 镜像默认位置：agents-infra 仓库的 pi/agent/npm/
+DEFAULT_DST = Path(os.environ.get("AGENTS_INFRA_DIR", Path.home() / "Developer" / "agents-infra")) / "pi" / "agent" / "npm"
 
 # 人读「用途」列：脚本无法从包元数据自动提炼，在这里手工维护（按包名）。
 # 新包未收录时回退到包的 description 字段（若也没有则留空，提示补充）。
@@ -115,7 +115,7 @@ def read_source_files() -> dict[str, str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="同步 pi 第三方包清单到 TeamToolkit 镜像")
+    parser = argparse.ArgumentParser(description="同步 pi 第三方包清单到 agents-infra 镜像")
     parser.add_argument("--check", action="store_true", help="只校验镜像与当前本机是否一致，不写文件")
     parser.add_argument("--dst", type=Path, default=DEFAULT_DST, help=f"镜像目录（默认 {DEFAULT_DST}）")
     args = parser.parse_args()
@@ -158,7 +158,7 @@ def main() -> int:
     print(f"  已更新：{', '.join(changed) if changed else '（无）'}")
     print(f"  未变化：{', '.join(unchanged) if unchanged else '（无）'}")
     if changed:
-        print("  提醒：按规矩记 TeamToolkit 的 CHANGELOG 并提交。")
+        print("  提醒：按规矩记 agents-infra 的 CHANGELOG 并提交。")
     return 0
 
 

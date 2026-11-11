@@ -1,4 +1,4 @@
-# 全局通用能力的开源出口：TeamToolkit（2026-11-05 起单 pusher）
+# 全局通用能力的开源出口：agents-infra（2026-11-05 起单 pusher；2026-11-11 更名）
 
 > 本文件由全局 `~/.pi/agent/AGENTS.md`「团队结构参考」指针节指向。**何时读**：维护全局 `~/.pi/agent/`
 > 的通用能力（skills / AGENTS.md / docs / patch / pi 扩展）时、装 / 删 / 升级 pi 第三方包后刷新清单时、
@@ -6,11 +6,11 @@
 
 ## 一、它是什么、归谁
 
-`TeamToolkit`（原 `CapabilityManagerAgent`，2026-11-05 更名）是**智能体团队通用能力底座的唯一开源出口**。
+`agents-infra`（2026-11-11 定现名；本项目的沿革是 `CapabilityManagerAgent` → 2026-11-05 降级更名 `TeamToolkit` → 2026-11-11 更名 `agents-infra`，原因是「TeamToolkit」读起来像某个 agent 的专属工具箱、看不出它是全队共用的基础设施）是**智能体团队通用能力底座的唯一开源出口**。
 它已经从「Agent 项目」降级为**普通项目**，归 **Kit**（assistant）负责；原来的 Prometheus
 会话不再维护它，发布动作由脚本完成。
 
-- 仓库：`github.com/xhqing/TeamToolkit`（旧地址 `CapabilityManagerAgent` 自动重定向）
+- 仓库：`github.com/xhqing/agents-infra`（旧地址 `TeamToolkit` / `CapabilityManagerAgent` 由 GitHub 自动重定向）
 - 权威源：全局 `~/.pi/agent/`（两机之间用 Syncthing 双向同步，逐字节一致）
 - 镜像位置：仓库里的 `pi/agent/`，路径与全局一一对应
 - 该项目**只做镜像发布**：任何改动的源头都在全局，不要去镜像里改内容（改了也会被下一次发布覆盖）
@@ -23,7 +23,7 @@
 
 所以约定：**只有 macmini 持有这个仓库并推送**。
 
-- macmini：`~/Developer/TeamToolkit`（唯一 git clone，唯一 pusher）
+- macmini：`~/Developer/agents-infra`（唯一 git clone，唯一 pusher）
 - macbook：**不保留**这个仓库（要看内容 `gh repo view` / 网页即可；本机的 `~/.pi/agent` 就是同一份内容）
 - 需要在新机器上重建发布能力：macmini 上 `git clone` + 配好 `gh` 认证即可，脚本不需要改
 
@@ -33,9 +33,9 @@
 
 ```bash
 # 在 macmini 上（本机会话里用 ssh 或 macmini_run 调用都行）
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py            # 发布（无变化则什么都不做）
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --check    # 只检查是否已一致
-python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --dry-run  # 看会改哪些文件
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py            # 发布（无变化则什么都不做）
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --check    # 只检查是否已一致
+python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改哪些文件
 ```
 
 脚本做的事（顺序固定）：
@@ -79,11 +79,11 @@ python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py --dry-run  # 看会改
 
 ```bash
 # 本机：生成清单到临时目录
-python3 ~/.pi/agent/patch/npm-manifest/refresh.py --dst /tmp/team-toolkit-npm
+python3 ~/.pi/agent/patch/npm-manifest/refresh.py --dst /tmp/agents-infra-npm
 # 拷到发布机的仓库里（发布机仍是唯一 pusher）
-scp /tmp/team-toolkit-npm/* mac-mini:~/Developer/TeamToolkit/pi/agent/npm/
+scp /tmp/agents-infra-npm/* mac-mini:~/Developer/agents-infra/pi/agent/npm/
 # macmini：正常发布
-ssh mac-mini 'python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py'
+ssh mac-mini 'python3 ~/.pi/agent/patch/agents-infra-publish/publish.py'
 ```
 
 `publish.py` 默认**不碰** `pi/agent/npm/`，只打印一行提示。
@@ -92,10 +92,10 @@ ssh mac-mini 'python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py'
 
 ```bash
 # 全局 vs 镜像 逐字节比对（排除本机私有文件与本机产物）
-diff -r ~/.pi/agent/skills      ~/Developer/TeamToolkit/pi/agent/skills
-diff    ~/.pi/agent/AGENTS.md   ~/Developer/TeamToolkit/pi/agent/AGENTS.md
+diff -r ~/.pi/agent/skills      ~/Developer/agents-infra/pi/agent/skills
+diff    ~/.pi/agent/AGENTS.md   ~/Developer/agents-infra/pi/agent/AGENTS.md
 # 确认镜像内容真的被 git 跟踪（2026-10-04 事故：.gitignore 里一条裸 docs/ 把镜像静默吞掉）
-git -C ~/Developer/TeamToolkit ls-files pi/agent/docs | wc -l
+git -C ~/Developer/agents-infra ls-files pi/agent/docs | wc -l
 ```
 
 常见问题：
