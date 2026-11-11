@@ -42,7 +42,7 @@ interface BgTask {
 	/** 会话工作目录（启动命令与日志目录的基准）。 */
 	cwd: string;
 	logPath: string;
-	/** 日志相对会话工作目录的路径（展示用，如 tmp/pi-bg/<sid8>-bg-1.log）。 */
+	/** 日志相对会话工作目录的路径（展示用，如 tmp/pi-bg/<stag>-bg-1.log；stag = 完整会话标识）。 */
 	logRel: string;
 	startedAt: number;
 	endedAt?: number;
@@ -211,11 +211,14 @@ export default function backgroundTasks(pi: ExtensionAPI) {
 			fs.mkdirSync(logDir, { recursive: true });
 			counter += 1;
 			const id = `bg-${counter}`;
-			// 日志文件按会话分名（<sid8>-<id>.log）：任务编号是进程内计数、多会话并行时
+			// 日志文件按会话分名（<stag>-<id>.log）：任务编号是进程内计数、多会话并行时
 			// 会重复（都从 bg-1 起），不加会话前缀会互相覆盖 / 混入别的会话的输出。
+			// 2026-11-11 修（Issue #77 / T188HKUS）：不能截前 8 位——pi 的会话 id 是 UUIDv7，
+			// 前 8 位是毫秒时间戳高位，相隔几十秒启动的两个会话会相同，日志照样会串。
+			// 改用完整会话标识（去掉非字母数字，与 trading-agent 的 session_tag.py 同口径）。
 			// 会话 id 若取不到（极端情况）退到进程启动时间戳。
 			const sid = String(ctx?.sessionManager?.getSessionId?.() ?? "");
-			const sidSafe = sid.replace(/[^A-Za-z0-9-]/g, "").slice(0, 8) || `${Date.now().toString(36)}`;
+			const sidSafe = sid.replace(/[^A-Za-z0-9]/g, "") || `${Date.now().toString(36)}`;
 			const logName = `${sidSafe}-${id}.log`;
 			const logPath = path.join(logDir, logName);
 			const logRel = `tmp/pi-bg/${logName}`;
