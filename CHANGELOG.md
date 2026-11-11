@@ -6,6 +6,24 @@
 
 ## 2026-11-11
 
+- **镜像同步（2026-11-11）**：从全局 `~/.pi/agent` 单向发布。
+  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
+  **改了什么**：13 个文件——
+  - `pi/agent/AGENTS.md`
+  - `pi/agent/docs/agents-registry.md`
+  - `pi/agent/docs/capability-sync.md`
+  - `pi/agent/docs/new-agent-scaffold.md`
+  - `pi/agent/docs/repo-branch-protection.md`
+  - `pi/agent/extensions/git-commit-guard.ts`
+  - `pi/agent/extensions/redundant-ask-guard.ts`
+  - `pi/agent/patch/npm-manifest/refresh.py`
+  - `pi/agent/patch/skill-custom/README.md`
+  - `pi/agent/patch/team-toolkit-publish/README.md`
+  - `pi/agent/patch/team-toolkit-publish/publish.py`
+  - `pi/agent/skills/backup/SKILL.md`
+  - `pi/agent/patch/agents-infra-publish/`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
 - **更名（2026-11-11）：`TeamToolkit` → `agents-infra`**。
   **为什么改**：用户指出「TeamToolkit」这个名字不合适——它读起来像某个 agent 的专属工具箱，看不出这是全队 17 个 agent 共用的基础设施。新名字 `agents-infra` 直接把「agent 们的基础设施」写进名字，也符合团队「非 agent 项目命名要尽可能简单、体现职责」的规范。
   **改了什么**：① GitHub 仓库 `xhqing/TeamToolkit` 改名为 `xhqing/agents-infra`（旧 URL 由 GitHub 自动重定向）；② 发布机（macmini）上的 clone 目录 `~/Developer/TeamToolkit` 改名为 `~/Developer/agents-infra`，remote 指向新地址；③ 仓库根 `README.md` / `README_cn.md` 的标题、类型徽章（`Type-Team Toolkit` → `Type-Agents Infra`）、示意图路径、clone 指令与正文自称全部换新，沿革说明补成三段名字的历史（CapabilityManagerAgent → TeamToolkit → agents-infra）；④ 版本号 `2.0.0` → `2.1.0`（对外更名属新增级变更）；⑤ 全局权威源 `~/.pi/agent` 内的引用同批更新：`docs/capability-sync.md`、`docs/agents-registry.md`、`docs/new-agent-scaffold.md`、`docs/repo-branch-protection.md`、`AGENTS.md`、发布脚本目录 `patch/team-toolkit-publish/` → `patch/agents-infra-publish/`、`patch/npm-manifest/refresh.py`（环境变量 `TEAM_TOOLKIT_DIR` → `AGENTS_INFRA_DIR`）、`extensions/redundant-ask-guard.ts`、`skills/backup/` 文档说明；⑥ 团队其它仓库的引用（assistant-agent、xhqing 名册）同批更新。

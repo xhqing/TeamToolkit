@@ -22,7 +22,7 @@
 - **盯盘的对话输出（特例，唯一要精简的场景）**：结论直接给、信号直接发、不展开解释，但仍然要语义清晰、容易理解。
 - **不要自创简写**（所有场景通用）：通用术语正常使用，但不为了短而自造缩略说法（例如把「买盘较多」压成「偏正」、把「继续上涨」压成「续涨」）。
 - **逐条检测 / 核对类结果用 ✅ / ❌ 列表展示**（所有场景通用）：回复中凡是「多条检测项逐条判断是否通过 / 就绪」的结果（/commit 标配检测、敏感扫描、改完文件后的验证清单等）一律用列表逐条展示，**通过打 ✅、没通过打 ❌**（形如 `- ✅ License：已存在`），不要用表格、不要用整段文字罗列。不适用于盯盘实时信号输出和纯叙述性回复。
-- **已授权事项不问第二遍（2026-10-29 用户立）**：凡是规则里已经写明「无需询问 / 不用问 / 直接做」的事，**执行时直接做**，不要用「要不要我……」「需要我……吗」「要我把……做好吗」这类问句结尾征求确认。用户原话：「这个能不能工具强制掉，不要总是给多余的询问」。清单（与 `~/.pi/agent/extensions/redundant-ask-guard.ts` 的 `AUTHORIZED_BRIEF` 保持一致）：① 全局能力层改动后发布 **TeamToolkit** 开源镜像 → 在 macmini 上跑 `python3 ~/.pi/agent/patch/team-toolkit-publish/publish.py`（本机会话用 `ssh mac-mini` 或 `macmini_run` 调用；脚本按 hostname 拒绝在 MacBook 上发布。不要问；macmini 不可用时先把本机改完，等它上线由脚本补发）；② 工作区 / 暂存区有待提交内容 → 直接按 `/add` 或 `/commit` 流程处理（**被 add-mode / commit-mode 暂停的项目例外**，见「Git 写操作必须先征得同意」节的两个开关条目）；③ 其它 agent 项目仓库有待提交内容 → 直接 `agent_call` 对方按其 `/add` → `/commit` 处理；④ `/add` 预检完全干净 → 自动衔接 `/commit`，`/commit` 第 10 步命中发版条件 → 自动 bump / 发版；⑤ 新建项目 `git init`、向 `agents-registry` 追加新 agent 行 → 免确认。**仍应询问的**：方案分叉大、返工成本高、规则未覆盖、涉及不可逆破坏性操作。**工具强制**：`redundant-ask-guard.ts` 每轮把这份清单追加进系统提示（预防），并在回复里命中「询问句式 + 已授权关键词」时，把一条**只给 AI 看**的回执（`display: false`，用户界面不显示）注入下一轮上下文，内容指出问了哪一类、正确做法是什么（检测 + 自纠）。**不向用户弹任何提示**——用户 2026-10-29 补充：「不要让我看警告，这种事情定了规矩我就不想插手了，警告应该让当前会话看见」。
+- **已授权事项不问第二遍（2026-10-29 用户立）**：凡是规则里已经写明「无需询问 / 不用问 / 直接做」的事，**执行时直接做**，不要用「要不要我……」「需要我……吗」「要我把……做好吗」这类问句结尾征求确认。用户原话：「这个能不能工具强制掉，不要总是给多余的询问」。清单（与 `~/.pi/agent/extensions/redundant-ask-guard.ts` 的 `AUTHORIZED_BRIEF` 保持一致）：① 全局能力层改动后发布 **agents-infra** 开源镜像 → 在 macmini 上跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish.py`（本机会话用 `ssh mac-mini` 或 `macmini_run` 调用；脚本按 hostname 拒绝在 MacBook 上发布。不要问；macmini 不可用时先把本机改完，等它上线由脚本补发）；② 工作区 / 暂存区有待提交内容 → 直接按 `/add` 或 `/commit` 流程处理（**被 add-mode / commit-mode 暂停的项目例外**，见「Git 写操作必须先征得同意」节的两个开关条目）；③ 其它 agent 项目仓库有待提交内容 → 直接 `agent_call` 对方按其 `/add` → `/commit` 处理；④ `/add` 预检完全干净 → 自动衔接 `/commit`，`/commit` 第 10 步命中发版条件 → 自动 bump / 发版；⑤ 新建项目 `git init`、向 `agents-registry` 追加新 agent 行 → 免确认。**仍应询问的**：方案分叉大、返工成本高、规则未覆盖、涉及不可逆破坏性操作。**工具强制**：`redundant-ask-guard.ts` 每轮把这份清单追加进系统提示（预防），并在回复里命中「询问句式 + 已授权关键词」时，把一条**只给 AI 看**的回执（`display: false`，用户界面不显示）注入下一轮上下文，内容指出问了哪一类、正确做法是什么（检测 + 自纠）。**不向用户弹任何提示**——用户 2026-10-29 补充：「不要让我看警告，这种事情定了规矩我就不想插手了，警告应该让当前会话看见」。
 
 ## 文件命名规范
 
@@ -120,7 +120,7 @@ AI 对 git 暂存区（staging area / index）**自主能做的只有只读查�
 - **正确姿势**：`/commit`（用户主动触发，或 `/add` 预检完全干净后的自动衔接）。流程内 commit 与 push 用 `&&` 串成一条，带 `# AI_AUTHORIZED_COMMIT` 标记。
 - **授权不免检**：用户当轮说「提交吧」也不构成跳过 skill 的理由——授权解决的是「能不能提交」，skill 解决的是「该不该提交」（扫描结果可能让这次提交不该发生）。两者都要过。
 - **工具强制**：`extensions/git-commit-guard.ts` 放行前查 `state/commit-gate.json` 这张闸门。闸门只由 `/commit` 流程用 `python3 ~/.pi/agent/patch/commit-gate/gate.py begin` 打开（默认 30 分钟），流程结束 / 失败 / 命中检测终止 / 用户中断都要 `gate.py end` 关上；裸 commit 会被直接拒，报错信息里给出开闸与关闸命令。
-- **边界**：本条只管「用什么流程提交」，不改变下方授权与暂存区规则；`~/.pi/agent` 这类不是 git 仓库的目录、以及脚本自己内部执行的 git 操作（如 TeamToolkit 发布脚本、`worktree-adopt.py`）不受影响。
+- **边界**：本条只管「用什么流程提交」，不改变下方授权与暂存区规则；`~/.pi/agent` 这类不是 git 仓库的目录、以及脚本自己内部执行的 git 操作（如 agents-infra 发布脚本、`worktree-adopt.py`）不受影响。
 
 ## commit skill 的触发与终止
 
@@ -267,11 +267,11 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 ## 团队结构参考（按需读取，指针节）
 
-团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目 TeamToolkit，归 Kit）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，TeamToolkit 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
+团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目、归 Kit，2026-11-11 该项目更名为 agents-infra）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，agents-infra 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
 
 - **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（**Agent 项目一律 `<职责>-agent` 全小写、连字符**，Non-agent 项目按「尽可能简单、体现职责」；项目是不是 Agent 项目看 README 的 `Type` 徽章是否为 `AI Agent`）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
 - **跨 agent 移交 / 推荐子任务**：读 `~/.pi/agent/docs/agents-registry.md`（注册表：名称、项目、职责、销售流水线、三小组分组）。
-- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 TeamToolkit 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。全局 `~/.pi/agent/` 是唯一权威源；**TeamToolkit**（原 CapabilityManagerAgent，2026-11-05 更名、降级为 Kit 名下的普通项目）是通用能力开源的**单一出口**，其 `pi/agent/` 逐字节镜像全局。**发布改为单 pusher**：只在 macmini 上单向生成镜像并推送（两台机器同时 PR 会造出重复提交），脚本 `patch/team-toolkit-publish/publish.py`；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 TeamToolkit 的 CHANGELOG。
+- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 agents-infra 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。全局 `~/.pi/agent/` 是唯一权威源；**agents-infra**（沿革：CapabilityManagerAgent → 2026-11-05 降级为 Kit 名下的普通项目并更名 TeamToolkit → 2026-11-11 更名为 agents-infra）是通用能力开源的**单一出口**，其 `pi/agent/` 逐字节镜像全局。**发布改为单 pusher**：只在 macmini 上单向生成镜像并推送（两台机器同时 PR 会造出重复提交），脚本 `patch/agents-infra-publish/publish.py`；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 agents-infra 的 CHANGELOG。
 - **智能体专属文件：Agent 项目与子项目完全独立（2026-11-08 用户立，取代 2026-10-30「身份层软链接 + 能力层路径引用」）**：`AGENTS.md`、`AGENTS.override.md`、项目级 `.pi/` 这类「按工作目录加载、表征智能体身份」的文件，**每个项目只放本项目真实需要的内容**——Agent 项目放 Agent 自己的规则与工具，子项目放子项目自己的规则与工具，**两边之间不留链接、不留路径引用**。
   - **规则文件本体统一为 `AGENTS.md`、`CLAUDE.md` 弃用（2026-11-05 用户立）**：全局规则文件是 `~/.pi/agent/AGENTS.md`，各 Agent 项目的项目级规则文件本体一律是项目根的 `AGENTS.md`；**不再新建 / 保留 `CLAUDE.md` 实体副本，也不再挂 `AGENTS.md → CLAUDE.md` 软链接**（存量已全部改名）。依据：pi 的上下文文件候选顺序是 `AGENTS.override.md` > `AGENTS.md` > `CLAUDE.md`（`dist/core/resource-loader.js` 的 `loadContextFileFromDir()`），同一目录只加载第一个存在的文件——本体放在 `AGENTS.md` 后 `CLAUDE.md` 根本不参与加载，留着只是双份内容漂移的隐患。`.claude/` 目录本身仍按原口径「不新增、不维护」（2026-10-17 决定），其中的 `CLAUDE.md` 已迁出、不再是 agent 规则本体。
   - **子项目 `AGENTS.md` 是本仓库的实体文件**，写四件事：① 本项目是什么（一两句）；② 归哪个 Agent 负责；③ Worker 的角色边界（干完向谁汇报、不碰 local main、不建删 worktree）；④ 各类规则在哪（`.pi/APPEND_SYSTEM.md`、`DEVELOPMENT.md`、`CHANGELOG.md`、`TODO.md` 的索引）。**不写** Agent 项目的身份与规则副本——那些本来就不属于这个仓库。
@@ -291,6 +291,8 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 ## 规矩必须配套工具强制（元规则）
 
 任何规矩立下后，都要尽可能用工具强制辅助防遗忘——代码 / hook / settings deny 等硬约束落地，仅靠文本记录在 rules / skills / AGENTS.md 里不够（规矩刚立几分钟就被违反的实证：「远程禁复用窗口」立规后转头就用了 `open vscode://` URI）。能映射为可检测命令模式的规矩写进 pi 扩展（`~/.pi/agent/extensions/` 下的守卫，命中即拦截）；不能映射的（输出风格类）才只靠文本。改规矩时同步改对应的强制工具，两边不能脱节。工具强制是下限防线，文本管「判断与边界」。
+
+**CC 侧自 2026-11-11 起停止维护**（用户立）：`~/.claude/` 与 Claude Code 钩子不再跟着改——新规矩只落 pi 端（`extensions/` + `skills/` + `patch/`），不再为 CC 写或改钩子，评估规则落地时也不用考虑 CC 一致性。CC 若还在用，按它现有的旧规则跑，不保证与 pi 一致；文档里提到「CC 钩子已硬拦截」的段落属于历史记录，不要因此去改那边的文件。
 
 ## 工作规则
 
@@ -373,7 +375,7 @@ pi 加载扩展时**只要有一个文件解析失败就 `exit(1)`**——打印
 - **适用范围**：pi 启动时会加载的扩展代码——`~/.pi/agent/extensions/**` 与 `<当前项目>/.pi/extensions/**` 下的 `.ts` / `.mts` / `.cts` / `.js` / `.mjs` / `.cjs`（`.tsx` / `.jsx` 除外：Node 类型擦除不支持 JSX）。技能脚本、项目源码、第三方 npm 包不在此列——它们写坏了不会让 pi 起不来。
 - **最常见的成因**：模板字符串里写了**未转义的反引号**。`` `只有 `~/.pi/agent` 与 …` `` 这种写法会把模板字符串提前闭合，正确写法是内部反引号加反斜杠：`\``。2026-11-04 的 `macmini-use/index.ts` 就是栽在这一处，导致 2026-11-05 一整天 `pi` 起不来。
 - **工具强制（`extensions/ts-syntax-guard.ts`）**：① `write` / `edit` 写入扩展目录时，先按「写入后的完整内容」用**pi 加载器同一个解析器**（Node `stripTypeScriptTypes`）校验，有语法错直接 block 并给出出错行与代码片段——坏内容根本落不了盘；② `bash` 执行后对比扩展文件 mtime，被改动的逐个复检，坏了就在工具结果里追加醒目告警（覆盖 `cat >` / `tee` / `sed -i` / `cp` / `mv` 这类旁路写入）。
-- **随时可手工复核**：`node ~/.pi/agent/patch/ts-syntax-check/check.mjs [目录…]`（无参数时查全局扩展目录 + 当前项目 `.pi/extensions`）。**成批同步 / 复制扩展代码之后（例如对齐 TeamToolkit 开源镜像）必跑一次**——手工复制不过守卫，只有事后核对能兜住。
+- **随时可手工复核**：`node ~/.pi/agent/patch/ts-syntax-check/check.mjs [目录…]`（无参数时查全局扩展目录 + 当前项目 `.pi/extensions`）。**成批同步 / 复制扩展代码之后（例如对齐 agents-infra 开源镜像）必跑一次**——手工复制不过守卫，只有事后核对能兜住。
 - **逃生门**：建 `~/.pi/agent/state/ts-syntax-guard-off` 可临时停用守卫，仅用于「解析器本身误报」这种极端情况；正常改代码永远不需要——解析器错了就该改代码，因为 pi 用的就是同一个解析器。
 
 ### 运行版本与开发版本隔离（禁止 npm link / 本地直跑开发源码）

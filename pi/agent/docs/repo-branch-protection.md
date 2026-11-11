@@ -28,7 +28,7 @@
 
 ### 补齐前（2026-11-03 上午实测）
 
-37 个仓库里只有 **9 个** strict 合格（TeamToolkit、assistant、cmux、codef、ghostty-launcher、ghostty、mp4-player、pi-harness、XPilot），其余 **28 个** 的保护里 `required_status_checks` 为 `null`——**根本没挂 required check**，所以 strict 参数不存在（不是 strict=false，是无从谈起）。
+37 个仓库里只有 **9 个** strict 合格（agents-infra、assistant、cmux、codef、ghostty-launcher、ghostty、mp4-player、pi-harness、XPilot），其余 **28 个** 的保护里 `required_status_checks` 为 `null`——**根本没挂 required check**，所以 strict 参数不存在（不是 strict=false，是无从谈起）。
 
 28 个的细分：
 
@@ -68,7 +68,7 @@
 ## 现状（2026-10-04 实测）
 
 - **已开保护（7 个）**
-  - 试点（2026-10-04）：`xhqing/TeamToolkit`、`xhqing/assistant-agent`、`xhqing/zcode-cli`
+  - 试点（2026-10-04）：`xhqing/agents-infra`（当时名为 CapabilityManagerAgent，后改名 TeamToolkit、2026-11-11 再改名 agents-infra）、`xhqing/assistant-agent`、`xhqing/zcode-cli`
   - 更早：`xhqing/codef`、`xhqing/ghostty`、`xhqing/ghostty-launcher`、`xhqing/pi`
 - **未开保护**：其余 public 仓库（直推 main 可用；技能里「已开保护 → push 被拒 → 走 PR 兜底」的分支不触发）
 - **无法开保护**：private 仓库（GitHub 免费版不支持分支保护 / rulesets，API 直接报「Upgrade to GitHub Pro」）
@@ -104,7 +104,7 @@
 
 **已铺开范围**（2026-11-02 实测，脚本逐仓 `PUT …/branches/<default>/protection`）：
 
-- **public 仓库（全部已锁）**：18 个 Agent 项目 + 19 个子项目。参数统一为：PR 必过（0 approvals）、`enforce_admins=true`、禁 force / 禁删除、线性历史、`allow_squash_merge=true` + `allow_merge_commit/rebase_merge=false` + `allow_auto_merge=true` + `delete_branch_on_merge=true`；原有 required check 的仓库保留其 context 并补 `strict=true`（`TeamToolkit` / `assistant` = `validate`，`ghostty-launcher` = `Test & Check`，`codef` = `test`，`ghostty` = `build-macos`，`mp4-player` = `build`，`pi-harness` = `build-check-test`，`XPilot` = `test`）。
+- **public 仓库（全部已锁）**：18 个 Agent 项目 + 19 个子项目。参数统一为：PR 必过（0 approvals）、`enforce_admins=true`、禁 force / 禁删除、线性历史、`allow_squash_merge=true` + `allow_merge_commit/rebase_merge=false` + `allow_auto_merge=true` + `delete_branch_on_merge=true`；原有 required check 的仓库保留其 context 并补 `strict=true`（`agents-infra` / `assistant` = `validate`，`ghostty-launcher` = `Test & Check`，`codef` = `test`，`ghostty` = `build-macos`，`mp4-player` = `build`，`pi-harness` = `build-check-test`，`XPilot` = `test`）。
 - **cmux**：保护已开（PR 必过 + 线性 + 禁 force/删除 + admins 受限），但 required check 暂为空——fork 的 Actions 还没启用，加了会冻死 main；启用后再补 `checks`（见 cmux `DEVELOPMENT.md` §9.6）。
 - **private 仓库（GitHub 免费版无法开保护，API 直接 403）**：`dotfiles`、`ToolCallingRules`、`xhs-mentor-scam`。这些仓库靠本地 `git-main-guard.ts` 硬拦 + 流程约束。要真正上服务端保护需升级 GitHub Pro 或改 public（用户决定）。
 - **暂未锁的例外**：`xhs-mentor-scam` —— 该仓有一个 launchd 每 5 分钟执行的 `autosave.sh` **直接 push main**（备份用途，单写者、无 CI）。锁了会让自动备份静默失败，待决定：改造 autosave 推 `autosave` 分支，或保留豁免。
