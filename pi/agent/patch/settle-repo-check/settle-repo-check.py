@@ -23,13 +23,10 @@ import re
 import subprocess
 import sys
 
-# 权威源是 ~/.pi/agent/docs/agents-registry.md（2026-11-08 修）：旧版脚本读的是
-# ~/.claude/ 下的副本，那份从 2026-10-23 起就没更新过（差 128 行）——turn-diff 这类
-# 新子项目根本不在巡检范围内，当天堆了 13 个 worktree 没被发现就是这个原因。
-REG_CANDIDATES = [
-    os.path.expanduser("~/.pi/agent/docs/agents-registry.md"),
-    os.path.expanduser("~/.claude/docs/agents-registry.md"),
-]
+# 权威源是 ~/.pi/agent/docs/agents-registry.md。历史上这里还回退读过
+# ~/.claude/ 下的副本，那份早就停更；2026-11-11 起其它 harness 一律不维护，
+# 回退项一并删掉——找不到 registry 就让巡检报错，不猜第二份。
+REG_CANDIDATES = [os.path.expanduser("~/.pi/agent/docs/agents-registry.md")]
 DEV = os.path.expanduser("~/Developer")
 
 

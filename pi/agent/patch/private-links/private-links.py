@@ -60,7 +60,6 @@ KNOWN_IGNORES = [
     r"\.vsix$",
     r"(^|/)tmp(/|$)",
     r"(^|/)\.DS_Store$",
-    r"(^|/)\.claude/settings\.local\.json$",
     r"(^|/)\.ignore$",
     r"(^|/)DATA-LOCATION\.local\.md$",
     r"(^|/)vscode-copy-anywhere$",

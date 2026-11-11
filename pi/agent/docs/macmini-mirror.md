@@ -51,7 +51,7 @@
 | `pi-agent` | `~/.pi/agent` | `~/.pi/agent` | 双向 | 全局能力层（`AGENTS.md` / `skills/` / `docs/` / `patch/` / `extensions/` / `prompts/` / `themes/` / 配置） | `sessions/`、`state/`、`logs/`、`tmp/`、`intercom/`、`npm/`、`bin/`、运行时缓存、`trust.json`、`skills/anysearch/runtime.conf`、`patch/session-link/*.json`、`__pycache__`、`*.log`、`*.lock` |
 
 **明确不同步**：`~/Developer` 下所有项目仓库（含 `.git`、worktree、`node_modules`、构建产物）、
-`~/.dev/snapshots/`（本地快照，各机各留 5 份）、机器本地配置（`.claude/settings.local.json`、
+`~/.dev/snapshots/`（本地快照，各机各留 5 份）、机器本地配置（`settings.local.json`、
 `DATA-LOCATION.local.md` 等）。
 
 **已完成（2026-11-05 收尾）**：`developer` 共享已移除（`setup.py --drop-developer`，只动配置、磁盘文件保留）；macmini 上 38 个仓库**原地转正**为正经 clone（`fetch --prune` + `reset --hard origin/<分支>`，依赖目录全部保留、没重下 7.7 GB）；10 个坏掉的 worktree 残留目录已删除；git 只读层（扩展 + `core.hooksPath` hook）已撤除。
