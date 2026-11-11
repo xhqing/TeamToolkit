@@ -10,6 +10,14 @@
   **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
   **改了什么**：3 个文件——
   - `pi/agent/AGENTS.md`
+  - `pi/agent/patch/license-check/license-check.py`
+  - `pi/agent/skills/commit/SKILL.md`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
+- **镜像同步（2026-11-11）**：从全局 `~/.pi/agent` 单向发布。
+  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
+  **改了什么**：3 个文件——
+  - `pi/agent/AGENTS.md`
   - `pi/agent/docs/capability-sync.md`
   - `pi/agent/extensions/redundant-ask-guard.ts`
   **回归风险**：无（只同步内容，不改本仓库自身逻辑）。

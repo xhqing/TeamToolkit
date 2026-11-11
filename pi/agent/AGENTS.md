@@ -178,7 +178,7 @@ Copyright (c) <起始年份>[-<最新年份>] xhqing and contributors
 ### 两种许可证的文件怎么写
 
 - **MIT 项目**：`LICENSE.md` 放标准 MIT 全文（版权行换用上面格式），不手写、不改条款正文。
-- **CC BY 4.0 项目**：`LICENSE.md` 顶部放上述版权声明行 + 许可说明，正文取官方 `https://creativecommons.org/licenses/by/4.0/legalcode.txt`（**不手写许可条款**）。**放全文而不是只放链接**——GitHub 侧边栏的许可证识别依赖标准法律文本，只写一句「详见链接」会识别失败。
+- **CC BY 4.0 项目**：`LICENSE.md` **只放官方 `https://creativecommons.org/licenses/by/4.0/legalcode.txt` 全文，原样照收、一字不加**——GitHub 的许可证识别（licensee）只在文件是**零追加的纯官方文本**时才认得出 CC BY 4.0；加了版权行或说明段落就变成「Other / NOASSERTION」（2026-11-11 实测三版对照：版权行放顶部 → Other；版权行改到全文末尾 → 仍 Other；纯全文 → `cc-by-4.0` ✅；对照 `microsoft/autogen` 与 `EbookFoundation/free-programming-books` 两个仓库，也都是纯全文）。**所以版权声明行与许可要点、署名要求写进 `README.md` / `README_cn.md` 的版权段**（那里本来就要求有版权与署名段，由 commit skill 第 9a 步保证），不在 `LICENSE.md` 里重复。**放全文而不是只放链接**——只写一句「详见链接」同样识别失败。
 
 ### fork / copy 项目的版权与许可（2026-11-09 用户立）
 
