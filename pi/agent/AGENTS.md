@@ -231,7 +231,13 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 ### 存量项目
 
-2026-11-08 之前建的项目许可证类型无需变动（本就都是 MIT，正确），仅版权声明行由 `All Contributors` 改为上述格式。存量的版权行不强制一次性全改，按批次迁移——每个仓库走自己的 worktree + PR + CI 流程，不要用脚本跨仓库直推 main。
+存量项目的**版权行写法**不强制一次性全改，按批次迁移——每个仓库走自己的 worktree + PR + CI 流程，不要用脚本跨仓库直推 main。
+
+**但许可证类型必须按性质核，不因「建得早」而豁免（2026-11-11 修订，起因 blog 事故）**：2026-11-08 之前建的项目**不是**「本就都是 MIT、正确」——当时那条表述把「存量」误当成了「都是软件」，于是文章型项目 blog（2021 年建、主体是博客文章）一直挂着 MIT 无人发现，直到 2026-11-11 被用户当场指出。正确口径：**性质决定类型，建得早不改变性质**——内容型存量项目（文章、书籍、博客、教程）就该改成 CC BY 4.0，改动面与新建时一致（`LICENSE.md` 换全文 + 徽章 + 版权段 + 两份 CONTRIBUTING + CHANGELOG + patch 版本发版）。
+
+**工具强制（2026-11-11 立）**：
+- `python3 ~/.pi/agent/patch/license-check/license-check.py` —— 扫 `~/Developer` 下全部仓库，输出「仓库 / 许可证 / 性质 / 结论（OK / MISMATCH / REVIEW）」，`MISMATCH` 即类型与性质不对应；`--repo <路径>` 只查一个。粗筛，`REVIEW` 交人判（判据看内容被谁消费）。
+- `commit` skill 第 9b 步每次 `/commit` 都会对当前仓库跑一次这个脚本：`MISMATCH` 时在汇报里单列一条（不静默改、不静默放过），`REVIEW` 自查或问用户，结果写进 `.commit-cache.md` 的 `license` 标记（`ok` / `mismatch`）。
 
 ## 版本信息一致性（VERSION 文件为唯一权威）
 
