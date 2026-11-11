@@ -107,6 +107,7 @@
 | NeuralCoreAgent（Ada） | AgentCortex | 深度推理引擎规则集（三套推理引擎：Infinite / Rapid / Incisive） |
 | NeuralCoreAgent（Ada） | ToolCallingRules | LLM 工具调用规则集（2026-11-02 按「团队项目一律 public」由私有改公开并锁 main；22 条规则 / 7 类，注入 system prompt 以减少 function calling 的参数格式错误与不安全重试、提升调用准确率；PolyForm-Noncommercial；2026-10-31 用户决定由 Ada 接手负责，此前是未登记的历史独立项目） |
 | trading-agent（Victor） | TradingProofs | 交易数学的 Lean 4 + Mathlib 机器可验证证明（从固定比例下注的累计收益率推导开始，覆盖强数定律指数增长率 / 凯利最优 f\* /「两倍凯利」边界；与实盘执行完全隔离，2026-10-11 立项） |
+| social-agent（Gatsby） | blog | 个人博客「藏经阁」（docsify 站点，<https://xhqing.github.io/blog>；GitHub Pages 直接从 `main` 的 `docs/` 发布）。**2026-11-11 由 Kit（assistant-agent）移交 Gatsby**，同日从「已退役子项目」名单里恢复为活跃。内容双通道：手写，加上从 social-agent 的 `docs/articles/` 每 10 分钟自动同步——**不看写完没写完**，源仓库什么状态博客就什么状态；同步产物带 `<!-- source: … -->` 标记，机器人跑完自检后直推 `main`（用过 `GITHUB_TOKEN` 建 PR 触发不了别的 workflow，所以不走 PR） |
 
 > **Mark（quant-agent）名下已无子项目仓库（2026-11-08）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）。
 
@@ -117,7 +118,7 @@
 - **已移出名册的子项目（2026-11-02 用户决定）**：**xhs-mentor-scam**（原属 Gatsby / social-agent）——仓库含第三方个人信息（合同、私信截图、真实姓名、举报材料），按 2026-11-02 立的「团队项目必须 public、私有仓库不得入队」规则不能留在团队；保持 private 作为用户个人项目，`autosave.sh` 自动备份照常。GitHub 仓库 `xhqing/xhs-mentor-scam` 与本地目录 `~/Developer/xhs-mentor-scam` 均保留。要恢复为团队项目，须先拆分 / 脱敏敏感材料并转为 public。
 - **已移出名册的子项目（2026-10-31 用户决定）**：**NewsScoreStudy**（Mark 负责的面试实操题研究仓库，私有远程 `github.com/xhqing/NewsScoreStudy` 保留；本地目录已于 2026-10-31 按用户要求删除）——用户要求「先从名册中移除」；因名册与子项目映射表必须内容一致，本表同步删除其登记（原属 Mark，2026-10-26 由 Victor 移交）。要恢复时在这两处同时加回并同步名册。
 - **除名 agent 的本地副本处理口径（2026-10-31 用户立）**：除名的 agent 项目**本地目录一律删除、不在本地保留备份**——只要 GitHub 仓库是最新版即可（删除前先确认工作区干净、与 `origin/main` 同步，避免丢本地改动）。需要查阅时从 GitHub 取。
-- **已取消 / 已退役的子项目（不再维护）**：GitComic、agent-team-playbook-src（Wright）；zcode-cli、zcode-vsce、cmux-launcher（Atlas）；channels-watch（Atlas，2026-10-17 退役）；ResourceMonitor（Alfred）；CyberRipple、blog（Kit）——本地项目资料删除，GitHub 远端仓库保留为存档（CyberRipple 原未建远端仓库，其组织总览内容已并入 `xhqing` 主页 README）。
+- **已取消 / 已退役的子项目（不再维护）**：GitComic、agent-team-playbook-src（Wright）；zcode-cli、zcode-vsce、cmux-launcher（Atlas）；channels-watch（Atlas，2026-10-17 退役）；ResourceMonitor（Alfred）；CyberRipple——本地项目资料删除，GitHub 远端仓库保留为存档（CyberRipple 原未建远端仓库，其组织总览内容已并入 `xhqing` 主页 README）。**blog 已于 2026-11-11 由 Kit 移交 social-agent（Gatsby）、恢复为活跃子项目**，见上方映射表。
 
 **名册同步（2026-10-26 用户立，硬性规定 + 工具强制）**：本文件任何改动——新增 / 删除 Agent 项目、子项目新增 / 删除 / 归属变更、Agent 迁机（宿主机归属变化）——必须**在同一批改动里**同步更新 `xhqing` 仓库（`~/Developer/xhqing`）README 的名册表格，也就是「Subprojects (🌐 public · 🔒 private)」那张表（**英文 `README.md` 与中文 `README_cn.md` 两份都要改**，双语文档同步）。不是「下次顺手改」，而是和 registry 改动一起做完。
 
