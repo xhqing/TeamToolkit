@@ -4,7 +4,7 @@
 
 ## 一句话
 
-把 `~/.pi/agent`（五部分 + npm 清单）单向发布到 `agents-infra` 仓库（`pi/agent/`），
+把 `~/.pi/agent`（五部分 + `dsh/` 核心 + npm 清单）单向发布到 `agents-infra` 仓库（`pi/agent/` 与 `dsh/`），
 **只允许在 macmini 上跑**——两台机器都推会造成重复提交与分叉。
 
 ## 命令
@@ -33,6 +33,13 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改
 `skills/backup/endpoints/`、`patch/session-link/*.json`）、本机产物（`*.log *.lock __pycache__ *.pyc`）。
 
 清单在 `publish.py` 的 `EXCLUDES`，与 `docs/capability-sync.md` 第四节必须保持一致。
+
+## DSH 核心基础设施
+
+`~/.pi/agent/dsh/` 是 DSH home 的可发布副本（AGENTS.md、profiles/dsh-tui 配置、install.sh），
+镜像到 `agents-infra/dsh/`。live `~/.dsh/` 含凭证/会话/附件，不镜像；发布机 macmini 也没有 `~/.dsh`。
+
+插件源码 `patch/dsh/project-append-system.mjs` 会映射到 `dsh/profiles/dsh-tui/plugins/`，让镜像自包含。
 
 ## 失败排查
 

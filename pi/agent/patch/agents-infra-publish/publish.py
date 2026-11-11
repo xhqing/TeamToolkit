@@ -55,6 +55,19 @@ PARTS = ["AGENTS.md", "skills", "docs", "patch", "extensions"]
 # 镜像里允许存在、但不归 rsync 管的顶层条目：npm 清单（由本机 note_npm 维护 / 发布机不生成）
 MIRROR_KEEP = {"npm"}
 
+# DSH 核心基础设施：canonical 在 ~/.pi/agent/dsh（两机同步、可公开），
+# 发布到 agents-infra/dsh/；live ~/.dsh 含凭证/会话，不镜像。
+DSH_GLOBAL = GLOBAL / "dsh"
+DSH_MIRROR_SUB = Path("dsh")
+DSH_PLUGIN_SRC = GLOBAL / "patch" / "dsh" / "project-append-system.mjs"
+DSH_PLUGIN_REL = Path("profiles") / "dsh-tui" / "plugins" / "project-append-system.mjs"
+DSH_EXCLUDES = [
+    "node_modules/", ".plugin-manager/", "sessions/", "storages/", "attachments/",
+    ".env", ".credentials.yaml", "settings.yaml.imported", ".anonymous-user-id",
+    "*.log", "__pycache__/", "*.pyc", ".DS_Store", "*.sync-conflict-*",
+    "profiles/dsh-tui/plugins/",  # 插件由下面的 copy 单独映射，避免 rsync --delete 删掉
+]
+
 # 发布闸门用的「本机私有文件」特征：排除表（EXCLUDES）靠人工维护，新出现的私有文件
 # 未必登记；镜像里一旦出现这些名字，一律按问题处理（2026-11-08 立，见 scan_mirror）。
 PRIVATE_FILE_PATTERNS = [
@@ -133,8 +146,8 @@ def wait_idle(timeout_s: int = 180) -> bool:
 
 def find_conflicts() -> list[str]:
     hits = []
-    for part in PARTS:
-        root = GLOBAL / part
+    roots = [GLOBAL / part for part in PARTS] + [DSH_GLOBAL, GLOBAL / "patch" / "dsh"]
+    for root in roots:
         if not root.exists():
             continue
         for p in root.rglob("*sync-conflict-*"):
@@ -181,6 +194,56 @@ def dry_run_diff(part: str, mirror: Path) -> list[str]:
     return keep
 
 
+def _rsync_excludes(patterns: list[str]) -> list[str]:
+    out: list[str] = []
+    for pat in patterns:
+        out += ["--exclude", pat]
+    return out
+
+
+def dsh_mirror(repo: Path) -> Path:
+    return repo / DSH_MIRROR_SUB
+
+
+def sync_dsh(repo: Path) -> None:
+    """把 ~/.pi/agent/dsh 同步到 agents-infra/dsh，并映射插件文件。"""
+    if not DSH_GLOBAL.exists():
+        return
+    dst = dsh_mirror(repo)
+    dst.mkdir(parents=True, exist_ok=True)
+    cmd = ["rsync", "-a", "-c", "--delete", *_rsync_excludes(DSH_EXCLUDES),
+           f"{DSH_GLOBAL}/", f"{dst}/"]
+    sh(cmd)
+    if not DSH_PLUGIN_SRC.exists():
+        return
+    plugin_dst = dst / DSH_PLUGIN_REL
+    plugin_dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(DSH_PLUGIN_SRC, plugin_dst)
+
+
+def dry_run_diff_dsh(repo: Path) -> list[str]:
+    dst = dsh_mirror(repo)
+    if not DSH_GLOBAL.exists():
+        return []
+    dst.mkdir(parents=True, exist_ok=True)
+    cmd = ["rsync", "-a", "-c", "--delete", "--dry-run", "--itemize-changes",
+           *_rsync_excludes(DSH_EXCLUDES), f"{DSH_GLOBAL}/", f"{dst}/"]
+    out = sh(cmd, check=False).stdout
+    items = []
+    for ln in out.splitlines():
+        if not ln or ln.startswith("sending"):
+            continue
+        if re.match(r"^[.>][fd]\.\.[t.]", ln):
+            continue
+        items.append(ln)
+    if DSH_PLUGIN_SRC.exists():
+        plugin_dst = dst / DSH_PLUGIN_REL
+        same = plugin_dst.exists() and DSH_PLUGIN_SRC.read_bytes() == plugin_dst.read_bytes()
+        if not same:
+            items.append(f">f+++++++++ {DSH_MIRROR_SUB}/{DSH_PLUGIN_REL}")
+    return items
+
+
 def prune_orphans(mirror: Path, dry: bool) -> list[str]:
     """删掉镜像里的「孤儿顶层条目」（已不属于 PARTS、也不在 MIRROR_KEEP 里）。
 
@@ -202,7 +265,7 @@ def prune_orphans(mirror: Path, dry: bool) -> list[str]:
     return removed
 
 
-def scan_mirror(mirror: Path) -> list[str]:
+def scan_mirror(mirror: Path, label: str) -> list[str]:
     """发布闸门：镜像落盘后、提交前做一次确定性扫描（2026-11-08 立）。
 
     为什么需要：发布链路原来是「rsync → 直接提交推送」，本机私有文件只靠 EXCLUDES
@@ -234,7 +297,7 @@ def scan_mirror(mirror: Path) -> list[str]:
             for h in hits:
                 rel = str(h.get("File", "")).replace(str(mirror) + "/", "")
                 problems.append(
-                    f"gitleaks 命中 {h.get('RuleID')} @ pi/agent/{rel}:{h.get('StartLine', '?')}"
+                    f"gitleaks 命中 {h.get('RuleID')} @ {label}{rel}:{h.get('StartLine', '?')}"
                 )
         finally:
             report.unlink(missing_ok=True)
@@ -277,7 +340,7 @@ def append_changelog(repo: Path, files: list[str]) -> None:
     if len(files) > 40:
         listing += f"\n  - ……（共 {len(files)} 个文件）"
     entry = (
-        f"- **镜像同步（{today}）**：从全局 `~/.pi/agent` 单向发布。\n"
+        f"- **镜像同步（{today}）**：从全局 `~/.pi/agent`（含 `dsh/` 核心基础设施）单向发布。\n"
         f"  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。\n"
         f"  **改了什么**：{len(files)} 个文件——\n{listing}\n"
         f"  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。\n"
@@ -306,7 +369,7 @@ def commit_and_pr(repo: Path, files: list[str], branch: str) -> None:
     sh(["git", "-C", str(repo), "commit", "-q", "-m", msg])
     sh(["git", "-C", str(repo), "push", "-q", "-u", "origin", branch])
     title = f"chore: 镜像同步 {dt.date.today().isoformat()}（{len(files)} 个文件）"
-    body = "从全局 `~/.pi/agent` 单向发布，由 `patch/agents-infra-publish/publish.py` 生成。\n\n" + \
+    body = "从全局 `~/.pi/agent`（含 `dsh/` 核心基础设施）单向发布，由 `patch/agents-infra-publish/publish.py` 生成。\n\n" + \
            "\n".join(f"- `{f}`" for f in files[:40])
     out = sh(["gh", "pr", "create", "--title", title, "--body", body, "--base", "main",
               "--head", branch], cwd=repo, check=False)
@@ -363,6 +426,7 @@ def main() -> int:
         items: list[str] = []
         for part in PARTS:
             items += dry_run_diff(part, mirror)
+        items += dry_run_diff_dsh(repo)
         if items:
             print(f"[DIFF] 有 {len(items)} 处内容未同步（只读检查，未改动任何文件）：")
             for it in items[:60]:
@@ -384,6 +448,7 @@ def main() -> int:
         items: list[str] = []
         for part in PARTS:
             items += dry_run_diff(part, mirror)
+        items += dry_run_diff_dsh(repo)
         orphans = prune_orphans(mirror, dry=True)
         if orphans:
             print(f"[PRUNE] 将清理镜像孤儿条目：{'、'.join(orphans)}")
@@ -394,13 +459,16 @@ def main() -> int:
 
     for part in PARTS:
         sync_part(part, mirror, False)
+    sync_dsh(repo)
     orphans = prune_orphans(mirror, dry=False)
     if orphans:
         print(f"[PRUNE] 清理镜像孤儿条目：{'、'.join(orphans)}")
     note_npm()
 
     # 发布前闸门（2026-11-08 立）：镜像里发现密钥或未登记的本机私有文件，直接拒绝发布。
-    problems = scan_mirror(mirror)
+    problems = scan_mirror(mirror, "pi/agent/")
+    if DSH_GLOBAL.exists():
+        problems += scan_mirror(dsh_mirror(repo), "dsh/")
     if problems:
         print("[ERR] 发布闸门未通过，已拒绝提交：")
         for p in problems[:40]:
