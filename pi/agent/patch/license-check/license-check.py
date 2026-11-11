@@ -153,6 +153,22 @@ def expected(kind: str) -> str:
     return "MIT" if kind == "software" else "CC BY 4.0"
 
 
+def ccby_purity(repo: Path) -> str:
+    """CC BY 4.0 要求 LICENSE 文件是零追加的纯官方文本，否则 GitHub 识别成 Other（2026-11-11 实测）。"""
+    for name in ("LICENSE.md", "LICENSE", "LICENSE.txt"):
+        p = repo / name
+        if not p.is_file():
+            continue
+        first = p.read_text(encoding="utf-8", errors="ignore").lstrip("\ufeff").splitlines()[0].strip()
+        size = p.stat().st_size
+        if first != "Attribution 4.0 International":
+            return f"首行为「{first[:30]}」，不是官方 legalcode 开头——GitHub 会识别成 Other"
+        if size > 19000:
+            return f"{size} 字节，超过官方文本（约 18657）——像是有追加内容，GitHub 会识别成 Other"
+        return ""
+    return ""
+
+
 def check_repo(repo: Path) -> dict:
     lic, lic_raw = detect_license(repo)
     res = {"repo": repo.name, "license": lic, "license_raw": lic_raw}
@@ -164,12 +180,18 @@ def check_repo(repo: Path) -> dict:
         return res
     kind, why = classify(repo)
     res.update(kind=kind, detail=why)
+    purity = ccby_purity(repo) if lic == "CC BY 4.0" else ""
+    pure_check = bool(purity)
     if kind == "software":
-        res["verdict"] = "OK" if lic == "MIT" else ("MISMATCH" if lic == "CC BY 4.0" else f"CHECK ({lic})")
+        verdict = "OK" if lic == "MIT" else ("MISMATCH" if lic == "CC BY 4.0" else f"CHECK ({lic})")
     elif kind == "content":
-        res["verdict"] = "OK" if lic == "CC BY 4.0" else ("MISMATCH" if lic == "MIT" else f"CHECK ({lic})")
+        verdict = "OK" if lic == "CC BY 4.0" else ("MISMATCH" if lic == "MIT" else f"CHECK ({lic})")
     else:
-        res["verdict"] = "REVIEW"
+        verdict = "REVIEW"
+    if pure_check and verdict in ("OK", "REVIEW"):
+        verdict = "WARN (CC BY 文件不纯)"
+        res["detail"] = purity
+    res["verdict"] = verdict
     return res
 
 
@@ -196,16 +218,21 @@ def main() -> int:
     for r in rows:
         print(f"{r['repo'].ljust(width)}  {r['license'].ljust(20)} {r['kind'].ljust(9)} {r['verdict']}  —  {r['detail']}")
     mismatches = [r for r in rows if r["verdict"].startswith("MISMATCH")]
+    warns = [r for r in rows if r["verdict"].startswith("WARN")]
     reviews = [r for r in rows if r["verdict"] == "REVIEW"]
     print()
     print(f"共 {len(rows)} 个仓库：OK {sum(1 for r in rows if r['verdict'] == 'OK')}，"
-          f"MISMATCH {len(mismatches)}，REVIEW {len(reviews)}，"
+          f"MISMATCH {len(mismatches)}，WARN {len(warns)}，REVIEW {len(reviews)}，"
           f"其余为 fork / 无许可证 / 其它许可需人工判断")
     if mismatches:
         print("\n需要处理（类型与性质不匹配）：")
         for r in mismatches:
             print(f"  - {r['repo']}：现为 {r['license']}，按性质（{r['kind']}）应为 {expected(r['kind'])}")
-    return 1 if mismatches else 0
+    if warns:
+        print("\n需要处理（CC BY 4.0 文件不是纯官方全文，GitHub 会显示 Other）：")
+        for r in warns:
+            print(f"  - {r['repo']}：{r['detail']}")
+    return 1 if (mismatches or warns) else 0
 
 
 if __name__ == "__main__":
