@@ -95,6 +95,7 @@ ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to macmini --t
 | 编译 | clang 14、cmake 3.24、Swift 5.7.2（只有 CLT、**没有完整 Xcode → `xcodebuild` 不可用**） |
 | 其他 | git 2.37.1、pandoc 2.19、tmux、xxd、rsync 2.6.9、zip、Chrome（headless 打印 PDF 可用）、brew 3.5.9（x64，装到 /usr/local） |
 | 缺 | ffmpeg / ffprobe / ImageMagick / ghostscript / yt-dlp / jq / rg / fd / rustc / cargo / go / uv |
+| pi 会话的模型 | 默认 provider `magpie` 指向**本机** `127.0.0.1:3425`（magpie.app 只在本机跑），macmini 上不可达 → 在 macmini 起 pi 会话必须显式 `--model` 换 provider（2026-11-11 实测：`deepseek/deepseek-flash`、`deepseek/deepseek-v4-pro` 可用；`coding-plan` 订阅无效、`dashscope` 账户欠费、`zai-coding-cn` 套餐到期，都不可用） |
 
 **Docker 不可用**：CLI 在，但 daemon 启动即 panic（2026-11-03 实测）。要跑容器就回本机或换别的方案。
 
@@ -194,6 +195,7 @@ macmini_run: rm -rf /tmp/macmini-jobs/<job>.sh /tmp/macmini-jobs/<job>.log
 | 同一个命令远端 Node 版本不对 | 手写 ssh 用了 `bash -lc`（拿到 Node 16）；改用 `macmini_run` 或 `ssh mac-mini '命令'` |
 | `xcrun: error ... requires Xcode` | macmini 只有 Command Line Tools；`xcodebuild` 类任务回本机 / 走 CI |
 | 编译通过但本机跑不起来 | 产物是 x64；本机 arm64 需要重新编，或改用 CI 出 arm64 产物 |
+| pi 会话反复报 `Connection error.` 不动 | provider 不可达：默认 `magpie` 只在本机。先在远端 `pi -p "PING-OK" --model <provider/model>` 验证连通，再带 `--model deepseek/deepseek-flash` 起会话 |
 | `git ...` 在远端失败 | 已经不再是「只读」问题：多半是 github.com 被限速（已配 `http.version=HTTP/1.1` + 关低速阈值）或凭据过期（`gh auth status` 查） |
 | 删除命令被拒 | 远端递归删除会删到本机；临时文件放 /tmp，确需删除加 `AI_REMOTE_RM_OK` |
 
@@ -204,4 +206,5 @@ macmini_run: rm -rf /tmp/macmini-jobs/<job>.sh /tmp/macmini-jobs/<job>.log
 - ❌ 在 `~/.pi/agent` / `~/.dev/private` 里随手 `rm -rf`——本机同一份也消失，这两个目录没有「重建」这条路。
 - ❌ 把 `node_modules` / `.venv` / 编译缓存 rsync 回本机——架构不通用、还占盘。
 - ❌ 在 macmini 上再开一个 pi 会话只为了跑一条命令——费用翻倍，不值得。
+- ❌ 在 macmini 上起 pi 会话却不先验证模型连通——默认 `magpie` 只在本机，会话会静默空转（2026-11-11：5 个 Worker 因此空转 4.5 小时零产出，全程没有报错到外面）。起会话前先跑一条 `pi -p "PING-OK" --model deepseek/deepseek-flash`。
 - ❌ 分流完就忘了收尾——远端留一堆跑飞的进程和几 GB 的 /tmp 日志。
