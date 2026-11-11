@@ -6,6 +6,17 @@
 
 ## 2026-11-11
 
+- **修复（2026-11-11）：README 横幅 logo 内容过时**。
+  **为什么改**：`assets/logo.svg` 里写的一直是更早的项目名——主标题 `CapabilityManagerAgent`、副标题 `Capability Manager · Team-wide ~/.claude/ backbone`（连权威源路径都还是 `~/.claude/`）。2026-11-05 改名 TeamToolkit 时漏了这份图，2026-11-11 改名 agents-infra 后它彻底对不上 README 正文：README 顶部横幅会显示一个已经不存在的项目名。
+  **改了什么**：重绘 `assets/logo.svg`——名称改为 `agents-infra`、副标题改为 `The infrastructure every agent runs on`（与 README 英文版口径一致）、`aria-label` 同步；图形从 🔥 emoji 换成矢量砖墙（基础材料，且不依赖查看环境的 emoji 字体，PNG 导出也更稳），配色从橙红换成靛蓝渐变（与旧形象区分）；按 icon-design 规范做圆角 28、主体留白 ≥10%，文字边界用 `check-text-bounds.py` 实测 PASS。
+  **回归风险**：无——纯视觉资产，不影响 `pi/agent/` 镜像与任何行为。
+
+- **镜像同步（2026-11-11）**：从全局 `~/.pi/agent` 单向发布。
+  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
+  **改了什么**：1 个文件——
+  - `pi/agent/skills/macmini-use/SKILL.md`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
 - **镜像同步（2026-11-11）**：从全局 `~/.pi/agent` 单向发布。
   **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
   **改了什么**：1 个文件——
