@@ -1,40 +1,30 @@
-# dsh：DSH 核心基础设施（可发布副本）
+# ~/.dsh：DSH 团队权威源
 
-这里放 dsh-team 的核心基础设施，镜像到 `agents-infra` 的 `dsh/` 目录。
-**它不是 `~/.dsh` 的完整拷贝**——`~/.dsh` 里还有凭证、会话、附件、运行时状态，不能公开；
-而且发布机 macmini 上没有 `~/.dsh`（DSH 只装在 MacBook），所以不能直接镜像 live 目录。
+这个目录是 **dsh-team 的权威源**。DSH agent 在演化过程中会直接修改这里的全局文件
+（`AGENTS.md`、`profiles/dsh-tui/` 配置、插件）。它不是只读的部署副本。
 
-## 内容
+## 镜像
 
-```text
-dsh/
-├── AGENTS.md                  # dsh-team 全局规则（canonical）
-├── README.md                  # 本文件
-├── install.sh                 # 部署到 ~/.dsh
-└── profiles/
-    └── dsh-tui/
-        ├── cordis.yml
-        ├── cordis.patch.yml   # 挂载 project-append-system 插件
-        ├── package.json
-        ├── pnpm-lock.yaml
-        └── pnpm-workspace.yaml
-```
+- 目标：`agents-infra/dsh/`
+- 发布脚本：`~/.pi/agent/patch/agents-infra-publish/publish_dsh.py`
+- 发布机：**MacBook**（`~/.dsh` 只在这里；macmini 不装 DSH）
+- 发布的是 **secret-free 核心**，不是整个 `~/.dsh`
 
-插件源码在 `~/.pi/agent/patch/dsh/project-append-system.mjs`；发布脚本会把它映射到
-`dsh/profiles/dsh-tui/plugins/project-append-system.mjs`，让镜像保持可安装。
+排除：`.env`、`.credentials.yaml`、`.anonymous-user-id`、`sessions/`、`storages/`、
+`attachments/`、`profiles/*/node_modules/`、`profiles/*/.plugin-manager/`、
+`settings.yaml.imported`、`*.log`、`__pycache__`。
 
-## 部署
+## 新机器恢复
 
-```bash
-~/.pi/agent/dsh/install.sh
-```
-
-部署会把 `AGENTS.md`、profile 配置与插件复制到 `~/.dsh`。首次在新机器上还需要在
-`~/.dsh/profiles/dsh-tui/` 跑一次 `pnpm install`（或让 `dsh` 初始化），然后重启 dsh。
+1. clone `github.com/xhqing/agents-infra`；
+2. 运行 clone 里的 `dsh/bootstrap.sh`（它会把 `dsh/` 的核心文件复制到 `~/.dsh`）；
+3. 在 `~/.dsh/profiles/dsh-tui/` 跑一次 `pnpm install`（或让 `dsh` 初始化）；
+4. 配置模型与凭证（本机私有，不进仓库）。
 
 ## 修改与发布
 
-1. 改这里的 `AGENTS.md` / profile 配置，或改 `patch/dsh/` 里的插件源码；
-2. 跑 `install.sh` 让本机 `~/.dsh` 生效；
-3. 在 macmini 上跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish.py` 发布；
-4. 不要在 `~/.dsh` 里直接改完就结束——它只是部署副本，下次 `install.sh` 会覆盖。
+1. 直接改 `~/.dsh` 下的文件（这就是权威源）；
+2. 跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py`（可加 `--check` / `--dry-run`）；
+3. 脚本会同步到本机 `~/Developer/agents-infra/dsh/` 并开 PR 自动合并。
+
+不要把 `~/.dsh` 的内容手工复制到别处作为“第二权威源”；如果确实需要冻结某个版本，用 git tag / 镜像历史。

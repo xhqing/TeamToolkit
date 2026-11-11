@@ -53,3 +53,10 @@
 - 先有真实项目，再加规则；不要为了“体系完整”预建空目录、空注册表、空技能。
 - 新规则只写进本文件或项目自己的 `AGENTS.md`；不要复制 pi 的 125KB 全局规则（DSH 单次指令预算 65,536 字节，超了会被截断）。
 - 本文件控制在 20KB 以内；项目 `AGENTS.md` 控制在 10KB 以内。
+
+## 8. 镜像与发布
+
+- 本目录 `~/.dsh/` 是 dsh-team 的权威源；直接改这里的文件，不要维护第二份 canonical。
+- 核心基础设施镜像到 `agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布。
+- 凭证、会话、附件、`node_modules/`、`settings.yaml.imported` 不发布。
+- 改了本目录后跑一次发布脚本；发布脚本会排除敏感/运行时内容。
