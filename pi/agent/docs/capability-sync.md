@@ -43,14 +43,14 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改
 1. **等 Syncthing 收敛**：查 `/rest/db/status?folder=pi-agent`，两边都 `idle` 才继续——否则会把
    「只同步到一半的全局目录」发布出去（最坑的形态是 `AGENTS.md` 引用了还没到的 skill）。
 2. **拒绝发布冲突副本**：发现 `*.sync-conflict-*` 直接报错退出（说明能力层本身要人管了）。
-3. **单向 rsync** 五部分 + npm 清单到仓库的 `pi/agent/`（排除本机产物与本机私有配置）。
+3. **单向 rsync** 五部分 + `dsh/` 核心 + npm 清单到仓库的 `pi/agent/` 与 `dsh/`（排除本机产物与本机私有配置）。
 4. **生成 CHANGELOG 条目**（列出本次变更文件）+ 按需 bump 版本号。
 5. **提交 → 推分支 → 开 PR → `gh pr merge --auto`**（remote main 锁定，不允许直推）。
 6. 合并后快进本地 main。
 
 ## 四、范围与排除（哪些进镜像、哪些不进）
 
-**进镜像（五部分 + 生成式清单）**：
+**进镜像（五部分 + dsh 核心 + 生成式清单）**：
 
 | 全局 | 镜像 | 说明 |
 |---|---|---|
@@ -59,10 +59,12 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改
 | `docs/` | `pi/agent/docs/` | 参考文档（agents-registry、capability-sync、macmini-mirror 等） |
 | `patch/` | `pi/agent/patch/` | 自研补丁 / 辅助脚本 |
 | `extensions/` | `pi/agent/extensions/` | 工具强制类扩展 |
+| `dsh/` | `dsh/` | DSH 核心基础设施（canonical：`~/.pi/agent/dsh/`；AGENTS.md、`profiles/dsh-tui/`、插件映射） |
 | `npm/`（清单） | `pi/agent/npm/` | `package.json` / `package-lock.json` + `PACKAGES.md`（`patch/npm-manifest/refresh.py` 生成） |
 
 **不进镜像**：
 
+- live `~/.dsh/`（凭证、会话、附件、storages；只镜像 canonical `~/.pi/agent/dsh/`）
 - 运行时与架构相关：`sessions/`、`state/`、`logs/`、`tmp/`、`intercom/`、`npm/`（包本体）、`bin/`
 - 本机私有配置：`trust.json`、`mcp-project-approvals.json`、`skills/anysearch/runtime.conf`、
   `skills/anysearch/.env`、`skills/backup/endpoints/*`、`patch/session-link/*.json`

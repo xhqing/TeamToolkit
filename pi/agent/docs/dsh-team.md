@@ -68,9 +68,11 @@ Worker 的 worktree 里**只有 `.dsh/`，没有 `.pi/`**，所以 Worker 天然
 
 DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.pi/APPEND_SYSTEM.md`：
 
-- 源码：`~/.pi/agent/patch/dsh/project-append-system.mjs`（公开，随 agents-infra 镜像发布）
-- 安装：`~/.pi/agent/patch/dsh/install.sh` 复制到 `~/.dsh/profiles/dsh-tui/plugins/`
-- 挂载：`~/.dsh/profiles/dsh-tui/cordis.patch.yml`
+- 插件源码：`~/.pi/agent/patch/dsh/project-append-system.mjs`（公开，随 agents-infra 镜像发布）
+- DSH 核心基础设施（canonical）：`~/.pi/agent/dsh/`（`AGENTS.md`、`profiles/dsh-tui/` 配置、`install.sh`）
+- 部署：`~/.pi/agent/dsh/install.sh` 复制到 `~/.dsh`（AGENTS.md、profile 配置、插件）
+- 挂载：`~/.pi/agent/dsh/profiles/dsh-tui/cordis.patch.yml` → 部署到 `~/.dsh/profiles/dsh-tui/`
+- 镜像：`agents-infra/dsh/`；live `~/.dsh` 含凭证 / 会话，不镜像
 
 ```yaml
 - insert:
@@ -85,6 +87,13 @@ DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.
 - **`liangshen` preset 的 `complete: true` 会压制系统段**：用 standard preset，或把注入改成持久用户消息（`agent/pre-step` / inbox）。
 - 文件在会话开始时读一次，中途修改不热更新。
 - 系统提示每次请求都计费：`APPEND_SYSTEM.md` 保持短小，只放硬规则。
+
+## 5b. DSH 核心基础设施的镜像
+
+- canonical：`~/.pi/agent/dsh/`（两机同步、可公开）——`AGENTS.md`、`profiles/dsh-tui/` 配置、`install.sh`。
+- 镜像：`agents-infra/dsh/`，由 `patch/agents-infra-publish/publish.py` 一并发布；插件源码 `patch/dsh/project-append-system.mjs` 会映射到 `dsh/profiles/dsh-tui/plugins/`。
+- live `~/.dsh/` **不进镜像**：里面有 `.env`、`.credentials.yaml`、`sessions/`、`storages/`、`attachments/`；而且发布机 macmini 上没装 DSH，不能直接镜像 live 目录。
+- 修改顺序：改 `~/.pi/agent/dsh/` 或 `patch/dsh/` → 跑 `~/.pi/agent/dsh/install.sh` 部署到 `~/.dsh` → 在 macmini 跑 `publish.py`。
 
 ## 6. 版本与 CHANGELOG
 
