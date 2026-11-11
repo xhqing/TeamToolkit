@@ -267,7 +267,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 ## 团队结构参考（按需读取，指针节）
 
-**两个团队完全独立（2026-11-11 用户立）**：**pi-team** 负责开源项目，规则在本文件；**dsh-team** 负责闭源项目，规则在 `~/.dsh/AGENTS.md`。两边不共用注册表、名册、镜像、技能、守卫；dsh-team 的项目不登记进 `docs/agents-registry.md`，也不进 `xhqing` 名册与 `agents-infra` 镜像；反过来，pi-team 的项目也不进 dsh-team。
+**两个团队完全独立（2026-11-11 用户立）**：**pi-team** 负责开源项目，规则在本文件；**dsh-team** 负责闭源项目，规则在 `~/.dsh/AGENTS.md`。两边不共用注册表、名册、镜像、技能、守卫；dsh-team 的项目不登记进 `docs/agents-registry.md`，也不进 `xhqing` 名册与 `agents-infra` 镜像；反过来，pi-team 的项目也不进 dsh-team。**同一个 Agent 是“一个人”，只有一套版本 / CHANGELOG；两顶帽子（`.pi` / `.dsh`）与 Leader / Worker 工作流的布局见 `~/.pi/agent/docs/dsh-team.md`。**
 
 团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目、归 Kit，2026-11-11 该项目更名为 agents-infra）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，agents-infra 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
 
