@@ -68,11 +68,10 @@ Worker 的 worktree 里**只有 `.dsh/`，没有 `.pi/`**，所以 Worker 天然
 
 DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.pi/APPEND_SYSTEM.md`：
 
-- 插件源码：`~/.pi/agent/patch/dsh/project-append-system.mjs`（公开，随 agents-infra 镜像发布）
-- DSH 核心基础设施（canonical）：`~/.pi/agent/dsh/`（`AGENTS.md`、`profiles/dsh-tui/` 配置、`install.sh`）
-- 部署：`~/.pi/agent/dsh/install.sh` 复制到 `~/.dsh`（AGENTS.md、profile 配置、插件）
-- 挂载：`~/.pi/agent/dsh/profiles/dsh-tui/cordis.patch.yml` → 部署到 `~/.dsh/profiles/dsh-tui/`
-- 镜像：`agents-infra/dsh/`；live `~/.dsh` 含凭证 / 会话，不镜像
+- 插件源码：`~/.dsh/profiles/dsh-tui/plugins/project-append-system.mjs`（权威源）
+- 挂载：`~/.dsh/profiles/dsh-tui/cordis.patch.yml`
+- 镜像：`agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布
+- 部署/恢复：新机器用 `agents-infra/dsh/bootstrap.sh`；日常直接改 `~/.dsh`
 
 ```yaml
 - insert:
@@ -90,10 +89,12 @@ DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.
 
 ## 5b. DSH 核心基础设施的镜像
 
-- canonical：`~/.pi/agent/dsh/`（两机同步、可公开）——`AGENTS.md`、`profiles/dsh-tui/` 配置、`install.sh`。
-- 镜像：`agents-infra/dsh/`，由 `patch/agents-infra-publish/publish.py` 一并发布；插件源码 `patch/dsh/project-append-system.mjs` 会映射到 `dsh/profiles/dsh-tui/plugins/`。
-- live `~/.dsh/` **不进镜像**：里面有 `.env`、`.credentials.yaml`、`sessions/`、`storages/`、`attachments/`；而且发布机 macmini 上没装 DSH，不能直接镜像 live 目录。
-- 修改顺序：改 `~/.pi/agent/dsh/` 或 `patch/dsh/` → 跑 `~/.pi/agent/dsh/install.sh` 部署到 `~/.dsh` → 在 macmini 跑 `publish.py`。
+- **权威源：`~/.dsh/`**（MacBook；DSH agent 演化时直接改这里）。
+- 镜像：`agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布（MacBook 单 pusher）。
+- `pi/agent/` 仍由 macmini 的 `publish.py` 发布；两个子树、两个单 pusher，路径不相交。
+- 镜像只含 secret-free 核心：`AGENTS.md`、`README.md`、`bootstrap.sh`、`profiles/dsh-tui/`（配置 + 插件）。
+- 排除：`.env`、`.credentials.yaml`、`.anonymous-user-id`、`sessions/`、`storages/`、`attachments/`、`node_modules/`、`.plugin-manager/`、`settings.yaml.imported`。
+- 修改后跑 `publish_dsh.py`；不要维护第二份 canonical，也不要手工复制到 `~/.pi/agent`。
 
 ## 6. 版本与 CHANGELOG
 
