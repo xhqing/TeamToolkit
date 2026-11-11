@@ -42,6 +42,10 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
 
 ## 执行流程
 
+**开闸（2026-11-11 用户立，先于一切步骤）**：`python3 ~/.pi/agent/patch/commit-gate/gate.py begin`。裸 `git commit` 已被 `extensions/git-commit-guard.ts` 硬拦——它放行前要求 `state/commit-gate.json` 这张闸门开着，闸门只由本流程打开。所以**每一步 git commit 之前先确认闸门是开的**（默认 30 分钟；跨过 30 分钟的流程重新 `begin` 一次即可）。规则出处与「为什么禁止裸 commit」见全局 `~/.pi/agent/AGENTS.md`「提交必须走 commit skill」节。
+
+**关闸（流程结束时必做）**：本次流程无论**成功、失败、命中敏感扫描 / cache 检测而终止、还是用户中断**，都要 `python3 ~/.pi/agent/patch/commit-gate/gate.py end`——不关等于留一个 30 分钟的裸 commit 窗口。正常路径在最后一步汇报之前关。
+
 0. **远端对齐 + 分支感知（最前置的硬性检查，先于一切其它步骤）**：
    - **0a. 远端 main 对齐检测（2026-09-21 用户立）**：先 `git -C <目标工作区> fetch origin`（无 `origin` remote 或 fetch 失败 → 无从对齐，直接进 0b），再比较本地 main 与远端 main 的领先关系——本地 main 不存在（`git -C <目标工作区> rev-parse --verify -q main` 无输出，全新仓库首次提交前）→ 无从对齐，直接进 0b；否则取 `git -C <目标工作区> rev-list --count main..origin/main`（远端领先本地 main 的提交数）与 `git -C <目标工作区> rev-list --count origin/main..main`（本地 main 领先远端的提交数）：
      - **远端领先、本地不领先**（纯落后，典型如 PR 被 CI squash 合并后本地没跟上）→ **直接拉取对齐**：
