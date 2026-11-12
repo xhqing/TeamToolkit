@@ -1,0 +1,16 @@
+{
+  "updatedAt": "2026-11-12 13:58",
+  "note": "macmini 上 pi 允许使用的模型清单（用户动态维护，2026-11-12 立）。只有这里列出的模型可以出现在 macmini 的 pi 启动命令里；其它模型一律拦截，除非用户当轮明确授权（命令末尾加 # AI_AUTHORIZED_MODEL）。改完本文件不用改代码——守卫 extensions/macmini-model-guard.ts 每次调用时实时读取。",
+  "models": [
+    {
+      "model": "magpie/auto/hy4free",
+      "display": "Hy4（magpie auto 路由，免费）",
+      "note": "2026-11-12 用户指定"
+    },
+    {
+      "model": "magpie/codearts/deepseek-v4.1-flash-1017",
+      "display": "DeepSeek V4.1 Flash 1017（magpie CodeArts 通道，免费）",
+      "note": "2026-11-12 用户指定"
+    }
+  ]
+}

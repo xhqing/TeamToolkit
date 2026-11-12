@@ -58,10 +58,15 @@ macmini_status()          # 看两机实时负载，判断该不该分流时用
 `background: true`。
 
 **不要为了省事在 macmini 上再开一个 pi 会话跑一条命令**——模型费用翻倍、任务还要多绕一层。
-只有「需要在远端多轮交互、反复看日志改代码」时才委派值班会话：
+只有「需要在远端多轮交互、反复看日志改代码」时才开一个**临时 tmux 会话**（2026-11-12 起不再有常驻会话）：
 
 ```bash
-ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to macmini --text "任务与背景"'
+# 开（模型必须走 allowlist.json 里的清单）
+ssh mac-mini 'tmux new-session -d -s pi-<名字> -c <cwd> "pi -n <名字> --model magpie/auto/hy4free"'
+# 派活
+ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to <名字> --text "任务与背景"'
+# 干完立即清掉
+ssh mac-mini 'tmux kill-session -t pi-<名字>'
 ```
 
 **gh / git 在 macmini 上已恢复正常（2026-11-05 用户立）**：git 只读层已撤除（`git-readonly-guard.ts` 已删、`core.hooksPath` 只读 hook 已清），macmini 可以正常 `fetch` / `pull` / 提交 / 推送，`gh` 的全部子命令也都可用。**唯一保留的约束是团队通用的那几条**：remote main 锁定（改动走分支 + PR + CI，由 `git-main-guard.ts` 两机一致拦住）、同一仓库同一时间只在一台机器上做写操作（避免本地 main 各自分叉）、公开动作（PR / Issue / Release）须先做公开文本敏感自检并在命令末尾带 `# AI_SENSITIVE_CHECKED`。
@@ -95,7 +100,7 @@ ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to macmini --t
 | 编译 | clang 14、cmake 3.24、Swift 5.7.2（只有 CLT、**没有完整 Xcode → `xcodebuild` 不可用**） |
 | 其他 | git 2.37.1、pandoc 2.19、tmux、xxd、rsync 2.6.9、zip、Chrome（headless 打印 PDF 可用）、brew 3.5.9（x64，装到 /usr/local） |
 | 缺 | ffmpeg / ffprobe / ImageMagick / ghostscript / yt-dlp / jq / rg / fd / rustc / cargo / go / uv |
-| pi 会话的模型 | macmini 上**默认用 magpie 的免费模型**（2026-11-11 用户立规）：本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie，所以 `--model magpie/<model>` 直接可用（不带 `--model` 也行，默认就是 magpie）。**用不了就停下来向用户汇报原因，不得自行改用付费 / 订阅模型**；确需其它模型（`deepseek/` 官方、`coding-plan/`、`dashscope/`、`zai-coding-cn/`、`tokenplus/` 等）必须先经用户当次同意 |
+| pi 会话的模型 | macmini 上**只用可用模型清单里的 magpie 模型**（2026-11-12 用户立）：清单 = `~/.pi/agent/patch/macmini-models/allowlist.json`，**目前只有 `magpie/auto/hy4free` 与 `magpie/codearts/deepseek-v4.1-flash-1017`**（用户会动态调整）。本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie。**清单外模型一律不准用**；**用不了就停下来向用户汇报原因**，不得自行换清单外模型。校验：`python3 ~/.pi/agent/patch/macmini-models/check.py --ping` |
 
 **Docker 不可用**：CLI 在，但 daemon 启动即 panic（2026-11-03 实测）。要跑容器就回本机或换别的方案。
 
@@ -195,7 +200,7 @@ macmini_run: rm -rf /tmp/macmini-jobs/<job>.sh /tmp/macmini-jobs/<job>.log
 | 同一个命令远端 Node 版本不对 | 手写 ssh 用了 `bash -lc`（拿到 Node 16）；改用 `macmini_run` 或 `ssh mac-mini '命令'` |
 | `xcrun: error ... requires Xcode` | macmini 只有 Command Line Tools；`xcodebuild` 类任务回本机 / 走 CI |
 | 编译通过但本机跑不起来 | 产物是 x64；本机 arm64 需要重新编，或改用 CI 出 arm64 产物 |
-| pi 会话反复报 `Connection error.` 不动 | macmini 上的 magpie 是经本机反向隧道过去的（`patch/magpie-tunnel/`）。按顺序查：① 本机 magpie 是否在跑（`lsof -nP -iTCP:3425 -sTCP:LISTEN`）；② launchd 是否活着（`launchctl print gui/$(id -u)/com.xhq.magpie-tunnel`、日志 `~/Library/Logs/magpie-tunnel.err.log`）；③ macmini 侧 `lsof -nP -iTCP:3425` 与 `curl` 错误原文。**仍不通就向用户汇报原因，不得自行改用付费模型顶替。** 连通可以用 `pi -p "PING-OK" --model magpie/codearts/deepseek-v4.1-flash-1017` 验证 |
+| pi 会话反复报 `Connection error.` 不动 | macmini 上的 magpie 是经本机反向隧道过去的（`patch/magpie-tunnel/`）。按顺序查：① 本机 magpie 是否在跑（`lsof -nP -iTCP:3425 -sTCP:LISTEN`）；② launchd 是否活着（`launchctl print gui/$(id -u)/com.xhq.magpie-tunnel`、日志 `~/Library/Logs/magpie-tunnel.err.log`）；③ macmini 侧 `lsof -nP -iTCP:3425` 与 `curl` 错误原文。**仍不通就向用户汇报原因，不得自行改用清单外模型顶替。** 连通可以用 `python3 ~/.pi/agent/patch/macmini-models/check.py --ping` 验证 |
 | `git ...` 在远端失败 | 已经不再是「只读」问题：多半是 github.com 被限速（已配 `http.version=HTTP/1.1` + 关低速阈值）或凭据过期（`gh auth status` 查） |
 | 删除命令被拒 | 远端递归删除会删到本机；临时文件放 /tmp，确需删除加 `AI_REMOTE_RM_OK` |
 
@@ -206,6 +211,7 @@ macmini_run: rm -rf /tmp/macmini-jobs/<job>.sh /tmp/macmini-jobs/<job>.log
 - ❌ 在 `~/.pi/agent` / `~/.dev/private` 里随手 `rm -rf`——本机同一份也消失，这两个目录没有「重建」这条路。
 - ❌ 把 `node_modules` / `.venv` / 编译缓存 rsync 回本机——架构不通用、还占盘。
 - ❌ 在 macmini 上再开一个 pi 会话只为了跑一条命令——费用翻倍，不值得。
-- ❌ 在 macmini 上起 pi 会话却不先验证模型连通——先跑一条 `pi -p "PING-OK" --model magpie/codearts/deepseek-v4.1-flash-1017`；不通就查隧道并向用户汇报，不要换个 provider 硬顶。
-- ❌ 未经用户同意在 macmini 上使用非 magpie 的模型（`deepseek/` 官方、`coding-plan/`、`dashscope/`、`zai-coding-cn/`、`tokenplus/` 等）——2026-11-11 用户立规：默认只用 magpie 免费模型；用不了要汇报原因。守卫 `extensions/macmini-model-guard.ts` 会拦。
+- ❌ 在 macmini 上起 pi 会话却不先验证模型连通——先跑 `python3 ~/.pi/agent/patch/macmini-models/check.py --ping`；不通就查隧道并向用户汇报，不要换个模型硬顶。
+- ❌ 在 macmini 上使用清单外的模型（包括 magpie 的其它模型，以及 deepseek 官方 / coding-plan / dashscope / zai-coding-cn / tokenplus 等）——2026-11-12 用户立：只认 `allowlist.json` 清单；守卫 `extensions/macmini-model-guard.ts` 会拦，确需清单外模型必须先经用户当次同意。
+- ❌ 在 macmini 上留常驻会话——2026-11-12 用户决定停用常驻（duty 守护已卸载）；临时会话用完必须 `tmux kill-session -t pi-<名字>`。
 - ❌ 分流完就忘了收尾——远端留一堆跑飞的进程和几 GB 的 /tmp 日志。
