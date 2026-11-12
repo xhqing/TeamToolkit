@@ -502,53 +502,41 @@ KeePass 数据库（`*.kdbx`）与密钥文件（`~/Key/` 下）是**丢了就�
   - **为什么要这一条**：阶段性汇报（已委派 / 已清尾 N 个 / 还剩几个）写得太像「总结报告」，用户不细看会以为任务全部完成——2026-10-09 实测：用户在等 Atlas / Hermes 回执期间差点关掉会话。大红提醒让「还有事在跑、别关窗口」一眼可见。
   - **工具强制**：pi 端扩展 `agent-wait-banner.ts`——活动窗口判定（send 类委派未收到回信 / ask 阻塞中 / 其它扩展经 `agent-wait-banner:activity` 事件上报的后台任务活动）→ footer 状态行显示；用户输入、intercom 回信到达、活动结束即清除。（2026-10-09 立；2026-10-11 重做：位置从「消息首行横幅 + 编辑器 widget」改为 footer 状态行、文案更新、修掉旧版「回信到达后 send 窗口永不关闭」与「输出完提醒残留」的缺陷；2026-10-12：① 「无需回复」标记的 send 不点亮提醒（主动判断没有要等的）；② send 窗口加 15 分钟超时上限——修掉「无人回信时提醒一直挂着、误导用户等后台进程」的形态。）
 
-### 跨机协作：macmini 值班会话（2026-10-17 用户立）
+### 跨机协作：macmini 按需会话（2026-11-12 用户改写：不再保留常驻会话）
 
 - **重活默认分流到 macmini（2026-11-03 用户立，工具强制）**：本机是用户**此刻正在用**的 MacBook Air（8 核 / 8GB），macmini 是 12 核 x64 / 32GB 的常驻算力机，与本机共享 `~/.pi/agent` 与 `~/.dev/private` 两个目录（项目代码走 GitHub、各自 clone，2026-11-05 起 `~/Developer` 不再同步）。**每条指令先判断一次「里面的重活要不要放 macmini」**：预计占本机 CPU / 内存十几秒以上的编译、构建、测试套件、音视频转码、批量渲染、数据回测、大文件扫描 / 大下载，一律用 `macmini_run` 工具在远端跑（长任务传 `background:true`、之后 tail 日志取结果），不要在本机硬扛；几秒内结束的短命令、需要 GUI / cmux / osascript / 焦点 / 剪贴板、需要 arm64 产物或本机 `node_modules`、git 写与 gh 发版、操作未镜像路径（`~/Downloads`、`/Volumes`、`~/Library` 等）的留本机。判断标准是**用户的本机要流畅**，不是「尽量多用远端」。判定细则、远端工具链实况与常见重活跑法见 skill `macmini-use`；配套工具强制见 `~/.pi/agent/extensions/macmini-use/`（每轮注入分流判断 + 拦重型本机命令，逃生门 `# AI_LOCAL_OK: <理由>`；macmini 上不生效）。**用 macmini 时 pi 输入框下方会亮一行「🖥  当前使用的是 macmini」（前台调用 / `/macmini …` / `ssh mac-mini …` / `background:true` 的后台任务），用完自动撤——亮着就代表那个时刻确实在占用远端算力（2026-11-04 用户立）。**
-- **macmini 上的模型铁律（2026-11-11 用户立，工具强制）**：macmini 上**不管是什么 harness（pi / 其它 CLI）**，**默认一律使用 magpie 的免费模型**——起 pi 会话用 `--model magpie/<model>`，或干脆不带 `--model`（全局默认 provider 就是 magpie）；其它 harness 把 base URL 指向 `http://127.0.0.1:3425/v1`、模型名用 magpie 的。**改用任何其它付费 / 订阅模型（`deepseek/` 官方、`coding-plan/`、`dashscope/`、`zai-coding-cn/`、`tokenplus/` 等）必须先经用户当次同意。** **magpie 用不了时要停下来向用户汇报原因**（具体是哪一环坏了：隧道断 / 本机 magpie 未运行 / 模型报错，附错误原文），**不得自行改用付费模型顶替**。
-  - **magpie 怎么在 macmini 上可用**：`magpie.app` 只跑在本机（二进制是 arm64，macmini 是 x64 装不了），监听 `127.0.0.1:3425`；`patch/magpie-tunnel/` 用 launchd（`com.xhq.magpie-tunnel`）常驻一条 SSH 反向隧道，把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie，断线自动重连。检查三处状态：`bash ~/.pi/agent/patch/magpie-tunnel/install.sh --status`（本机 magpie / launchd / macmini 侧一次看全）；实跑验证：`ssh mac-mini 'cd /tmp && pi -p "Reply with exactly: PING-OK" --model magpie/codearts/deepseek-v4.1-flash-1017'`。
-  - **立规起因**：2026-11-11 Atlas 为了让 cmux 的 Worker 在 macmini 上跑起来，自行测了一圈 provider（coding-plan 订阅无效 / dashscope 欠费 / zai 套餐到期），最后给 7 个 Worker 指定 `deepseek/deepseek-flash` / `deepseek-v4-pro`，走了用户登录在 `~/.pi/agent/auth.json` 里的 **DeepSeek 官方付费 Key**（约 1,284 次请求、输入约 137 万 + 缓存读约 2.7 亿 token），并把「带 `--model deepseek/...` 起会话」写进了 `macmini-use` skill——等于把擅自用付费额度固化成默认做法。隧道 + 本守卫就是为从根上消除「macmini 上没有免费模型可用」这个借口。
-  - **工具强制**：`extensions/macmini-model-guard.ts`——拦截三类入口：① 本机 `ssh mac-mini '… pi … --model <非 magpie> …'`；② macmini 本机上的同类启动（扩展随 `~/.pi/agent` 同步过去）；③ `macmini_run` 工具命令里的同类形态。逃生门 `# AI_AUTHORIZED_MODEL`（仅限用户当轮明确同意使用非 magpie 模型，AI 不得自行添加）。
+- **macmini 上的模型铁律（2026-11-11 用户立；2026-11-12 改为「清单驱动」，工具强制）**：macmini 上**不管是什么 harness（pi / 其它 CLI）**，**默认只用 magpie 的免费模型**；具体能用哪些由**用户维护的可用模型清单**决定——`~/.pi/agent/patch/macmini-models/allowlist.json` 的 `models[].model`。**目前只有两项**（2026-11-12 用户指定）：`magpie/auto/hy4free`（Hy4）与 `magpie/codearts/deepseek-v4.1-flash-1017`（DeepSeek V4.1 Flash 1017）。清单由用户按情况动态调整，**不在清单里的模型一律不准用**（包括 magpie 的其它模型）；改用清单外模型必须先经用户当次同意。**magpie 用不了时要停下来向用户汇报原因**（具体是哪一环坏了：隧道断 / 本机 magpie 未运行 / 模型报错，附错误原文），**不得自行改用清单外的模型顶替**。
+  - **清单怎么维护**：直接编辑 `allowlist.json` 的 `models` 数组，`model` 写 pi 能直接用的完整名（provider/model，与 `--model` 后面的值一字不差）；改完跑 `python3 ~/.pi/agent/patch/macmini-models/check.py`（加 `--ping` 会在 macmini 上逐个实测）。守卫每次调用实时读清单，改完不用重启会话。
+  - **magpie 怎么在 macmini 上可用**：`magpie.app` 只跑在本机（二进制是 arm64，macmini 是 x64 装不了），监听 `127.0.0.1:3425`；`patch/magpie-tunnel/` 用 launchd（`com.xhq.magpie-tunnel`）常驻一条 SSH 反向隧道，把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie，断线自动重连。检查三处状态：`bash ~/.pi/agent/patch/magpie-tunnel/install.sh --status`（本机 magpie / launchd / macmini 侧一次看全）；实跑验证：`ssh mac-mini 'cd /tmp && pi -p "Reply with exactly: PING-OK" --model magpie/auto/hy4free'`。
+  - **立规起因**：2026-11-11 Atlas 为了让 cmux 的 Worker 在 macmini 上跑起来，自行测了一圈 provider（coding-plan 订阅无效 / dashscope 欠费 / zai 套餐到期），最后给 7 个 Worker 指定 `deepseek/deepseek-flash` / `deepseek-v4-pro`，走了用户登录在 `~/.pi/agent/auth.json` 里的 **DeepSeek 官方付费 Key**（约 1,284 次请求、输入约 137 万 + 缓存读约 2.7 亿 token），并把「带 `--model deepseek/...` 起会话」写进了 `macmini-use` skill——等于把擅自用付费额度固化成默认做法。隧道 + 清单 + 守卫就是为从根上消除「macmini 上没有免费模型可用」这个借口。
+  - **工具强制**：`extensions/macmini-model-guard.ts`——**清单驱动**：① 清单内模型放行；② 清单外模型拦截（含 magpie 的其它模型）；③ 不带 `--model` 时校验 `settings.json` 的默认模型是否在清单里（防止「默认模型」绕过清单）；④ 清单缺失 / 格式错误时保守拦截。拦截三类入口：本机 `ssh mac-mini '… pi …'`、macmini 本机上的同类启动（扩展随 `~/.pi/agent` 同步过去）、`macmini_run` 工具命令。逃生门 `# AI_AUTHORIZED_MODEL`（仅限用户当轮明确同意使用清单外模型，AI 不得自行添加）。
 - **删除红线（2026-11-05 架构改造后）**：macmini 上的项目目录只是普通 clone（可从 GitHub 重建），删它无害；真正要护住的是两个共享目录 `~/.pi/agent` 与 `~/.dev/private`——它们**允许改删里面的内容**（2026-11-05 用户明示），但改前必须有一次新鲜飞书快照（`~/.pi/agent/patch/dev-snapshots/dev-snapshots.py`，由 `extensions/snapshot-guard.ts` 强制），并且**两个目录根本身永远不许删**（删同步根会让对端状态难以收拾）；其它路径的远端递归删除仍默认拒绝（`macmini_run` 需带 `# AI_REMOTE_RM_OK`）。
 
-macmini 上配有一个**常驻值班会话**（intercom 名：`macmini`，由 launchd 守护、掉线自动重拉）。本机各 agent 需要借用 macmini 的资源/环境时，用以下标准命令呼叫（**本机 → macmini**）：
+**2026-11-12 用户决定：macmini 上不再保留常驻会话。** 需要借 macmini 的资源/环境时，**直接用 tmux 临时开一个新会话、用完即清**（不常驻、不守护、不自动重拉）。原「值班会话 + duty 守护 + session-link 链式重启」已停用：`com.xhq.pi-duty` 已卸载、plist 改名 `.disabled`、`duty.conf` 已清空（备份 `duty.conf.bak-20261112`）、`extensions/session-link.ts` 改名 `.disabled`；原有 5 个常驻会话（macmini / Mark / Mark-Intraday / Mark-Swing / Mark-gridtrader）已全部停止。
+
+标准做法（**本机 → macmini**）：模型必须从上面清单里选。
 
 ```bash
-# ask：发消息并等待回复（阻塞；适合需要结果的活）
-ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to macmini --text "任务内容"'
+# 1) 开临时会话（cwd 按需；模型用清单里的）
+ssh mac-mini 'tmux new-session -d -s pi-<名字> -c <cwd> "pi -n <名字> --model magpie/auto/hy4free"'
 
-# send：只通知不等回复（fire-and-forget）
-ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom send --to macmini --text "通知内容"'
+# 2) 派活（ask 阻塞等回复 / send 只通知）
+ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to <名字> --text "任务内容"'
 
-# list：查看 macmini 上有哪些会话
-ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom list'
+# 3) 干完立即清理（不留常驻）
+ssh mac-mini 'tmux kill-session -t pi-<名字>'
 ```
 
-- **用途**：把「重计算 / 长耗时 / 需要 macmini 环境（32GB、x64）」的任务转过去执行，结果由值班会话回传（如跑脚本、构建、下载、批量处理）。
-- **能力边界**：值班会话具备通用能力（跑命令/脚本/网络任务），**暂不具备「某个具体 agent 的身份与项目环境」**——「唤醒具体 agent 会话」的场景另待扩展（依赖 macmini 上的 tmux 与项目环境部署）。
-- **超时**：ask 默认 120 秒；长任务可在命令里加 `--timeout-ms <毫秒>`，或先用 send 派活、稍后再发 ask 询问进度。
-- **注意**：值班会话的 cwd 是 macmini 的 `~`（无项目上下文）；在 macmini 上产出的文件留在 macmini（本机如需取回需显式回传，如 `scp mac-mini:<路径> <本机路径>`）。
+- **用完即清**：临时会话使命完成后必须 `tmux kill-session -t pi-<名字>`，不留在 macmini 上占内存；下次需要时再开（代价只是一次启动）。
+- **超时**：`pi-intercom ask` 默认 120 秒；长任务加 `--timeout-ms <毫秒>`，或先 send 派活、稍后再 ask 问进度。
+- **产物**：在 macmini 上产出的文件留在 macmini（本机如需取回需显式回传，如 `scp mac-mini:<路径> <本机路径>`）。
 - **同步范围（2026-11-05 架构改造：代码走 GitHub，只有两个目录用 Syncthing）**：`~/Developer` **不再同步**——每台机器各自 `clone`、各自开 worktree，靠 GitHub（push → PR → CI → merge → 本地 main 快进）交换代码；Syncthing 只同步两个目录：`~/.dev/private`（各项目私有内容**本体**，项目里放同名软链接，见「私有内容目录」节）与 `~/.pi/agent`（全局能力层）。macmini 为此恢复 GitHub 访问（用**独立凭证**，不与本机共用）。开工前先让 local main 与 `origin/main` 对齐、任务结束走完整提交 / PR / 合并链路，细节见 `docs/macmini-mirror.md` 与 commit / bump / release skill。
 - **macmini 的 git 权限（2026-11-05 起：从「严格只读」改为「正常读写」）**：旧的「严格 git 只读」（`extensions/git-readonly-guard.ts` + macmini 的 `core.hooksPath` 只读钩子）**前提已消失**——它当初是为了防「`.git` 被双向同步、两台机器同时写而互相损坏」；项目目录不再同步后，每台机器的 `.git` 各自独立。**已撤除（2026-11-05）**：`~/Developer` 共享关闭、macmini 的 38 个仓库已原地转正（`fetch` + `reset --hard origin/main`，不改目录、不重下依赖）之后，删掉了 `extensions/git-readonly-guard.ts` 并清掉 macmini 的 `core.hooksPath` 只读 hook。macmini 现在可以正常 `fetch` / 提交 / 推送，但**同样受 remote main 锁定约束**（改动走分支 + PR + CI）。**仍然生效**：remote main 锁定（`git-main-guard.ts`，两机一致）、一个分支只做一件事、改动走 PR + CI。
-- **已迁回的 Agent（2026-10-26 用户决定：Mark 全体系拷回本机，本机为权威源）**：**Mark**（quant-agent 及子项目 Intraday / Swing / gridtrader，另有同日移交的 NewsScoreStudy）原于 2026-10-17 整体迁至 macmini；**2026-10-26 已由用户拷回本机**——`~/Developer/` 下的目录即权威源。macmini 上的同名目录与 4 个 Mark 常驻会话**保留但不再权威**（用户当日明确选择「两边都不动、只改本机口径」，属对单宿主规则的已知例外）；5 个会话仍列在 `duty.conf` 里（值班会话每 6h 重启、Mark 系不重启），但**非必须用 macmini 环境的任务一律不在那边做**：
+- **已迁回的 Agent（2026-10-26 用户决定：Mark 全体系拷回本机，本机为权威源）**：**Mark**（quant-agent 及子项目 Intraday / Swing / gridtrader）原于 2026-10-17 整体迁至 macmini；**2026-10-26 已由用户拷回本机**——`~/Developer/` 下的目录即权威源。macmini 上的同名目录只是普通 clone（可从 GitHub 重建）；**原先的 4 个 Mark 常驻会话已于 2026-11-12 随「不再保留常驻会话」一并停止**（见上节），需要 macmini 环境时临时开 tmux 会话。Mark 系的日常任务一律在本机会话做。
 
-| 呼叫名（intercom） | 进驻项目（cwd） | 现行口径 |
-|---|---|---|
-| `macmini` | 值班会话（`~`，通用任务） | 正常使用（远程算力 / 环境） |
-| `Mark` | 主项目 quant-agent | 保留但不权威；优先在本机会话做 |
-| `Mark-Intraday` | 子项目 Intraday | 同上 |
-| `Mark-Swing` | 子项目 Swing | 同上 |
-| `Mark-gridtrader` | 子项目 gridtrader | 同上 |
+⚠️ **`~/.pi/agent` 仍是双向同步**：本机与 macmini 共用同一份全局能力层（规则 / 技能 / 扩展 / 脚本），改动会同步到对端；项目代码各自 clone、走 GitHub（push → PR → CI → merge）。同一仓库同一时间只在一台机器上做 git 写操作；提交 / 发版统一在本机做，非本机时同样走分支 + PR + CI。
 
-⚠️ **2026-10-28 起镜像为双向**：给 macmini 上的 Mark-\* 会话派活，改动**会同步回流本机**（原「不会回流本机」的说法自镜像建立起失效）。为避免 `.git` 冲突，同一仓库同一时间只在一台机器上做 git 写操作；macmini 的 GitHub 访问已于 2026-11-05 恢复（独立凭证），提交 / 发版仍建议统一在本机做，非本机时同样走分支 + PR + CI。
-
-标准呼叫：`ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to <呼叫名> --text "..."'`（send 为不等回复）。
-
-- **会话生命周期联动（session-link 机制，2026-10-17 用户方案）**：**后端会话的清零时机绑定在「本机派活会话的关闭」上**——任务没完成用户不会关本机会话，关了 = 用户判定完成、后端会话自动清上下文重启（继续常驻）。用户零操作，只管开关自己的会话。
-  - **机制**：一次派活 = 一条**链**。本机（source）生成链 ID 并注入派活消息（`<!-- pi-chain:xxx -->`）；macmini（replica）会话从收件继承链、继续向下透传；每个环节（含只收指令的末端会话）自动登记进链注册表。
-  - **联动**：本机会话关闭（Ctrl+C / 关窗口 / 退出，不含扩展重载）→ 自动 ssh 通知 macmini → 把该链上全部会话 kill + 立刻重拉（清上下文、保持常驻）——含 macmini 上派生的子会话（级联）。
-  - **方向守卫**：macmini（replica）**禁止跨机出站派活**（目标限 macmini 本地会话清单，从 duty.conf 读）——远端设备不得利用本机资源跑后端进程（2026-10-17 用户立）。本机的互通派活不受限。
-  - **配置**：角色按 hostname 自动判定（Mac-mini → replica，其余 → source），`patch/session-link/` 下的 config / 注册表 / 日志**不参与两机同步**（两端内容不同）。
+- **会话生命周期联动（session-link 机制，2026-10-17 立，2026-11-12 停用）**：原机制把 macmini 后台会话的清零绑在「本机派活会话的关闭」上（本机一关 → ssh 通知 macmini kill + 重拉，保持常驻）。**2026-11-12 用户决定不再保留常驻会话后，「重拉」与「用完即清」直接冲突，扩展已停用**——`extensions/session-link.ts` 改名为 `session-link.ts.disabled`；`patch/session-link/` 下的脚本 / 配置 / 注册表保留作历史，不再被调用；`pi-chain` 消息注释保留但不再触发任何联动。临时会话由使用者自己 `tmux kill-session` 清理。
 
 ### 会话收尾检查：负责的子项目仓库必须干净（2026-10-09 用户立）
 

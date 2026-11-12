@@ -1,0 +1,4 @@
+# macmini 常驻会话清单 —— 2026-11-12 用户决定停用（不再保留常驻会话）
+# 需要时用 tmux 临时开会话、用完即清，不再由 duty.sh 守护。
+# 恢复办法：看 duty.conf.bak-20261112；需要的话手工把
+# ~/Library/LaunchAgents/com.xhq.pi-duty.plist.disabled 改回 .plist 并 bootstrap。

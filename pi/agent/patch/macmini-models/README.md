@@ -1,0 +1,50 @@
+# macmini 可用模型清单（用户动态维护）
+
+2026-11-12 用户立：
+
+> magpie 的模型必须是 hy4free 或者 deepseek-4.1-flash-1017。
+> 需要专门维护一个 macmini 上面的可用模型清单，这个清单我会根据情况动态调整，
+> 目前只有 magpie 的 hy4free 和 deepseek-4.1-flash-1017。
+
+## 清单在哪
+
+`allowlist.json`（本目录）。守卫 `~/.pi/agent/extensions/macmini-model-guard.ts`
+**每次调用时实时读取**，所以改完不用重启会话、也不用改代码。
+
+当前两项：
+
+| 清单里的完整模型名 | 说明 |
+|---|---|
+| `magpie/auto/hy4free` | Hy4（magpie auto 路由，免费） |
+| `magpie/codearts/deepseek-v4.1-flash-1017` | DeepSeek V4.1 Flash 1017（magpie CodeArts 通道，免费） |
+
+## 怎么改
+
+直接编辑 `allowlist.json` 的 `models` 数组，字段：
+
+```json
+{ "model": "magpie/<provider>/<model>", "display": "给人看的名字", "note": "备注（可选）" }
+```
+
+`model` 必须写 pi 里能直接用的**完整名**（provider/model，与 `--model` 后面的值一字不差）。
+改完跑一次校验：
+
+```bash
+python3 ~/.pi/agent/patch/macmini-models/check.py          # 只校验格式
+python3 ~/.pi/agent/patch/macmini-models/check.py --ping   # 在 macmini 上逐个实测
+```
+
+## 守卫怎么用它
+
+- 清单里的模型 → 放行；
+- 清单外的模型 → 拦截（包括 magpie 的其它模型，如 `magpie/auto/deepseek-v4.1-flash-1017`）；
+- 命令不带 `--model` → 取 `~/.pi/agent/settings.json` 的默认 provider/model 拼完整名，
+  不在清单里也拦（防止「默认模型」绕过清单）；
+- 清单缺失 / 解析失败 → 保守拦截并提示修清单；
+- 逃生门：命令末尾 `# AI_AUTHORIZED_MODEL`（仅限用户当轮明确同意用清单外的模型）。
+
+## 与隧道的关系
+
+清单里的 magpie 模型要经过 `patch/magpie-tunnel/` 的常驻 SSH 反向隧道才能从 macmini
+访问到本机 magpie。清单模型集体不可用时，先查隧道（`install.sh --status`）再向用户
+汇报原因，不要换清单外的模型顶替。
