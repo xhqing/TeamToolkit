@@ -43,12 +43,13 @@
 - 全局能力层 `~/.pi/agent` 两边仍逐字节一致（双向），所以任何一台机器都能改规则 / 技能；
   **开源镜像只在 macmini 上生成并推送**（单 pusher，见 `docs/capability-sync.md`）。
 
-## 三、同步范围（只有两个目录）
+## 三、同步范围（三个目录）
 
 | folder id | 本机 | macmini | 模式 | 内容 | 排除项 |
 |---|---|---|---|---|---|
 | `private` | `~/.dev/private` | `~/.dev/private` | 双向 | 各项目私有内容**本体**（`private-links` 的软链接指过来） | `.DS_Store`、`._*` |
 | `pi-agent` | `~/.pi/agent` | `~/.pi/agent` | 双向 | 全局能力层（`AGENTS.md` / `skills/` / `docs/` / `patch/` / `extensions/` / `prompts/` / `themes/` / 配置） | `sessions/`、`state/`、`logs/`、`tmp/`、`intercom/`、`npm/`、`bin/`、运行时缓存、`trust.json`、`skills/anysearch/runtime.conf`、`patch/session-link/*.json`、`__pycache__`、`*.log`、`*.lock` |
+| `dsh` | `~/.dsh` | `~/.dsh` | sendonly → receiveonly | DSH 权威源（MacBook）的 secret-free 核心：`AGENTS.md`、`README.md`、`bootstrap.sh`、`profiles/dsh-tui/`（配置 + 插件） | `.env`、`.credentials.yaml`、`sessions/`、`storages/`、`attachments/`、`settings.yaml.imported`、`node_modules/`、`.plugin-manager/`、`web/headless/desktop` profile |
 
 **明确不同步**：`~/Developer` 下所有项目仓库（含 `.git`、worktree、`node_modules`、构建产物）、
 `~/.dev/snapshots/`（本地快照，各机各留 5 份）、机器本地配置（`settings.local.json`、

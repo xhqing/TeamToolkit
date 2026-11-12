@@ -3,12 +3,14 @@
 
 用法：python3 setup.py
 - 本机（MacBook Air，arm64）与 macmini（Intel，x64）各跑一个 Syncthing 守护进程；
-- 两个共享目录：~/Developer（全部项目）、~/.pi/agent（全局能力层）；
+- 三个共享目录：~/.pi/agent（全局能力层）、~/.dev/private（私有本体）、
+  ~/.dsh（DSH 权威源，本机 sendonly → macmini receiveonly）；
 - 排除项写在各自目录根的 .stignore（见同目录 stignore-* 模板）。
 
 说明：本脚本只负责「建配置」，不改已存在目录的设置（幂等，可重复执行）。
 """
 import json
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -83,13 +85,13 @@ def ensure_folder(base, key, folder, remote):
     print(f"  folder {folder['id']} 已添加")
 
 
-def folder_spec(fid, label, path, device_ids, versions_path):
+def folder_spec(fid, label, path, device_ids, versions_path, folder_type="sendreceive"):
     return {
         "id": fid,
         "label": label,
         "filesystemType": "basic",
         "path": path,
-        "type": "sendreceive",
+        "type": folder_type,
         "devices": [{"deviceID": d, "introducedBy": "", "encryptionPassword": ""} for d in device_ids],
         "rescanIntervalS": 600,
         "fsWatcherEnabled": True,
@@ -106,6 +108,24 @@ def folder_spec(fid, label, path, device_ids, versions_path):
             "fsType": "basic",
         },
     }
+
+
+def ensure_stignore(path, template, remote=False):
+    """确保 .stignore 在 folder 启动前就位，避免先把凭证/会话同步过去。"""
+    if remote:
+        r = subprocess.run(["ssh", REMOTE_HOST, f"test -f {path}/.stignore"], capture_output=True)
+        if r.returncode == 0:
+            return
+        subprocess.run(["ssh", REMOTE_HOST, f"mkdir -p {path}"], check=True)
+        subprocess.run(["scp", str(template), f"{REMOTE_HOST}:{path}/.stignore"], check=True)
+        print(f"  .stignore 已放到 {path}")
+        return
+    p = Path(path)
+    p.mkdir(parents=True, exist_ok=True)
+    dst = p / ".stignore"
+    if not dst.exists():
+        shutil.copy(template, dst)
+        print(f"  .stignore 已放到 {path}")
 
 
 def drop_folder(base, key, fid, remote):
@@ -138,6 +158,8 @@ def main():
 
     print("== 本机 ==")
     ensure_device(LOCAL, lk, rid, "Macs-Mac-mini", f"tcp://{REMOTE_IP}:22000", False)
+    stignore_dsh = Path(__file__).with_name("stignore-dsh")
+    ensure_stignore("/Users/xhq/.dsh", stignore_dsh)
     if with_dev:  # 2026-11-05 起代码走 GitHub，只有显式 --with-developer 才重建这层同步
         ensure_folder(LOCAL, lk, folder_spec(
             "developer", "Developer (team mirror)", "/Users/xhq/Developer",
@@ -148,9 +170,13 @@ def main():
     ensure_folder(LOCAL, lk, folder_spec(
         "private", "私有内容本体（~/.dev/private）", "/Users/xhq/.dev/private",
         [lid, rid], "/Users/xhq/.syncthing-versions/private"), False)
+    ensure_folder(LOCAL, lk, folder_spec(
+        "dsh", "DSH home (MacBook authoritative)", "/Users/xhq/.dsh",
+        [lid, rid], "/Users/xhq/.syncthing-versions/dsh", "sendonly"), False)
 
     print("== macmini ==")
     ensure_device(LOCAL, rk, lid, "MacBook-Air-xhq", f"tcp://{LOCAL_IP}:22000", True)
+    ensure_stignore("/Users/mac/.dsh", stignore_dsh, remote=True)
     if with_dev:
         ensure_folder(LOCAL, rk, folder_spec(
             "developer", "Developer (team mirror)", "/Users/mac/Developer",
@@ -161,6 +187,9 @@ def main():
     ensure_folder(LOCAL, rk, folder_spec(
         "private", "私有内容本体（~/.dev/private）", "/Users/mac/.dev/private",
         [rid, lid], "/Users/mac/.syncthing-versions/private"), True)
+    ensure_folder(LOCAL, rk, folder_spec(
+        "dsh", "DSH home (MacBook authoritative)", "/Users/mac/.dsh",
+        [rid, lid], "/Users/mac/.syncthing-versions/dsh", "receiveonly"), True)
 
     if drop_dev:
         print("== 移除 developer 共享（代码改走 GitHub）==")

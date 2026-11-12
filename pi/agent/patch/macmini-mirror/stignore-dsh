@@ -1,0 +1,19 @@
+// DSH home 同步排除项：只把 secret-free 核心同步到 macmini 供 agents-infra 发布。
+// 本文件不随 Syncthing 同步（.stignore 是本地配置），两边各放一份。
+/.env
+/.credentials.yaml
+/.anonymous-user-id
+/sessions
+/storages
+/attachments
+/settings.yaml.imported
+/profiles/web
+/profiles/headless
+/profiles/desktop
+/profiles/node_modules
+/profiles/dsh-tui/node_modules
+/profiles/dsh-tui/.plugin-manager
+__pycache__
+*.log
+*.pyc
+.DS_Store
