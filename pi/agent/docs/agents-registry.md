@@ -113,7 +113,6 @@
 | NeuralCoreAgent（Ada） | ToolCallingRules | LLM 工具调用规则集（2026-11-02 按「团队项目一律 public」由私有改公开并锁 main；22 条规则 / 7 类，注入 system prompt 以减少 function calling 的参数格式错误与不安全重试、提升调用准确率；PolyForm-Noncommercial；2026-10-31 用户决定由 Ada 接手负责，此前是未登记的历史独立项目） |
 | trading-agent（Victor） | TradingProofs | 交易数学的 Lean 4 + Mathlib 机器可验证证明（从固定比例下注的累计收益率推导开始，覆盖强数定律指数增长率 / 凯利最优 f\* /「两倍凯利」边界；与实盘执行完全隔离，2026-10-11 立项） |
 | social-agent（Gatsby） | blog | 个人博客「藏经阁」（docsify 站点，<https://xhqing.github.io/blog>；GitHub Pages 直接从 `main` 的 `docs/` 发布）。**2026-11-11 由 Kit（assistant-agent）移交 Gatsby**，同日从「已退役子项目」名单里恢复为活跃。内容双通道：手写，加上从 social-agent 的 `docs/articles/` 每 10 分钟自动同步——**不看写完没写完**，源仓库什么状态博客就什么状态；同步产物带 `<!-- source: … -->` 标记，机器人跑完自检后直推 `main`（用过 `GITHUB_TOKEN` 建 PR 触发不了别的 workflow，所以不走 PR） |
-
 | quant-agent（Mark） | NewsScoreStudy | 私有子项目（2026-11-12 重新登记）；只列名与链接，不介绍内容 |
 
 > **Mark（quant-agent）名下的仓库构成（2026-11-12）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）；另有私有子项目 **NewsScoreStudy**（独立 private 仓库，只列名与链接，不介绍内容）。
