@@ -5,10 +5,21 @@
 不干净的全部要处理干净（规则正文见全局 ~/.pi/agent/AGENTS.md「会话收尾检查」节）。
 
 用法：
-  settle-repo-check.py --cwd <dir> [--json]   # pi 端扩展 settle-repo-check.ts 调用
-  settle-repo-check.py --cc-stop              # CC 端 Stop hook：stdin 读 hook JSON，
+  settle-repo-check.py --cwd <dir> [--json]     # pi 端扩展 settle-repo-check.ts 调用
+  settle-repo-check.py --cwd <dir> --worktree-paths
+                                              # 只列当前 Agent 名下全部 worktree 路径（纯 git、
+                                              # 不查 gh），供扩展在 session_start 拍基线
+  settle-repo-check.py --cc-stop                # CC 端 Stop hook：stdin 读 hook JSON，
                                               # 未干净时 exit 2 阻断收尾（stderr 给 Claude 理由）；
                                               # stop_hook_active 时直接放行（防循环）
+
+worktree 的所有权反查（2026-11-12 加）：
+  残留 worktree 的提示要发给「建它的那个会话」，不是无差别发给当前会话。所有权由
+  `~/.pi/agent/state/worktrees.jsonl` 提供（append-only，每行一条 JSON，字段
+  `{ts, sessionId, cwd, repo, path, branch, source}`），由 worktree-name-guard.ts
+  （拦到 `git worktree add` / `move` 时）与 worktree-adopt.py（搬完改动后）写入。
+  本脚本按 path 反查最后一条记录，把 owner_session / owner_cwd 附在 --json 输出里。
+  没有记录 → 不带 owner 字段（调用方按「本轮新出现 / 静默」兜底）。
 
 逻辑：
   - 由 cwd（Agent 项目目录，或某个子项目目录）在 ~/.pi/agent/docs/agents-registry.md 的
@@ -23,6 +34,10 @@ import re
 import subprocess
 import sys
 
+AGENT_DIR = os.path.expanduser("~/.pi/agent")
+# worktree 所有权日志（append-only）：path → 最后一条记录 = 最后写它的人
+WORKTREE_LOG = os.path.join(AGENT_DIR, "state", "worktrees.jsonl")
+
 # 权威源是 ~/.pi/agent/docs/agents-registry.md。历史上这里还回退读过
 # ~/.claude/ 下的副本，那份早就停更；2026-11-11 起其它 harness 一律不维护，
 # 回退项一并删掉——找不到 registry 就让巡检报错，不猜第二份。
@@ -33,6 +48,44 @@ DEV = os.path.expanduser("~/Developer")
 def _sh(args, cwd=None):
     r = subprocess.run(args, cwd=cwd, capture_output=True, text=True)
     return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+def _norm_path(raw):
+    """路径归一：展开 ~、去尾斜杠，存在则取 realpath（对齐 session cwd 的软链接差异）。"""
+    p = os.path.expanduser((raw or "").strip())
+    if not p:
+        return ""
+    if os.path.exists(p):
+        p = os.path.realpath(p)
+    p = os.path.normpath(p)
+    return p
+
+
+def owner_index():
+    """worktree 路径 → 最后一条所有权记录。
+
+    为什么要有（2026-11-12 用户立）：残留 worktree 的提醒属于「建它的那个会话」，
+    不属于恰好收尾的当前会话（实测 Gatsby 会话被报了两条 Kit 移交前建的 blog worktree）。
+    日志 append-only：同一路径写了多次（move / 重建）时以最后一条为准。
+    """
+    idx = {}
+    try:
+        with open(WORKTREE_LOG, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return idx
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        path = rec.get("path")
+        if isinstance(path, str) and path.strip():
+            idx[_norm_path(path)] = rec
+    return idx
 
 
 def registry_rows():
@@ -177,6 +230,7 @@ def stale_worktrees(agent, rows):
     扫描范围见 `_sweep_projects()`（含 Agent 项目自身仓库，2026-11-09 补齐）。
     """
     out = []
+    owners = owner_index()
     for proj in _sweep_projects(agent, rows):
         d = os.path.join(DEV, proj)
         if not os.path.isdir(os.path.join(d, ".git")):
@@ -213,7 +267,34 @@ def stale_worktrees(agent, rows):
             c2, st, _ = _sh(["git", "-C", path, "status", "--porcelain"])
             if c2 != 0 or st.strip():
                 continue  # 不干净 / 读不到：不是「用完的」worktree
-            out.append({"repo": proj, "path": path, "branch": branch})
+            rec = {"repo": proj, "path": path, "branch": branch}
+            owner = owners.get(_norm_path(path))
+            if owner:
+                if owner.get("sessionId"):
+                    rec["owner_session"] = owner["sessionId"]
+                if owner.get("cwd"):
+                    rec["owner_cwd"] = owner["cwd"]
+            out.append(rec)
+    return out
+
+
+def worktree_paths(agent, rows):
+    """当前 Agent 名下全部 worktree 路径（含主工作区；纯 git，不查 gh）。
+
+    用途：pi 端扩展在 session_start 拍基线，settle 时只报「本会话开始后才出现」且
+    没有所有权记录的 worktree——避免把上几轮会话遗留的历史包袱压给新会话。
+    """
+    out = []
+    for proj in _sweep_projects(agent, rows):
+        d = os.path.join(DEV, proj)
+        if not os.path.isdir(os.path.join(d, ".git")):
+            continue
+        code, wt, _ = _sh(["git", "-C", d, "worktree", "list", "--porcelain"])
+        if code != 0:
+            continue
+        for line in wt.splitlines():
+            if line.startswith("worktree "):
+                out.append(_norm_path(line[len("worktree "):]))
     return out
 
 
@@ -240,6 +321,11 @@ def main():
     agent = find_agent(cwd, rows)
     if not agent:
         sys.exit(0)  # 非 Agent / 子项目会话 → 无此项
+
+    # 基线快照：纯 git，不查 gh（session_start 调，要快）
+    if "--worktree-paths" in args:
+        print(json.dumps({"agent": agent, "paths": worktree_paths(agent, rows)}, ensure_ascii=False))
+        sys.exit(0)
 
     dirty = dirty_repos(agent, rows)
     stale = unpublished_repos(agent, rows)
@@ -289,7 +375,8 @@ def main():
         if leftover:
             print(f"[settle-repo-check] 已合并且干净的残留 worktree（可清理）：")
             for r in leftover:
-                print(f"  - {r['repo']}: {r['branch']} → {r['path']}")
+                owner = r.get("owner_session") or "(无记录)"
+                print(f"  - {r['repo']}: {r['branch']} → {r['path']}（建它的会话 {owner}）")
     sys.exit(0)
 
 
