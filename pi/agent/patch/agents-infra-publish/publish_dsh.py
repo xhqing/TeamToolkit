@@ -3,7 +3,7 @@
 
 为什么在 macmini
 ----------------
-`~/.dsh` 的权威源在 MacBook；Syncthing 的 `dsh` 文件夹以 sendonly → receiveonly
+`~/.dsh` 是双机双向同步的权威源；Syncthing 的 `dsh` 文件夹（双向）
 把 secret-free 核心同步到 macmini。agents-infra 只存在于 macmini，所以发布必须在那边跑。
 
 发布范围（secret-free 核心）
@@ -187,6 +187,13 @@ def commit_and_pr(repo: Path, files: list[str]) -> None:
     print("[DONE] 已开 PR 并设置自动合并（CI 通过后自动合入 main）")
 
 
+def find_conflicts() -> list[str]:
+    hits = []
+    for p in DSH.rglob("*sync-conflict-*"):
+        hits.append(str(p.relative_to(DSH)))
+    return hits
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="发布权威 ~/.dsh 核心基础设施到 agents-infra/dsh")
     ap.add_argument("--dir", default=str(REPO_DEFAULT), help="agents-infra 仓库路径")
@@ -196,11 +203,18 @@ def main() -> int:
 
     if not is_macmini():
         print("[ERR] 这个脚本只在 macmini 上跑：agents-infra 只存在于 macmini；\n"
-              "      ~/.dsh 通过 Syncthing 从 MacBook 同步过来（sendonly → receiveonly）。")
+              "      ~/.dsh 通过 Syncthing 双机双向同步。")
         return 2
     if not DSH.exists():
         print(f"[ERR] 找不到权威源：{DSH}")
         return 2
+
+    conflicts = find_conflicts()
+    if conflicts and not args.check:
+        print("[ERR] ~/.dsh 有 Syncthing 冲突副本，先人工合并再发布：")
+        for c in conflicts:
+            print("  -", c)
+        return 3
 
     repo = Path(args.dir).expanduser()
     if not (repo / ".git").exists():

@@ -89,8 +89,8 @@ DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.
 
 ## 5b. DSH 核心基础设施的镜像
 
-- **权威源：`~/.dsh/`**（MacBook；DSH agent 演化时直接改这里）。
-- 同步：Syncthing `dsh` 文件夹（MacBook sendonly → macmini receiveonly），只同步 secret-free 核心。
+- **权威源：`~/.dsh/`**（双机；DSH agent 可在任一机器上改，双向同步）。
+- 同步：Syncthing `dsh` 文件夹（双向），只同步 secret-free 核心。
 - 镜像：`agents-infra/dsh/`，由 macmini 的 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布。
 - `pi/agent/` 也由 macmini 的 `publish.py` 发布；两个子树都在 macmini 发布，路径不相交。
 - 镜像只含 secret-free 核心：`AGENTS.md`、`README.md`、`bootstrap.sh`、`profiles/dsh-tui/`（配置 + 插件）。

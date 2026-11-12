@@ -5,7 +5,7 @@
 ## 一句话
 
 把 `~/.pi/agent`（五部分 + npm 清单）单向发布到 `agents-infra/pi/agent/`，**只允许在 macmini 上跑**。
-`dsh/` 也由 macmini 上的 `publish_dsh.py` 发布；`~/.dsh` 由 Syncthing 从 MacBook 同步到 macmini。两个子树路径不相交。
+`dsh/` 也由 macmini 上的 `publish_dsh.py` 发布；`~/.dsh` 由 Syncthing 双机双向同步。两个子树路径不相交。
 
 ## 命令
 
@@ -14,7 +14,7 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish.py            # 在 macmi
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --check    # 只查是否一致
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改哪些文件
 
-# dsh/：也在 macmini 上（~/.dsh 由 Syncthing 从 MacBook 同步过来）
+# dsh/：也在 macmini 上（~/.dsh 双机双向同步）
 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py
 ```
 
@@ -39,7 +39,7 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py
 
 ## DSH 核心基础设施
 
-`~/.dsh/` 是 dsh-team 的权威源（MacBook）。Syncthing 的 `dsh` 文件夹（sendonly → receiveonly）
+`~/.dsh/` 是 dsh-team 的权威源（双机双向同步）。Syncthing 的 `dsh` 文件夹（双向）
 把 secret-free 核心同步到 macmini；`publish_dsh.py`（macmini）再发布到 `agents-infra/dsh/`。
 `publish.py` 只管 `pi/agent/`，两个子树路径不相交。
 
