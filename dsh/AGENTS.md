@@ -57,6 +57,7 @@
 ## 8. 镜像与发布
 
 - 本目录 `~/.dsh/` 是 dsh-team 的权威源；直接改这里的文件，不要维护第二份 canonical。
-- 核心基础设施镜像到 `agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布。
-- 凭证、会话、附件、`node_modules/`、`settings.yaml.imported` 不发布。
-- 改了本目录后跑一次发布脚本；发布脚本会排除敏感/运行时内容。
+- Syncthing 的 `dsh` 文件夹（MacBook sendonly → macmini receiveonly）把 secret-free 核心同步到 macmini。
+- 核心基础设施由 macmini 的 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布到 `agents-infra/dsh/`。
+- 凭证、会话、附件、`node_modules/`、`settings.yaml.imported` 不发布也不同步。
+- 改了本目录后等 Syncthing 收敛，再在 macmini 上跑发布脚本。
