@@ -37,6 +37,23 @@ esac
 
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
 cp "$SRC" "$DST"
+
+# 远端 3425 若被上一次的孤儿 sshd 占着，先清理（否则新连接绑定失败、launchd 反复重启）
+remote_listen=$(ssh mac-mini 'lsof -nP -iTCP:3425 -sTCP:LISTEN 2>/dev/null | tail -n +2' 2>/dev/null)
+if echo "$remote_listen" | grep -q '^sshd'; then
+  pids=$(echo "$remote_listen" | awk '$1=="sshd"{print $2}')
+  if [ -n "$pids" ]; then
+    echo "清理远端孤儿 sshd（${pids}）"
+    ssh mac-mini "kill $pids" 2>/dev/null
+    sleep 1
+  fi
+elif [ -n "$remote_listen" ]; then
+  echo "⚠️ macmini 的 3425 被非 sshd 进程占用，未清理："
+  echo "$remote_listen"
+  echo "先查清占用者再装隧道。"
+  exit 1
+fi
+
 launchctl bootout "gui/$UID_N/$LABEL" 2>/dev/null
 launchctl bootstrap "gui/$UID_N" "$DST" || { echo "bootstrap 失败"; exit 1; }
 sleep 2

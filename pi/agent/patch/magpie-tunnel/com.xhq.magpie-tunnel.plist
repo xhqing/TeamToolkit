@@ -26,6 +26,13 @@
     <string>-o</string><string>ServerAliveCountMax=3</string>
     <string>-o</string><string>ConnectTimeout=10</string>
     <string>-o</string><string>StrictHostKeyChecking=accept-new</string>
+    <!-- 必须禁用连接复用：~/.ssh/config 对 mac-mini 开了 ControlMaster auto +
+         ControlPersist 10m，隧道的 ssh 若复用用户已有的 master 连接，-R 请求会落到
+         那个 master 上、端口已被占用则直接失败（ExitOnForwardFailure），或者注册成功
+         但隧道跟着 master 一起在 10 分钟空闲后被回收 —— 两种情况都表现为 launchd
+         反复「running → spawn scheduled」，macmini 侧端口时通时断（2026-11-12 实测）。 -->
+    <string>-o</string><string>ControlMaster=no</string>
+    <string>-o</string><string>ControlPath=none</string>
     <string>-R</string><string>127.0.0.1:3425:127.0.0.1:3425</string>
     <string>mac-mini</string>
   </array>
