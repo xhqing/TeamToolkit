@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    macmini 上默认使用 magpie 的免费模型（2026-11-11 用户立规）。
+
+    magpie.app 只跑在本机（MacBook），代理监听 127.0.0.1:3425；macmini 上是 x64、
+    magpie.app 是 arm64，装不了。所以本机主动向 macmini 建一条 SSH 反向隧道：
+    macmini 的 127.0.0.1:3425 → 本机的 127.0.0.1:3425（magpie）。
+
+    这样 macmini 上任何 harness（pi / 其它 CLI）配 `magpie/...` 模型就能直接用，
+    不必再像 2026-11-11 那样被迫切到 deepseek 官方付费模型。
+
+    断线由 launchd KeepAlive 自动重连（本机睡眠 / 网络切换后恢复）。
+  -->
+  <key>Label</key><string>com.xhq.magpie-tunnel</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/ssh</string>
+    <string>-N</string>
+    <string>-T</string>
+    <string>-o</string><string>ExitOnForwardFailure=yes</string>
+    <string>-o</string><string>BatchMode=yes</string>
+    <string>-o</string><string>ServerAliveInterval=30</string>
+    <string>-o</string><string>ServerAliveCountMax=3</string>
+    <string>-o</string><string>ConnectTimeout=10</string>
+    <string>-o</string><string>StrictHostKeyChecking=accept-new</string>
+    <string>-R</string><string>127.0.0.1:3425:127.0.0.1:3425</string>
+    <string>mac-mini</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>10</integer>
+  <key>StandardOutPath</key><string>/Users/xhq/Library/Logs/magpie-tunnel.log</string>
+  <key>StandardErrPath</key><string>/Users/xhq/Library/Logs/magpie-tunnel.err.log</string>
+</dict>
+</plist>
