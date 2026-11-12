@@ -15,10 +15,16 @@
  *
  * 逃生门（仅限用户当轮明确授权，AI 不得自行添加）：命令末尾 `# AI_AUTHORIZED_WORKTREE_NAME`。
  * 判定失败时 fail-open：守卫失灵不阻塞会话。
+ *
+ * 顺手记所有权（2026-11-12 加）：放行的 `git worktree add` / `move` 会把
+ * `{ts, sessionId, cwd, repo, path, branch, source}` 追加到
+ * `~/.pi/agent/state/worktrees.jsonl`（append-only）。settle-repo-check 靠它把
+ * 「残留 worktree 可清理」的提示发给**建它的那个会话**，而不是无差别发给当前会话。
+ * 写失败不影响判定（守卫本身 fail-open）。
  */
 
 import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -28,6 +34,8 @@ const SEGMENT_SPLIT = /&&|\|\||;|\n|\|/;
 const WORKTREE_RE = /(?:^|\s)worktree\s+(add|move)(?=\s|$)([\s\S]*)$/;
 /** add 里这些选项后面跟一个值（不是路径）。 */
 const ADD_VALUE_OPTS = new Set(["-b", "-B", "--orphan", "--reason"]);
+/** worktree 所有权日志：settle-repo-check 按 path 反查「建它的会话」。 */
+const OWNER_LOG = path.join(os.homedir(), ".pi", "agent", "state", "worktrees.jsonl");
 
 const DENY =
 	"[worktree-name-guard] 拦截：worktree 目录名必须以「本仓库名」开头（2026-11-09 用户立规）。" +
@@ -105,6 +113,45 @@ function targetPathOf(action: string, rest: string, base: string): string | null
 	return resolveTarget(raw, base);
 }
 
+/** `add` 的目标分支：`-b` / `-B` 后的值；未指定时 git 用目标目录名建同名分支。 */
+function branchOf(action: string, rest: string, targetAbs: string): string {
+	if (action !== "add") return "";
+	const tokens = rest.replace(/["'`]/g, "").split(/\s+/).filter(Boolean);
+	for (let i = 0; i < tokens.length; i += 1) {
+		if (tokens[i] === "-b" || tokens[i] === "-B") return tokens[i + 1] ?? path.basename(targetAbs);
+	}
+	return path.basename(targetAbs);
+}
+
+/** 把「谁建了这个 worktree」追加进所有权日志；失败静默（不阻塞会话）。 */
+function recordOwner(opts: {
+	action: string;
+	sessionId: string;
+	cwd: string;
+	repo: string | null;
+	target: string;
+	branch: string;
+}): void {
+	try {
+		mkdirSync(path.dirname(OWNER_LOG), { recursive: true });
+		appendFileSync(
+			OWNER_LOG,
+			JSON.stringify({
+				ts: new Date().toISOString(),
+				sessionId: opts.sessionId,
+				cwd: opts.cwd,
+				repo: opts.repo ?? "",
+				path: opts.target,
+				branch: opts.branch,
+				source: "worktree-name-guard",
+				action: opts.action,
+			}) + "\n",
+		);
+	} catch {
+		// 写不进去就不写：settle-repo-check 会退到「本轮新出现 / 静默」兜底
+	}
+}
+
 /** 返回违规原因；null = 放行。 */
 function verdict(targetAbs: string, repoName: string | null): string | null {
 	const targetName = path.basename(targetAbs);
@@ -135,13 +182,14 @@ function verdict(targetAbs: string, repoName: string | null): string | null {
 }
 
 export default function (pi: ExtensionAPI) {
-	pi.on("tool_call", async (event) => {
+	pi.on("tool_call", async (event, ctx) => {
 		try {
 			if (!isToolCallEventType("bash", event)) return;
 			const command = event.input.command ?? "";
 			if (command.includes(AUTH_MARK)) return;
 
-			const cwd = process.cwd();
+			const cwd = ctx?.cwd ?? process.cwd();
+			const sessionId = String(ctx?.sessionManager?.getSessionId?.() ?? process.env.PI_SESSION_ID ?? "");
 			for (const raw of command.split(SEGMENT_SPLIT)) {
 				const segment = raw.trim();
 				const match = WORKTREE_RE.exec(segment);
@@ -149,12 +197,23 @@ export default function (pi: ExtensionAPI) {
 				if (!/(?:^|\s)git(?=\s|$)/.test(segment)) continue;
 
 				const repoDir = repoDirFromSegment(segment, cwd);
-				const target = targetPathOf(match[1], match[2], repoDir);
+				const action = match[1];
+				const target = targetPathOf(action, match[2], repoDir);
 				if (!target) continue;
 
 				const repoName = repoNameOf(repoDir);
 				const reason = verdict(target, repoName);
 				if (reason) return { block: true, reason: `${DENY}\n具体问题：${reason}` };
+
+				// 放行才记所有权：被拦的 add 不会真的建出来
+				recordOwner({
+					action,
+					sessionId,
+					cwd,
+					repo: repoName,
+					target,
+					branch: branchOf(action, match[2], target),
+				});
 			}
 		} catch {
 			// fail-open：守卫自身异常不阻塞会话

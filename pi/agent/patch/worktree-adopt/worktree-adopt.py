@@ -37,6 +37,9 @@ from pathlib import Path
 HOME = Path.home()
 ADD_STATE = HOME / ".pi" / "agent" / "state" / "add-mode.json"
 COMMIT_STATE = HOME / ".pi" / "agent" / "state" / "commit-mode.json"
+# worktree 所有权日志（与 worktree-name-guard.ts 共用）：settle-repo-check 按 path 反查
+# 「建它的会话」，把「已合并、可清理」的提示发给那个会话，而不是无差别发给当前会话。
+WORKTREE_LOG = HOME / ".pi" / "agent" / "state" / "worktrees.jsonl"
 MAIN_BRANCHES = ("main", "master")
 
 
@@ -86,6 +89,30 @@ def paused_by_mode(repo: Path) -> str | None:
             if repo_s == entry or repo_s.startswith(entry.rstrip("/") + "/"):
                 return f"{label} 已按项目暂停（{entry}）：用户可能正在看 diff，不再自动搬运 / 提交"
     return None
+
+
+def record_owner(repo: str, path: Path, branch: str) -> None:
+    """记下「谁建了这个 worktree」（2026-11-12 加）。
+
+    settle-repo-check 发现「已合并、工作区干净」的残留 worktree 时，靠这条记录把提示
+    发给建它的会话；没有记录就只能靠「本轮新出现 / 静默」兜底。写失败静默——不因为
+    记不了账就中断搬运。
+    """
+    try:
+        WORKTREE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        rec = {
+            "ts": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "sessionId": os.environ.get("PI_SESSION_ID", ""),
+            "cwd": os.getcwd(),
+            "repo": repo,
+            "path": str(path),
+            "branch": branch,
+            "source": "worktree-adopt",
+        }
+        with open(WORKTREE_LOG, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def parse_status(repo: Path) -> list[dict]:
@@ -232,6 +259,7 @@ def main() -> int:
     created = git(root, "worktree", "add", "-b", branch_name, str(worktree), base)
     if created.returncode != 0:
         return die(f"建 worktree 失败：{created.stderr.strip()}", 6)
+    record_owner(root.name, worktree, branch_name)
 
     def rollback(why: str) -> int:
         git(root, "worktree", "remove", "--force", str(worktree))
