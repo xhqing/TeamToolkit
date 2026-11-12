@@ -1,12 +1,12 @@
 # ~/.dsh：DSH 团队权威源
 
-这个目录是 **dsh-team 的权威源**。DSH agent 在演化过程中会直接修改这里的全局文件
+这个目录是 **dsh-team 的权威源**（MacBook 与 macmini 双向同步，两台机器都可以改）。DSH agent 在演化过程中会直接修改这里的全局文件
 （`AGENTS.md`、`profiles/dsh-tui/` 配置、插件）。它不是只读的部署副本。
 
 ## 镜像
 
 - 目标：`agents-infra/dsh/`
-- 同步：Syncthing `dsh` 文件夹（MacBook sendonly → macmini receiveonly），只同步 secret-free 核心
+- 同步：Syncthing `dsh` 文件夹（双向），只同步 secret-free 核心
 - 发布机：**macmini**（agents-infra 只在这里；macmini 不装 DSH）
 - 发布脚本：`~/.pi/agent/patch/agents-infra-publish/publish_dsh.py`（在 macmini 上跑）
 - 发布的是 **secret-free 核心**，不是整个 `~/.dsh`
