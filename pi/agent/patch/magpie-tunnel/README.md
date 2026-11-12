@@ -29,6 +29,13 @@ macmini 的 127.0.0.1:3425  →  本机的 127.0.0.1:3425（magpie）
 网络切换后恢复）。macmini 上任何 harness 只要把 base URL 配成 `http://127.0.0.1:3425/v1`、
 模型名用 `magpie/<model>`，就会走本机 magpie，不消耗任何官方付费额度。
 
+隧道的 ssh 显式带了 `-o ControlMaster=no -o ControlPath=none`：`~/.ssh/config` 对
+`mac-mini` 开了 `ControlMaster auto` + `ControlPersist 10m`，如果隧道 ssh 复用了用户
+平常用的 master 连接，`-R` 请求就落到那个 master 上——端口已被占用时直接失败退出，
+或者注册成功但隧道随 master 在 10 分钟空闲后被回收，结果是 launchd 反复
+「running → spawn scheduled」、macmini 侧 3425 时通时断（2026-11-12 实测踩到）。隧道进程
+必须独占一条自己的 SSH 连接。
+
 ## 安装 / 检查 / 卸载
 
 ```bash
@@ -64,3 +71,9 @@ ssh mac-mini 'cd /tmp && pi -p "Reply with exactly: PING-OK" \
   访问不到。
 - 如果 macmini 上的 3425 已被别的进程占用，`ExitOnForwardFailure` 会让 ssh 退出、
   launchd 反复重试——先在 macmini 上 `lsof -nP -iTCP:3425` 查清是谁占用。
+- **判断「隧道是不是真活着」不能只 `curl` 一次**（2026-11-12 教训）：连接被复用或处在
+  回收边缘时，单次 `curl` 可能刚好返回 200，实际几秒后就断。正确做法是同时看
+  ① `launchctl print gui/$(id -u)/com.xhq.magpie-tunnel | grep -E 'pid|state'` 有**稳定 pid**
+  （`pid =` 为空、只有 `state = spawn scheduled` 就是没跑起来）；② 用
+  `ssh -o ControlMaster=no -o ControlPath=none mac-mini 'curl …'` 复核 macmini 侧（绕开
+  master 连接，避免测到的是 master 上的复用转发）。
