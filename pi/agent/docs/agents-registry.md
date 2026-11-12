@@ -2,7 +2,7 @@
 
 > 本文件由全局 `~/.pi/agent/AGENTS.md`「团队结构参考」指针节指向。**何时读**：新建 Agent 项目前（名称查重）、判断某子任务该移交给哪个 agent 时、新增 / 变更 Agent 或子项目的注册信息时。权威源在全局 `~/.pi/agent/docs/`，开源镜像在 agents-infra 仓库 `pi/agent/docs/`。
 
-**dsh-team（闭源团队，2026-11-11 用户立）不在本注册表登记**：其项目、私有仓库、名称与职责不进入本文件、`xhqing` 公开名册与 `agents-infra` 镜像；pi-team 与 dsh-team 完全独立，互不引用。
+**dsh-team（闭源团队，2026-11-11 用户立）默认不在本注册表登记**：其项目、私有仓库、名称与职责不进入本文件、`xhqing` 公开名册与 `agents-infra` 镜像；**例外**：用户明确要求只列名与链接的私有子项目（当前：NewsScoreStudy），按专项指示登记、不介绍内容。pi-team 与 dsh-team 完全独立，互不引用。
 
 ## 智能体命名注册表（避免重名 + 跨 agent 推荐）
 
@@ -114,14 +114,16 @@
 | trading-agent（Victor） | TradingProofs | 交易数学的 Lean 4 + Mathlib 机器可验证证明（从固定比例下注的累计收益率推导开始，覆盖强数定律指数增长率 / 凯利最优 f\* /「两倍凯利」边界；与实盘执行完全隔离，2026-10-11 立项） |
 | social-agent（Gatsby） | blog | 个人博客「藏经阁」（docsify 站点，<https://xhqing.github.io/blog>；GitHub Pages 直接从 `main` 的 `docs/` 发布）。**2026-11-11 由 Kit（assistant-agent）移交 Gatsby**，同日从「已退役子项目」名单里恢复为活跃。内容双通道：手写，加上从 social-agent 的 `docs/articles/` 每 10 分钟自动同步——**不看写完没写完**，源仓库什么状态博客就什么状态；同步产物带 `<!-- source: … -->` 标记，机器人跑完自检后直推 `main`（用过 `GITHUB_TOKEN` 建 PR 触发不了别的 workflow，所以不走 PR） |
 
-> **Mark（quant-agent）名下已无子项目仓库（2026-11-08）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）。
+| quant-agent（Mark） | NewsScoreStudy | 私有子项目（2026-11-12 重新登记）；只列名与链接，不介绍内容 |
+
+> **Mark（quant-agent）名下的仓库构成（2026-11-12）**：原 Intraday / Swing / gridtrader 三个子项目仓库已并入 Mark 仓库，成为 `Intraday/`、`Swing/`、`gridtrader/` 三个目录（各自带自己的 `AGENTS.md`；并入按 squash 落地成单个提交，**原仓库的完整提交历史保留在三个 GitHub 存档仓库里**）；另有私有子项目 **NewsScoreStudy**（独立 private 仓库，只列名与链接，不介绍内容）。
 
 - **已注销 / 已退役的 Agent**：**Hermes**（NetOpsAgent，2026-10-26 用户决定）——原网络运维管理员，唯一子项目 XPilot 已移交 Atlas（dev-agent），项目本体退役、不再作为活跃 Agent 维护（GitHub 仓库 `xhqing/NetOpsAgent` 保留为存档；本地目录已于 2026-10-31 按用户要求删除）。
 - **已除名的 Agent（2026-10-31 用户决定，第二批）**：**Tinker**（PatchClaudeAgent，补丁维护匠）——用户要求「Tinker 这个 Agent 也除名，不需要了」；原职责是把自定义补丁重新应用到升级后的 VSCode Claude Code 扩展（自愈引擎），本次未指定接替者；项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/PatchClaudeAgent` 不再存在），GitHub 仓库 `xhqing/PatchClaudeAgent` 保留最新版为唯一源。
 - **已除名的 Agent（2026-11-05 用户决定）**：**Prometheus**（CapabilityManagerAgent，通用能力管家）——项目**降级为普通项目并更名 agents-infra**，归 **Kit**（assistant）负责；不再作为 Agent 维护（公告 / 维护逻辑改为 macmini 单向发布脚本，见 `docs/capability-sync.md`）。GitHub 仓库沿革：`xhqing/CapabilityManagerAgent` → 2026-11-05 改名 `xhqing/TeamToolkit` → 2026-11-11 改名 `xhqing/agents-infra`（旧 URL 均由 GitHub 自动重定向）。
 - **已除名的 Agent（2026-10-31 用户决定）**：**Alfred**（DeviceStewardAgent，电脑管家）——用户要求「可以从名册中除名了，以后他的工作由 Kit 处理」；职责已并入 **Kit**（assistant），项目本体退役、不再作为活跃 Agent 维护；**本地目录已按用户 2026-10-31 要求删除**（`~/Developer/DeviceStewardAgent` 不再存在），GitHub 仓库 `xhqing/DeviceStewardAgent` 保留最新版为唯一源；原有子项目 ResourceMonitor 早已退役。
 - **已移出名册的子项目（2026-11-02 用户决定）**：**xhs-mentor-scam**（原属 Gatsby / social-agent）——仓库含第三方个人信息（合同、私信截图、真实姓名、举报材料），按 2026-11-02 立的「团队项目必须 public、私有仓库不得入队」规则不能留在团队；保持 private 作为用户个人项目，`autosave.sh` 自动备份照常。GitHub 仓库 `xhqing/xhs-mentor-scam` 与本地目录 `~/Developer/xhs-mentor-scam` 均保留。要恢复为团队项目，须先拆分 / 脱敏敏感材料并转为 public。
-- **已移出名册的子项目（2026-10-31 用户决定）**：**NewsScoreStudy**（Mark 负责的面试实操题研究仓库，私有远程 `github.com/xhqing/NewsScoreStudy` 保留；本地目录已于 2026-10-31 按用户要求删除）——用户要求「先从名册中移除」；因名册与子项目映射表必须内容一致，本表同步删除其登记（原属 Mark，2026-10-26 由 Victor 移交）。要恢复时在这两处同时加回并同步名册。
+- **已恢复登记的私有子项目（2026-11-12 用户决定）**：**NewsScoreStudy**（Mark 负责，私有远程 `github.com/xhqing/NewsScoreStudy`；本地目录 2026-10-31 删除、2026-11-12 重新 clone 为 `~/Developer/NewsScoreStudy`）——2026-10-31 曾移出名册；2026-11-12 重新登记为 quant-agent 的 private 子项目，名册只列项目名与链接、不介绍内容。
 - **除名 agent 的本地副本处理口径（2026-10-31 用户立）**：除名的 agent 项目**本地目录一律删除、不在本地保留备份**——只要 GitHub 仓库是最新版即可（删除前先确认工作区干净、与 `origin/main` 同步，避免丢本地改动）。需要查阅时从 GitHub 取。
 - **已取消 / 已退役的子项目（不再维护）**：GitComic、agent-team-playbook-src（Wright）；zcode-cli、zcode-vsce、cmux-launcher（Atlas）；channels-watch（Atlas，2026-10-17 退役）；ResourceMonitor（Alfred）；CyberRipple——本地项目资料删除，GitHub 远端仓库保留为存档（CyberRipple 原未建远端仓库，其组织总览内容已并入 `xhqing` 主页 README）。**blog 已于 2026-11-11 由 Kit 移交 social-agent（Gatsby）、恢复为活跃子项目**，见上方映射表。
 
@@ -129,7 +131,7 @@
 
 - **谁做**：名册归 Kit（assistant）负责，但**改动 registry 的那个会话有责任同批补齐**（或当场交给 Kit 处理），不得留到下一次。
 - **名册实时同步、不再逐次询问（2026-10-31 用户立，修订）**：名册就是本文件两张表的公开镜像——registry 改了什么，名册就同批改成什么，**不用问用户、不用等确认**。描述语由 Kit 按仓库实际情况直接撰写：一句话说清「它是什么 / 解决什么问题」，不夸大、不写与仓库无关的内容、不泄露个人信息与凭证。
-  - **例外**：用户对**某个具体仓库**有过专项指示的，从其指示。**目前没有例外**——`NewsScoreStudy` 已于 2026-10-31 按用户要求从名册与子项目映射表中同时移除（见下方「已移出名册的子项目」），因此不再需要 allowlist 豁免。
+  - **例外**：用户对**某个具体仓库**有过专项指示的，从其指示。**目前没有例外**——`NewsScoreStudy` 已于 2026-11-12 重新登记为 quant-agent 的私有子项目（只列名与链接），allowlist 保持为空。
   - **修订说明**：本条取代 2026-10-26 的两条旧规矩——①「描述语要先问用户」；②「私有仓库默认放空不写」。用户原话（2026-10-31）：「xhqing公开名册必须实时同步全局注册表，这个不用问，下次自动同步。」所以**pi-team 的公开项目照常列名册**，不再默认豁免。
   - **dsh-team 项目不列名册（2026-11-11 用户立）**：闭源团队的项目、私有仓库、名称与描述一律不写进公开名册；两团队完全独立。
 - **工具强制**：pi 端扩展 `~/.pi/agent/extensions/roster-sync-guard.ts`——某次工具调用写到本文件后立即比对，发现名册没跟上就当场插话促其同批补齐；每轮收尾（`agent_settled`）再兜底比一次（Kit 会话注入提醒，其它会话只弹通知）。判定逻辑在 `~/.pi/agent/patch/roster-sync/roster-sync-check.py`（registry 两张表 ↔ 两份 README 名册的集合比对，缺 / 多都报；也可手工随时跑：`python3 ~/.pi/agent/patch/roster-sync/roster-sync-check.py`）。
