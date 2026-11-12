@@ -4,7 +4,7 @@
 用法：python3 setup.py
 - 本机（MacBook Air，arm64）与 macmini（Intel，x64）各跑一个 Syncthing 守护进程；
 - 三个共享目录：~/.pi/agent（全局能力层）、~/.dev/private（私有本体）、
-  ~/.dsh（DSH 权威源，本机 sendonly → macmini receiveonly）；
+  ~/.dsh（DSH 权威源，双向）；
 - 排除项写在各自目录根的 .stignore（见同目录 stignore-* 模板）。
 
 说明：本脚本只负责「建配置」，不改已存在目录的设置（幂等，可重复执行）。
@@ -78,8 +78,15 @@ def ensure_device(base, key, device_id, name, addr, remote):
 
 def ensure_folder(base, key, folder, remote):
     folders = api(base, key, "GET", "/config/folders", remote=remote)
-    if any(f["id"] == folder["id"] for f in folders):
-        print(f"  folder {folder['id']} 已存在")
+    for f in folders:
+        if f["id"] != folder["id"]:
+            continue
+        if f.get("type") != folder["type"]:
+            f["type"] = folder["type"]
+            api(base, key, "PUT", f"/config/folders/{folder['id']}", f, remote=remote)
+            print(f"  folder {folder['id']} type -> {folder['type']}")
+        else:
+            print(f"  folder {folder['id']} 已存在")
         return
     api(base, key, "POST", "/config/folders", folder, remote=remote)
     print(f"  folder {folder['id']} 已添加")
@@ -171,8 +178,8 @@ def main():
         "private", "私有内容本体（~/.dev/private）", "/Users/xhq/.dev/private",
         [lid, rid], "/Users/xhq/.syncthing-versions/private"), False)
     ensure_folder(LOCAL, lk, folder_spec(
-        "dsh", "DSH home (MacBook authoritative)", "/Users/xhq/.dsh",
-        [lid, rid], "/Users/xhq/.syncthing-versions/dsh", "sendonly"), False)
+        "dsh", "DSH home (team mirror)", "/Users/xhq/.dsh",
+        [lid, rid], "/Users/xhq/.syncthing-versions/dsh"), False)
 
     print("== macmini ==")
     ensure_device(LOCAL, rk, lid, "MacBook-Air-xhq", f"tcp://{LOCAL_IP}:22000", True)
@@ -188,8 +195,8 @@ def main():
         "private", "私有内容本体（~/.dev/private）", "/Users/mac/.dev/private",
         [rid, lid], "/Users/mac/.syncthing-versions/private"), True)
     ensure_folder(LOCAL, rk, folder_spec(
-        "dsh", "DSH home (MacBook authoritative)", "/Users/mac/.dsh",
-        [rid, lid], "/Users/mac/.syncthing-versions/dsh", "receiveonly"), True)
+        "dsh", "DSH home (team mirror)", "/Users/mac/.dsh",
+        [rid, lid], "/Users/mac/.syncthing-versions/dsh"), True)
 
     if drop_dev:
         print("== 移除 developer 共享（代码改走 GitHub）==")
