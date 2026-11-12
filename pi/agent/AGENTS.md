@@ -22,7 +22,7 @@
 - **盯盘的对话输出（特例，唯一要精简的场景）**：结论直接给、信号直接发、不展开解释，但仍然要语义清晰、容易理解。
 - **不要自创简写**（所有场景通用）：通用术语正常使用，但不为了短而自造缩略说法（例如把「买盘较多」压成「偏正」、把「继续上涨」压成「续涨」）。
 - **逐条检测 / 核对类结果用 ✅ / ❌ 列表展示**（所有场景通用）：回复中凡是「多条检测项逐条判断是否通过 / 就绪」的结果（/commit 标配检测、敏感扫描、改完文件后的验证清单等）一律用列表逐条展示，**通过打 ✅、没通过打 ❌**（形如 `- ✅ License：已存在`），不要用表格、不要用整段文字罗列。不适用于盯盘实时信号输出和纯叙述性回复。
-- **已授权事项不问第二遍（2026-10-29 用户立）**：凡是规则里已经写明「无需询问 / 不用问 / 直接做」的事，**执行时直接做**，不要用「要不要我……」「需要我……吗」「要我把……做好吗」这类问句结尾征求确认。用户原话：「这个能不能工具强制掉，不要总是给多余的询问」。清单（与 `~/.pi/agent/extensions/redundant-ask-guard.ts` 的 `AUTHORIZED_BRIEF` 保持一致）：① 全局能力层改动后发布 **agents-infra** 开源镜像 → `pi/agent` 在 macmini 上跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish.py`（本机会话用 `ssh mac-mini` 或 `macmini_run` 调用；脚本按 hostname 拒绝在 MacBook 上发布）；`dsh/` 在本机跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py`（权威源 `~/.dsh`，只在 MacBook 上跑）。不要问；macmini 不可用时先把本机改完，等它上线由脚本补发 pi 侧；② 工作区 / 暂存区有待提交内容 → 直接按 `/add` 或 `/commit` 流程处理（**被 add-mode / commit-mode 暂停的项目例外**，见「Git 写操作必须先征得同意」节的两个开关条目）；③ 其它 agent 项目仓库有待提交内容 → 直接 `agent_call` 对方按其 `/add` → `/commit` 处理；④ `/add` 预检完全干净 → 自动衔接 `/commit`，`/commit` 第 10 步命中发版条件 → 自动 bump / 发版；⑤ 新建项目 `git init`、向 `agents-registry` 追加新 agent 行 → 免确认。**仍应询问的**：方案分叉大、返工成本高、规则未覆盖、涉及不可逆破坏性操作。**工具强制**：`redundant-ask-guard.ts` 每轮把这份清单追加进系统提示（预防），并在回复里命中「询问句式 + 已授权关键词」时，把一条**只给 AI 看**的回执（`display: false`，用户界面不显示）注入下一轮上下文，内容指出问了哪一类、正确做法是什么（检测 + 自纠）。**不向用户弹任何提示**——用户 2026-10-29 补充：「不要让我看警告，这种事情定了规矩我就不想插手了，警告应该让当前会话看见」。
+- **已授权事项不问第二遍（2026-10-29 用户立）**：凡是规则里已经写明「无需询问 / 不用问 / 直接做」的事，**执行时直接做**，不要用「要不要我……」「需要我……吗」「要我把……做好吗」这类问句结尾征求确认。用户原话：「这个能不能工具强制掉，不要总是给多余的询问」。清单（与 `~/.pi/agent/extensions/redundant-ask-guard.ts` 的 `AUTHORIZED_BRIEF` 保持一致）：① 全局能力层改动后发布 **agents-infra** 开源镜像 → 在 macmini 上跑 `python3 ~/.pi/agent/patch/agents-infra-publish/publish.py`（pi/agent）与 `python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py`（dsh/；`~/.dsh` 由 Syncthing 同步到 macmini）。本机会话用 `ssh mac-mini` 或 `macmini_run` 调用；两个脚本都按 hostname 拒绝在 MacBook 上发布。不要问；macmini 不可用时先把本机改完，等它上线由脚本补发；② 工作区 / 暂存区有待提交内容 → 直接按 `/add` 或 `/commit` 流程处理（**被 add-mode / commit-mode 暂停的项目例外**，见「Git 写操作必须先征得同意」节的两个开关条目）；③ 其它 agent 项目仓库有待提交内容 → 直接 `agent_call` 对方按其 `/add` → `/commit` 处理；④ `/add` 预检完全干净 → 自动衔接 `/commit`，`/commit` 第 10 步命中发版条件 → 自动 bump / 发版；⑤ 新建项目 `git init`、向 `agents-registry` 追加新 agent 行 → 免确认。**仍应询问的**：方案分叉大、返工成本高、规则未覆盖、涉及不可逆破坏性操作。**工具强制**：`redundant-ask-guard.ts` 每轮把这份清单追加进系统提示（预防），并在回复里命中「询问句式 + 已授权关键词」时，把一条**只给 AI 看**的回执（`display: false`，用户界面不显示）注入下一轮上下文，内容指出问了哪一类、正确做法是什么（检测 + 自纠）。**不向用户弹任何提示**——用户 2026-10-29 补充：「不要让我看警告，这种事情定了规矩我就不想插手了，警告应该让当前会话看见」。
 
 ## 文件命名规范
 
@@ -249,6 +249,19 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 判断「某版本是否已发布」必须实测：`gh release view vX.Y.Z -R <owner>/<repo>`（返回 Release 详情即已发布、`not found` 即未发布）或 `gh release list`；`git tag -l` 作旁证。**不得凭 VERSION / package.json 版本号、CHANGELOG 条目、commit 历史（「bump to X」只说明版本号改了、不等于已发布）、工作区状态推断**——这些在发版前就会就位，是必要不充分条件（曾因轻信 git log 快照把改动塞进已发布条目被纠正）。口径：**版本号取值看 VERSION，发布状态看 GitHub Release**。
 
+## 发版失败一律递进版本，失败历史原样保留（2026-11-12 用户立）
+
+发版构建（如 cmux 的 `build-macos`）失败时，**不用「同版本重试」、不改写或删除已经建出来的东西**：
+
+- **不删、不改**已存在的 tag 与 GitHub Release——哪怕它没有构建产物、或产物内容是坏的。它们是失败历史，原样保留。
+- **不移动 tag**：不用 `git tag -f`、不用 `git push --force` 改写 tag 指向。
+- **递进一个版本**：把 `VERSION` bump 到下一个修订号（r19 失败 → r20 → r21 …），在新版本里修掉问题后重新发版；CHANGELOG 写清这次失败的原因与补救。
+- 允许给失败版本的 Release **追加**一句说明（「构建失败，由 rN 取代」）——只追加，不删改原有内容。
+
+理由：改写 / 删除已发布的 tag 是不可逆操作，会让人手里的引用、缓存的发布记录、Release 页面的历史证据失真；递进版本则让「哪次成功、哪次失败」完整可查。用户原话：「以后发版失败都是递进一个版本，保留失败历史记录原样不动。」
+
+工具强制：`release-history-guard.ts` 拦截删除 / 改写已发布 tag 与 Release 的命令（`git tag -d`、`git push --delete <tag>`、`git push --force <tag>`、`gh release delete`、`git tag -f`），逃生门 `# AI_AUTHORIZED_RELEASE_HISTORY` 仅限用户当轮明确要求。
+
 ## CHANGELOG 记录纪律（每次增删改必记 + 防回归）
 
 项目根有 `CHANGELOG.md` 时，**每一次文件增删改操作**（新建、编辑、重命名、删除，含 skill / rules / 配置 / 文档变更）都必须记录，且写清**为什么改**（触发原因 / 要解决的问题）+ **改了什么**（具体变更内容），按「新增 / 变更 / 移除」分类。**记录不用问**——改完直接顺手记入，问「要不要记」是多余的反 confirm。`CHANGELOG.md` 为项目标配（缺失由 commit skill 第 9m 步自动新建）。边界：只读查看不产生变更的不记；盯盘高频信号写 `signals/` 属运行时数据流不逐条记，但信号**机制**变更必须记。
@@ -279,7 +292,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 - **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（**Agent 项目一律 `<职责>-agent` 全小写、连字符**，Non-agent 项目按「尽可能简单、体现职责」；项目是不是 Agent 项目看 README 的 `Type` 徽章是否为 `AI Agent`）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
 - **跨 agent 移交 / 推荐子任务**：读 `~/.pi/agent/docs/agents-registry.md`（注册表：名称、项目、职责、销售流水线、三小组分组）。
-- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 agents-infra 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。**pi-team** 的权威源是 `~/.pi/agent/`，由 macmini 的 `patch/agents-infra-publish/publish.py` 镜像到 `agents-infra/pi/agent/`；**dsh-team** 的权威源是 `~/.dsh/`，由 MacBook 的 `patch/agents-infra-publish/publish_dsh.py` 镜像到 `agents-infra/dsh/`。两个子树、两个单 pusher，路径不相交；不要用一台机器的脚本去推另一个子树；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 agents-infra 的 CHANGELOG。
+- **维护全局通用能力（skills / AGENTS.md / docs / hooks / patch / pi 扩展）、发布 agents-infra 镜像**：读 `~/.pi/agent/docs/capability-sync.md`。**pi-team** 的权威源是 `~/.pi/agent/`，由 macmini 的 `patch/agents-infra-publish/publish.py` 镜像到 `agents-infra/pi/agent/`；**dsh-team** 的权威源是 `~/.dsh/`，经 Syncthing `dsh` 文件夹（sendonly → receiveonly）同步到 macmini，再由 macmini 的 `patch/agents-infra-publish/publish_dsh.py` 镜像到 `agents-infra/dsh/`。两个子树都在 macmini 发布，路径不相交；发现全局与镜像分叉时自动对齐（全局权威优先）、无需询问；同步动作只记 agents-infra 的 CHANGELOG。
 - **智能体专属文件：Agent 项目与子项目完全独立（2026-11-08 用户立，取代 2026-10-30「身份层软链接 + 能力层路径引用」）**：`AGENTS.md`、`AGENTS.override.md`、项目级 `.pi/` 这类「按工作目录加载、表征智能体身份」的文件，**每个项目只放本项目真实需要的内容**——Agent 项目放 Agent 自己的规则与工具，子项目放子项目自己的规则与工具，**两边之间不留链接、不留路径引用**。
   - **规则文件本体统一为 `AGENTS.md`、`CLAUDE.md` 弃用（2026-11-05 用户立）**：全局规则文件是 `~/.pi/agent/AGENTS.md`，各 Agent 项目的项目级规则文件本体一律是项目根的 `AGENTS.md`；**不再新建 / 保留 `CLAUDE.md` 实体副本，也不再挂 `AGENTS.md → CLAUDE.md` 软链接**（存量已全部改名）。依据：pi 的上下文文件候选顺序是 `AGENTS.override.md` > `AGENTS.md` > `CLAUDE.md`（`dist/core/resource-loader.js` 的 `loadContextFileFromDir()`），同一目录只加载第一个存在的文件——本体放在 `AGENTS.md` 后 `CLAUDE.md` 根本不参与加载，留着只是双份内容漂移的隐患。`.claude/` 目录本身仍按原口径「不新增、不维护」（2026-10-17 决定），其中的 `CLAUDE.md` 已迁出、不再是 agent 规则本体。
   - **子项目 `AGENTS.md` 是本仓库的实体文件**，写四件事：① 本项目是什么（一两句）；② 归哪个 Agent 负责；③ Worker 的角色边界（干完向谁汇报、不碰 local main、不建删 worktree）；④ 各类规则在哪（`.pi/APPEND_SYSTEM.md`、`DEVELOPMENT.md`、`CHANGELOG.md`、`TODO.md` 的索引）。**不写** Agent 项目的身份与规则副本——那些本来就不属于这个仓库。

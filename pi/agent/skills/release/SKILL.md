@@ -154,6 +154,18 @@ description: "打 tag 发布版本：读取版本号与 CHANGELOG，打带注释
 - 发布成功后删除本次构建的可分发产物（vsix / 压缩包 / 可执行包等），不删中间编译输出（`dist/`、`out/`、`build/`）与正式 `assets/`；异常暂停时保留产物。
 - 推送或 Release 创建失败如实报告，不自行破坏性重试。
 
+## 构建失败怎么办（2026-11-12 用户立）
+
+发版后由 CI 构建（如 cmux 的 `build-macos`）失败时，**不怪仓库，不改历史**：
+
+1. **不要**删 tag、删 Release、移动 tag（`git tag -f` + force push）、同版本重试——失败的 tag 与 Release **原样保留**。
+2. 先修掉导致构建失败的问题，走正常 fix 分支 + PR + CI 合并。
+3. **递进一个版本**：`/bump` 到下一个修订号（r19 失败 → r20 → r21 …），CHANGELOG 写清上一版失败原因与本次补救。
+4. 新版本照常 `/release`。可给失败版本的 Release **追加**一句说明（「构建失败，由 rN 取代」）——只追加，不删改原文。
+5. **发版前尽量先验证构建**：能用 `workflow_dispatch` 从 main 跑一次完整构建就先跑（如 `gh workflow run build-macos --ref main`），避免带着未验证的代码打 tag——2026-11-12 连续两版（r19 / r20）都因未验证就发版而失败。
+
+用户原话：「以后发版失败都是递进一个版本，保留失败历史记录原样不动。」工具强制：`release-history-guard.ts` 拦截删除 / 改写已发布 tag 与 Release 的命令（逃生门 `# AI_AUTHORIZED_RELEASE_HISTORY` 仅限用户当轮明确要求）。
+
 ## 汇报
 
 报告发布结果：版本号、tag 名、tag 指向的 commit（= HEAD）、推送是否成功、GitHub Release URL、Release title、上传的 asset 清单（若有）、已清理的本地构建产物（若有）、公开文本敏感自检结果（通过 / 白名单跳过条目摘要，若有）；若因异常暂停（含敏感自检命中），则列出异常详情与可选项。

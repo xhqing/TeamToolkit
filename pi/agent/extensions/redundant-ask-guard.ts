@@ -102,7 +102,7 @@ function buildBrief(modes: { add: boolean; commit: boolean }): string {
 	}
 	return `【已授权事项：直接做，不要征求确认（2026-10-29 用户立规）】
 下面这些事用户已经明确授权，**不要用「要不要我…」「需要我…吗」这类问句结尾**，直接执行：
-- 全局能力层（~/.pi/agent 下的 skills / AGENTS.md / docs / patch / extensions）改动后，发布 agents-infra 开源镜像 → 在 macmini 上跑 \`python3 ~/.pi/agent/patch/agents-infra-publish/publish.py\`（本机用 ssh / macmini_run 调用；脚本按 hostname 拒绝在 MacBook 上发布）；dsh/ 在本机跑 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py（权威源 ~/.dsh，只在 MacBook 上跑），不要问用户。
+- 全局能力层（~/.pi/agent 下的 skills / AGENTS.md / docs / patch / extensions）改动后，发布 agents-infra 开源镜像 → 在 macmini 上跑 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py（pi/agent）与 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py（dsh/；~/.dsh 由 Syncthing 同步过来）；本机用 ssh / macmini_run 调用，两个脚本都按 hostname 拒绝在 MacBook 上发布，不要问用户。
 ${commitLine}
 - 其它 agent 项目的仓库有待提交内容 → 直接 agent_call 对方按其自己的 /add → /commit 处理。
 - /add 预检完全干净 → 自动衔接 /commit；/commit 第 10 步命中发版条件 → 自动 bump / 发版。
@@ -118,7 +118,7 @@ const ASK_RE =
 const AUTHORIZED_HINTS: Array<{ re: RegExp; hint: string }> = [
 	{
 		re: /镜像同步|同步(到|回)?镜像|agents-infra|CapabilityManagerAgent/,
-		hint: "pi/agent 在 macmini 上跑 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py（本机用 ssh mac-mini 或 macmini_run）；dsh/ 在本机跑 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py（权威源 ~/.dsh）。发布后记 CHANGELOG",
+		hint: "在 macmini 上跑 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py（pi/agent）与 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py（dsh/；~/.dsh 由 Syncthing 同步过来）；本机用 ssh mac-mini 或 macmini_run。发布后记 CHANGELOG",
 	},
 	{
 		re: /\/add\b|\/commit\b|\/bump\b|\/release\b|预检|发版链/,

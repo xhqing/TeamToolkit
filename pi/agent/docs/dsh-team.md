@@ -70,7 +70,7 @@ DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.
 
 - 插件源码：`~/.dsh/profiles/dsh-tui/plugins/project-append-system.mjs`（权威源）
 - 挂载：`~/.dsh/profiles/dsh-tui/cordis.patch.yml`
-- 镜像：`agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布
+- 镜像：`agents-infra/dsh/`，由 macmini 的 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布
 - 部署/恢复：新机器用 `agents-infra/dsh/bootstrap.sh`；日常直接改 `~/.dsh`
 
 ```yaml
@@ -90,11 +90,12 @@ DSH 原生不读 `.dsh/APPEND_SYSTEM.md`。用插件实现，等价于 pi 的 `.
 ## 5b. DSH 核心基础设施的镜像
 
 - **权威源：`~/.dsh/`**（MacBook；DSH agent 演化时直接改这里）。
-- 镜像：`agents-infra/dsh/`，由本机 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布（MacBook 单 pusher）。
-- `pi/agent/` 仍由 macmini 的 `publish.py` 发布；两个子树、两个单 pusher，路径不相交。
+- 同步：Syncthing `dsh` 文件夹（MacBook sendonly → macmini receiveonly），只同步 secret-free 核心。
+- 镜像：`agents-infra/dsh/`，由 macmini 的 `~/.pi/agent/patch/agents-infra-publish/publish_dsh.py` 发布。
+- `pi/agent/` 也由 macmini 的 `publish.py` 发布；两个子树都在 macmini 发布，路径不相交。
 - 镜像只含 secret-free 核心：`AGENTS.md`、`README.md`、`bootstrap.sh`、`profiles/dsh-tui/`（配置 + 插件）。
 - 排除：`.env`、`.credentials.yaml`、`.anonymous-user-id`、`sessions/`、`storages/`、`attachments/`、`node_modules/`、`.plugin-manager/`、`settings.yaml.imported`。
-- 修改后跑 `publish_dsh.py`；不要维护第二份 canonical，也不要手工复制到 `~/.pi/agent`。
+- 修改后等 Syncthing 收敛，再在 macmini 跑 `publish_dsh.py`；不要维护第二份 canonical，也不要手工复制到 `~/.pi/agent`。
 
 ## 6. 版本与 CHANGELOG
 

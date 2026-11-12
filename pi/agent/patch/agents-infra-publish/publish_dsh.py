@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""把权威 `~/.dsh` 的核心基础设施发布到 agents-infra 的 `dsh/`（MacBook 单 pusher）。
+"""把权威 `~/.dsh` 的核心基础设施发布到 agents-infra 的 `dsh/`（macmini 单 pusher）。
 
-为什么是 MacBook
+为什么在 macmini
 ----------------
-`~/.dsh` 是 dsh-team 的权威源，只存在于 MacBook；macmini 不装 DSH。
-所以 `dsh/` 子树由 MacBook 发布，`pi/agent/` 子树仍由 macmini 的
-`publish.py` 发布——两个子树、两个单 pusher，路径不相交。
+`~/.dsh` 的权威源在 MacBook；Syncthing 的 `dsh` 文件夹以 sendonly → receiveonly
+把 secret-free 核心同步到 macmini。agents-infra 只存在于 macmini，所以发布必须在那边跑。
 
 发布范围（secret-free 核心）
 ----------------------------
@@ -14,7 +13,7 @@
   `pnpm-lock.yaml`、`pnpm-workspace.yaml`、`plugins/`
 - 排除：`.env`、`.credentials.yaml`、`.anonymous-user-id`、`sessions/`、
   `storages/`、`attachments/`、`node_modules/`、`.plugin-manager/`、
-  `settings.yaml.imported`、`*.log`、`__pycache__`
+  `settings.yaml.imported`、`.stignore`、`*.log`、`__pycache__`
 
 用法
 ----
@@ -48,6 +47,8 @@ EXCLUDES = [
     "sessions/", "storages/", "attachments/",
     "node_modules/", ".plugin-manager/",
     "settings.yaml.imported",
+    ".stignore",
+    ".stfolder/",
     "profiles/web/", "profiles/headless/", "profiles/desktop/",  # 只镜像 dsh-tui 核心
     "*.log", "__pycache__/", "*.pyc", ".DS_Store", "*.sync-conflict-*",
     "CHANGELOG.md",  # 生成物，保留在镜像里，不让 rsync --delete 删掉
@@ -193,9 +194,9 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true", help="显示会同步哪些文件，不提交")
     args = ap.parse_args()
 
-    if is_macmini():
-        print("[ERR] 这个脚本只在 MacBook 上跑：`~/.dsh` 是权威源，macmini 上没有它。\n"
-              "      pi/agent 的发布用 macmini 上的 publish.py；dsh/ 的发布用本脚本。")
+    if not is_macmini():
+        print("[ERR] 这个脚本只在 macmini 上跑：agents-infra 只存在于 macmini；\n"
+              "      ~/.dsh 通过 Syncthing 从 MacBook 同步过来（sendonly → receiveonly）。")
         return 2
     if not DSH.exists():
         print(f"[ERR] 找不到权威源：{DSH}")

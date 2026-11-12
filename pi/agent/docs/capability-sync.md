@@ -37,7 +37,7 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish.py            # 发布（
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --check    # 只检查是否已一致
 python3 ~/.pi/agent/patch/agents-infra-publish/publish.py --dry-run  # 看会改哪些文件
 
-# dsh/：在 MacBook 上（权威源 ~/.dsh，macmini 没有）
+# dsh/：也在 macmini 上（~/.dsh 由 Syncthing 从 MacBook 同步过来）
 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py
 python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py --check
 ```
@@ -65,7 +65,7 @@ python3 ~/.pi/agent/patch/agents-infra-publish/publish_dsh.py --check
 | `extensions/` | `pi/agent/extensions/` | 工具强制类扩展 |
 | `npm/`（清单） | `pi/agent/npm/` | `package.json` / `package-lock.json` + `PACKAGES.md`（`patch/npm-manifest/refresh.py` 生成） |
 
-**`dsh/` 是独立子树**：源是 `~/.dsh/`（MacBook 上的权威源），由 MacBook 的 `patch/agents-infra-publish/publish_dsh.py` 发布到 `agents-infra/dsh/`，不经 macmini 的 `publish.py`；`pi/agent/` 与 `dsh/` 是两个单 pusher、路径不相交。
+**`dsh/` 是独立子树**：源是 `~/.dsh/`（MacBook 上的权威源），由 Syncthing `dsh` 文件夹（sendonly → receiveonly）同步到 macmini，再由 macmini 的 `patch/agents-infra-publish/publish_dsh.py` 发布到 `agents-infra/dsh/`。`pi/agent/` 与 `dsh/` 都在 macmini 发布，路径不相交。
 
 **不进镜像**：
 
