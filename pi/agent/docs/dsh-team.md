@@ -58,9 +58,12 @@ Worker 的 worktree 里**只有 `.dsh/`，没有 `.pi/`**，所以 Worker 天然
 
 ## 4. Leader / Worker
 
-- **Leader = 人**：在 Agent 项目里，戴对应帽子；负责私有子项目 main 的同步、建 worktree、派任务、收尾。
-- **Worker = 工地工人**：在私有子项目的 worktree 里跑 DSH，载入 worktree 的 `AGENTS.md` + `.dsh/APPEND_SYSTEM.md`，执行任务，向 Leader 汇报；不碰 local main、不建删 worktree。
-- Leader 若在 pi 下：不能用 pi 的 `agent_call` 拉起 DSH Worker（registry / 启动命令是 pi 专用），用 `tmux` / shell 启动 `dsh`。
+- **Leader = Agent 项目**：Agent 项目任何分支 / worktree 的根目录作为 cwd 的 DSH 会话，都是 Leader（这个人）。可以开发 Agent 项目本身，也对名下私有子项目负最终责任。
+- **Worker = 子项目**：私有子项目任何分支 / worktree 的根目录作为 cwd 的 DSH 会话，都是 Worker；加载 worktree 的 `AGENTS.md` + `.dsh/APPEND_SYSTEM.md`，执行任务，向 Leader 汇报；不碰 local main、不建删 worktree。
+- **非 Agent 项目必定是某个 Agent 的子项目**：团队内不存在无主项目；新增私有项目先登记归属，再开工。
+- **Agent 项目的 worktree 不是 Worker**：它加载的是 Agent 项目的 `.dsh` 帽子，是 Leader；只有子项目 worktree 才是 Worker。
+- quant-agent（Mark）已把三个研究项目并入本仓库目录，没有独立子项目仓库：它的任何 worktree 都是 Leader，不产生 Worker 会话。
+- Leader 若在 pi 下：不能用 pi 的 `agent_call` 拉起 DSH Worker，用 `tmux` / shell 启动 `dsh`。
 - Leader 若在 DSH 下：用 DSH 的 teams / tmux 启动 Worker，工具链更一致。
 - 建议闭源链路整个用 DSH（Leader + Worker），开源 Agent 项目维护用 pi——同一个人，换帽子，不换项目、不换版本。
 

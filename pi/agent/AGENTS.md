@@ -300,7 +300,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
   - **为什么拆**（2026-11-08 用户原话：「二者的 AGENTS.md 和 .pi 目录之间应该完全无关才比较合适，只需要放本项目真实需要的项目规则和 .pi 目录下的工具文档或配置」）：① 跨仓库路径引用是**隐式依赖**——Agent 项目改名、子项目单独 clone、换机器，都会静默失效（pi 不报错，只是少加载东西）；② 两层压在同一个符号上只能靠「只允许追加、不许重述」的纪律压着，而那条纪律本身就说明两层混在一起有事；③ 实测下来那份引用九成是空的（Atlas 名下 8 个子项目引用的目录根本不存在），真带过来的少数几个还常常不搭（Chat 类技能出现在配置文件仓库里），属于噪声而非资产。
   - **安全网不受影响**：全局 `~/.pi/agent/`（全部团队规则、`add` / `commit` / `bump` / `release` 技能、各类守卫扩展）在**任何目录**都会加载，与项目级配置无关——所以拆掉项目级交叉引用不会丢任何一条保护。
   - **边界**：子项目依然是「某 Agent 负责的项目」（归属记在 `docs/agents-registry.md`、写在各自 `AGENTS.md` 里），只是规则与配置**物理上各管各的**。历史沿革见 `docs/agents-registry.md` 同名节。
-  - **子项目任务由 Worker 会话执行，Leader 只建 worktree 与收尾（2026-11-07 用户立，取代 2026-10-17「只允许 Agent 项目根目录」）**：Agent 项目根目录的会话是 **Leader**（项目负责人），子项目根目录 / 子项目 worktree 目录的会话是 **Worker**（临时工）。`agent_call` / `agent_wake` 的 `dir` 允许三类目录：Agent 项目根 / 已登记子项目根 / 该子项目的 git worktree（worktree 通过 `.git` 里的 `gitdir:` 反查主仓库校验），其它目录拒绝；启动命令固定带 `-a`（子项目 `.pi/` 下有 `APPEND_SYSTEM.md` 等资源，会触发 pi 的项目信任提示；判据是 `.pi/` 下存在 `settings.json` / `extensions` / `skills` / `prompts` / `themes` / `SYSTEM.md` / `APPEND_SYSTEM.md` 任一项，后台会话无人应答会卡死）。**为什么**：子项目的专属规则与工具只能靠「cwd 落在子项目上」才被 pi 加载（pi 只读 cwd 这一层 `.pi/`，不向上继承），放在 Agent 会话里按路径做等于永远读不到。子项目映射表与细则见 `~/.pi/agent/docs/agents-registry.md`，分工流程见下节「Leader / Worker 分工」。
+  - **子项目任务由 Worker 会话执行；Leader 是 Agent 项目，不是某个工作区（2026-11-12 用户重新定义，取代 2026-11-07 版）**：Agent 项目任何分支 / worktree 的根目录作为 cwd 的会话是 **Leader**；子项目任何分支 / worktree 的根目录作为 cwd 的会话是 **Worker**。`agent_call` / `agent_wake` 的 `dir` 允许四类目录：Agent 项目根 / Agent 项目的 git worktree / 已登记子项目根 / 子项目的 git worktree（worktree 通过 `.git` 里的 `gitdir:` 反查主仓库；主仓库是 Agent 项目→Leader，是子项目→Worker），其它目录拒绝；启动命令固定带 `-a`（子项目 `.pi/` 下有 `APPEND_SYSTEM.md` 等资源，会触发 pi 的项目信任提示；判据是 `.pi/` 下存在 `settings.json` / `extensions` / `skills` / `prompts` / `themes` / `SYSTEM.md` / `APPEND_SYSTEM.md` 任一项，后台会话无人应答会卡死）。**为什么**：子项目的专属规则与工具只能靠「cwd 落在子项目上」才被 pi 加载（pi 只读 cwd 这一层 `.pi/`，不向上继承），放在 Agent 会话里按路径做等于永远读不到。子项目映射表与细则见 `~/.pi/agent/docs/agents-registry.md`，分工流程见下节「Leader / Worker 分工」。
   - **子项目必须有 `.pi/APPEND_SYSTEM.md`（2026-11-07 起要求）**：子项目专属**硬规则**写进它（Worker 启动即加载），详细说明留在 `DEVELOPMENT.md` / `ARCHITECTURE.md` 等普通文档按需查阅。存量子项目尚未补齐的，处理到那个子项目时顺手补上。
 
 ## Skill 编写纪律
@@ -482,19 +482,23 @@ KeePass 数据库（`*.kdbx`）与密钥文件（`~/Key/` 下）是**丢了就�
 
 需要其他 agent（另一条 pi 会话）配合时，用 `agent_call` 工具直接联系对方，不要人工传话、不要让用户中转。要点：
 
-- **Leader / Worker 分工（2026-11-07 用户立，**全队所有 Agent 的默认跑法——不是某一个 Agent 的约定**，适用于全部 17 个 Agent 及其名下全部子项目）**：
-  - **Leader** = 以 Agent 项目根目录为 cwd 的本会话。只做四件事：① 名下所有子项目 local main 的同步（`git merge --ff-only origin/main`）；② 按任务建 worktree（`git -C <子项目> worktree add ~/Developer/<子项目>-<事项> -b <分支名>`）；③ 用 `agent_call` 把任务交给 Worker（消息写完整：背景、目标、验收标准、涉及文件）；④ 收尾：把 Worker 的 PR 合入后对齐 local main、`git worktree remove` 清掉 worktree，再向用户汇报。
-  - **Worker** = 以子项目根 / worktree 为 cwd 的临时会话。只做 worktree 里的具体活：读代码、改代码、跑测试、走自己的 `/add` → `/commit` → PR 流程，干完向 Leader 汇报（改了什么、验证结果、PR 号 / 遗留问题）。**Worker 不碰 local main、不建 / 删 worktree**（那是 Leader 的活）。
-  - **命名**：Worker 统一叫 `<Agent 名>-<子项目>`（如 `Atlas-cmux`）；同一子项目多个任务就多个 Worker，各自 worktree 不同、名字可相同（用 session-id 区分），也可以带上任务后缀。
-  - **生命周期**：Worker 干完即清（Leader 主动 `tmux kill-session -t pi-<名字>`）——它是临时的，不常驻。
-  - **汇报链路**：Worker → Leader → 用户。Leader 不能把 Worker 的原始输出直接转给用户（要自己消化、核对后再汇报）；反过来也不能把用户的需求原文甩给 Worker 不管（要自己把它翻译成明确的任务单）。
-  - **简单任务不分发**：跨项目琐事（如统一改个徽章）、一次性查询、Leader 自己就能看完的小修——Leader 直接做，不为了形式而绕一圈。
-  - **各 Agent 项目的 AGENTS.md 不得与本节冲突**：项目级若有「后台会话只能以本项目根目录开启」「子项目按路径操作」之类旧口径（2026-10-17 定、2026-11-07 已废止），一律以本节为准；发现就改掉，不要留两套说法。
-- **自动唤醒**：`agent_call` 会先检查目标会话是否在线；**不在线时用 `dir` 参数自动启动对方会话**，等它注册后再发消息。因此调用时尽量带上 `dir`。`dir` 允许三类：Agent 项目根（如 `~/Developer/dev-agent`，Leader）/ 已登记子项目根（Worker）/ 该子项目的 git worktree（Worker）——按 `~/.pi/agent/docs/agents-registry.md` 校验，其它目录会被拒绝。
+- **Leader / Worker 的定义（2026-11-12 用户重新定义，**全队所有 Agent 的默认跑法**，取代 2026-11-07 版）**：
+  - **Leader = Agent 项目**。任何分支、任何 worktree，只要 cwd 是该 Agent 项目的根目录，启动的 pi / DSH 会话就是 Leader。Leader 是这个“人”，对名下子项目负最终责任：可以开发 Agent 项目本身，也要负责子项目 local main 的同步、按任务建 worktree、派任务、收尾、向用户汇报。
+  - **Worker = 子项目**。团队内不存在没有 Agent 负责的非 Agent 项目；任何非 Agent 项目都必须是某个 Agent 项目的子项目。子项目任何分支、任何 worktree，只要 cwd 是该子项目的根目录，启动的 pi / DSH 会话就是 Worker。Worker 只干该 worktree 里的具体活（读代码、改代码、跑测试、`/add` → `/commit` → PR），干完向 Leader 汇报；**不碰 local main、不建 / 删 worktree**。
+  - **关系**：Leader / Worker 不是“主工作区 vs worktree”的概念，而是 **Agent 项目 vs 它负责的子项目** 的概念。Agent 项目的主工作区与它的任何 worktree 都是 Leader；子项目的主工作区与它的任何 worktree 都是 Worker。
+  - **Git 纪律不变**：Leader 在 Agent 项目 worktree 里仍是 Leader，但 local main 只在主工作区对齐；worktree 里不切 main、不 commit main。
+  - **无主项目禁止入队**：新增任何非 Agent 项目，必须先登记为某个 Agent 项目的子项目（`docs/agents-registry.md` 映射表 + Agent 项目 `AGENTS.md`），否则不得入队。
+  - **命名**：Leader 用 `<Agent 名>`；Worker 用 `<Agent 名>-<子项目>`（如 `Atlas-cmux`）。同一 Agent / 子项目允许同时多个会话，用 session-id 区分。
+  - **生命周期**：Worker 干完即清（Leader 主动关闭对应的 `pi-` 后台会话）。
+  - **汇报链路**：Worker → Leader → 用户。Leader 消化核对后再汇报，不直接转发 Worker 原文。
+  - **简单任务不分发**：Leader 自己能做完的 Agent 项目小修 / 一次性查询直接做；子项目任务仍交给 Worker。
+  - **项目级旧表述**：各 Agent 项目 `AGENTS.md` 里若还写「只有 Agent 项目主工作区根是 Leader」，以本节为准；接触该项目时顺手改。
+
+- **自动唤醒**：`agent_call` 会先检查目标会话是否在线；**不在线时用 `dir` 参数自动启动对方会话**，等它注册后再发消息。因此调用时尽量带上 `dir`。`dir` 允许四类：Agent 项目根（Leader）/ Agent 项目的 git worktree（Leader）/ 已登记子项目根（Worker）/ 子项目的 git worktree（Worker）——按 `~/.pi/agent/docs/agents-registry.md` 校验，其它目录会被拒绝。
 - **两种模式**：只需要对方知晓用 `mode: "send"`（以本会话身份发送、立即返回）；需要对方答复才能继续干活用 `mode: "ask"`（阻塞等待回复，默认超时 2 分钟，可用 `timeout_ms` 调整）。只想提前把对方会话拉起来，用 `agent_wake`。
 - **消息自带背景**：对方看不到本会话的上下文与对话历史，消息里要把背景、目标、期望对方做什么写完整。
 - **联系不上不硬等**：`ask` 超时或唤醒失败时，如实向用户报告「暂时联系不上 XX」，不无限重试、不静默卡住；可改用 `send` 留言、或等对方上线后再联系。
-- **会话命名约定**：启动 pi 会话统一用 `pi -n <agent名字>`（名字与 `~/.pi/agent/docs/agents-registry.md` 的注册表一致，即人格名）；**同一个 Agent 允许同时开多个会话、共用同一个名字**（一个人同时办几件事是合理的：Agent 项目根开会话、子项目目录也可以各开一个）——此时「**人格名 + session-id**」才能唯一确定一个会话：`intercom list` 会列出每个会话的 session-id（短前缀即可唯一定位），`intercom` 与 `agent_call` 都支持按名字（全名）或 session-id（或其短前缀）指定目标。已在运行的会话可用 `/alias <名字>` 补设。**子项目的 Worker 会话用 `<Agent 名>-<子项目>` 命名**（如 `Atlas-cmux`），避免与 Leader 同名混淆。
+- **会话命名约定**：启动 pi 会话统一用 `pi -n <agent名字>`（名字与 `~/.pi/agent/docs/agents-registry.md` 的注册表一致，即人格名）；**同一个 Agent 允许同时开多个会话、共用同一个名字**（一个人同时办几件事是合理的：Agent 项目主工作区 / 任何 worktree 都可以开 Leader 会话；子项目任何 worktree 开 Worker 会话）——此时「**人格名 + session-id**」才能唯一确定一个会话：`intercom list` 会列出每个会话的 session-id（短前缀即可唯一定位），`intercom` 与 `agent_call` 都支持按名字（全名）或 session-id（或其短前缀）指定目标。已在运行的会话可用 `/alias <名字>` 补设。**子项目的 Worker 会话用 `<Agent 名>-<子项目>` 命名**（如 `Atlas-cmux`），避免与 Leader 同名混淆。
 - **常设授权：其它 agent 仓库有待提交内容 → 自动委派（2026-10-04 用户立）**：检查到或得知任何 agent 项目的仓库有该提交却未提交的内容（工作区脏、暂存区有未提交内容等），**直接 `agent_call` 对方、由它用自己的 `/add` → `/commit` 流程处理**，不要拿这个问题去问用户——用户原话「每次检查到或者得知其它 Agent 的仓库有需要 commit 的内容就自动 call 这个 agent 使用 /add skill 或 /commit skill 处理一下，不要每次都问我」。授权边界：只允许「委派对方按它自己的 skill 流程提交」，**不得由本会话替对方仓库执行 git 写操作**；对方的 `/add` 预检、敏感扫描、cache 检测、发版链等安全阀照常生效；对方 /add 预检出现「需人工过目 / 不建议入库」时照旧停在 add 阶段、由对方报告用户。
 - **后台会话用完即清、不活跃即清（2026-10-04 用户立）**：用户**看不到 tmux 后台会话**，「后台会话对他而言等于不存在」——所以不要让它长期挂着。
   - **用完就清**：`agent_call` / `agent_wake` 拉起的会话，使命完成后**主动关闭**（`tmux kill-session -t <会话名>`），不留常驻隐形进程；下次需要时 `agent_call` 会自动重新唤醒（代价只是一次启动）。

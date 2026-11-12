@@ -65,18 +65,20 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * 会话目录角色（2026-11-07 用户决定，取代 2026-10-17「只允许 Agent 项目根目录」）：
- *   - leader：Agent 项目根目录 → 该 agent 的主会话（项目负责人）；
- *   - worker：已登记子项目根目录，或该子项目的 git worktree（临时工，只干某一件事）。
+ * 会话目录角色（2026-11-12 用户重新定义，取代 2026-11-07 版）：
+ *   - leader：Agent 项目根目录，或 Agent 项目的 git worktree（项目负责人）；
+ *   - worker：已登记子项目根目录，或该子项目的 git worktree（临时工）。
  *
- * 为什么放开：子项目有自己的专属规则（`.pi/APPEND_SYSTEM.md`）与工具，只有在「cwd 落在子项目 /
- * worktree」时才会被 pi 加载；把子项目任务放在 Agent 项目会话里按路径做，等于让 Worker 在
- * 没有本项目规则的情况下干活。Leader 只负责 local main 同步、建 worktree、收尾清理。
+ * Leader / Worker 不是“主工作区 vs worktree”，而是 Agent 项目 vs 它负责的子项目：
+ * Agent 项目的主工作区与任何 worktree 都是 Leader；子项目的主工作区与任何 worktree 都是 Worker。
+ *
+ * 为什么：子项目有自己的专属规则（`.pi/APPEND_SYSTEM.md`）与工具，只有在「cwd 落在子项目 /
+ * worktree」时才会被 pi 加载；Agent 项目的 worktree 加载的是 Agent 项目规则，所以它是 Leader。
  *
  * 校验仍按 `~/.pi/agent/docs/agents-registry.md`：Agent 名单取「智能体命名注册表」的「项目（仓库）」列，
  * 子项目名单取「子项目映射」表第一列（`assistant-agent（Kit）` 取括号前的项目名）与第二列；**不再依赖
  * 「项目名以 Agent 结尾」这个旧命名约定**（2026-11-09 用户立：性质看 README 的 Type 徽章，名字只求简单）。
- * worktree 用 `.git` 文件里的 `gitdir:` 反查主仓库，主仓库必须是已登记子项目。
+ * worktree 用 `.git` 文件里的 `gitdir:` 反查主仓库；主仓库是 Agent 项目 → Leader，是子项目 → Worker。
  * 注册表不可读时退回旧的标记文件检查（AGENTS.md / .pi）。
  */
 const REGISTRY = join(homedir(), ".pi", "agent", "docs", "agents-registry.md");
@@ -160,7 +162,7 @@ function mainRepoOfWorktree(dir: string): string | undefined {
 }
 
 type DirCheck =
-	| { ok: true; role: "leader"; project: string }
+	| { ok: true; role: "leader"; project: string; worktree: boolean }
 	| { ok: true; role: "worker"; project: string; worktree: boolean }
 	| { ok: false; detail: string };
 
@@ -186,7 +188,7 @@ function checkSessionDir(dir: string): DirCheck {
 	}
 
 	if ([...info.agents].some((n) => n.toLowerCase() === lower)) {
-		return { ok: true, role: "leader", project: name };
+		return { ok: true, role: "leader", project: name, worktree: false };
 	}
 	if (info.subprojects.has(lower)) {
 		return { ok: true, role: "worker", project: name, worktree: false };
@@ -194,6 +196,9 @@ function checkSessionDir(dir: string): DirCheck {
 	const mainRepo = mainRepoOfWorktree(expanded);
 	if (mainRepo) {
 		const mainName = basename(mainRepo);
+		if ([...info.agents].some((n) => n.toLowerCase() === mainName.toLowerCase())) {
+			return { ok: true, role: "leader", project: mainName, worktree: true };
+		}
 		if (info.subprojects.has(mainName.toLowerCase())) {
 			return { ok: true, role: "worker", project: mainName, worktree: true };
 		}
@@ -202,8 +207,8 @@ function checkSessionDir(dir: string): DirCheck {
 	return {
 		ok: false,
 		detail:
-			`拒绝唤醒：目录「${dir}」既不是已登记的 Agent 项目根，也不是已登记子项目或其 git worktree` +
-			`（按 ~/.pi/agent/docs/agents-registry.md 校验）。`,
+			`拒绝唤醒：目录「${dir}」不是已登记的 Agent 项目 / 子项目，也不是它们的 git worktree` +
+			`（按 ~/.pi/agent/docs/agents-registry.md 校验；Agent 项目→Leader，子项目→Worker）。`,
 	};
 }
 
@@ -355,10 +360,10 @@ export default function agentCallExtension(pi: ExtensionAPI) {
 		name: "agent_wake",
 		label: "Agent Wake",
 		description:
-			"确保另一个 pi 会话（pi-intercom 互通）处于在线状态：若不在线，则在指定项目目录用 tmux 启动一个新 pi 会话（pi -n <名字>，名字即 intercom 别名）并等待其注册。可在 agent_call 之前预热，或单独准备对方会话。dir 支持三类目录（按 ~/.pi/agent/docs/agents-registry.md 校验）：Agent 项目根 → Leader 会话；已登记子项目根 → Worker 会话；子项目的 git worktree → Worker 会话（临工干活的地方，能加载子项目自己的 .pi/APPEND_SYSTEM.md 与工具）。启动命令带 -a 信任项目文件（子项目有 .pi/settings.json，不带会卡在信任提示上）。非以上三类目录会被拒绝。",
+			"确保另一个 pi 会话（pi-intercom 互通）处于在线状态：若不在线，则在指定项目目录用 tmux 启动一个新 pi 会话（pi -n <名字>，名字即 intercom 别名）并等待其注册。可在 agent_call 之前预热，或单独准备对方会话。dir 支持四类目录（按 ~/.pi/agent/docs/agents-registry.md 校验）：Agent 项目根 → Leader 会话；Agent 项目的 git worktree → Leader 会话；已登记子项目根 → Worker 会话；子项目的 git worktree → Worker 会话（临工干活的地方，能加载子项目自己的 .pi/APPEND_SYSTEM.md 与工具）。启动命令带 -a 信任项目文件（子项目有 .pi/settings.json，不带会卡在信任提示上）。非以上四类目录会被拒绝。",
 		parameters: Type.Object({
 			name: Type.String({ description: "目标会话名字（pi-intercom 别名，与 /alias 或 pi -n 设置一致）——唤醒只认名字（新会话按此名字启动）" }),
-			dir: Type.String({ description: "目标会话的启动工作目录：Agent 项目根（Leader）/ 已登记子项目根（Worker）/ 子项目的 git worktree（Worker）——按 ~/.pi/agent/docs/agents-registry.md 校验，其它目录会被拒绝；绝对路径或 ~ 开头" }),
+			dir: Type.String({ description: "目标会话的启动工作目录：Agent 项目根（Leader）/ Agent 项目的 git worktree（Leader）/ 已登记子项目根（Worker）/ 子项目的 git worktree（Worker）——按 ~/.pi/agent/docs/agents-registry.md 校验，其它目录会被拒绝；绝对路径或 ~ 开头" }),
 			wait_seconds: Type.Optional(
 				Type.Number({ description: `等待注册的最长秒数（默认 ${DEFAULT_WAIT_SECONDS}）`, minimum: 3, maximum: 120 }),
 			),
@@ -390,7 +395,7 @@ export default function agentCallExtension(pi: ExtensionAPI) {
 		parameters: Type.Object({
 			name: Type.String({ description: "目标会话：pi-intercom 别名（人格名，如 Kit）或 session-id（或其短前缀，`pi-intercom list` 可见）——同一个 agent 可多开同名会话，此时用 session-id 唯一定位" }),
 			message: Type.String({ description: "消息内容（对方看不到本会话上下文，请自带背景与明确请求）" }),
-			dir: Type.Optional(Type.String({ description: "目标会话工作目录；对方不在线时用它自动唤醒。允许：Agent 项目根（Leader）/ 已登记子项目根（Worker）/ 子项目的 git worktree（Worker）——按注册表校验，其它目录会被拒绝；建议总是提供" })),
+			dir: Type.Optional(Type.String({ description: "目标会话工作目录；对方不在线时用它自动唤醒。允许：Agent 项目根（Leader）/ Agent 项目的 git worktree（Leader）/ 已登记子项目根（Worker）/ 子项目的 git worktree（Worker）——按注册表校验，其它目录会被拒绝；建议总是提供" })),
 			mode: Type.Optional(
 				StringEnum(["ask", "send"] as const, { description: "ask=阻塞等回复（默认）；send=仅通知、以本会话身份发送" }),
 			),
