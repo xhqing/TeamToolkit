@@ -44,7 +44,7 @@ private-subproject/               # 私有，dsh-team
 ```
 
 - 子项目的 `AGENTS.md` 由负责的 Agent 写，内容是项目事实与 Worker 边界，**不复制** Agent 项目的完整规则。
-- 子项目不登记进公开 `docs/agents-registry.md`、不写 `xhqing` 名册、不进 agents-infra 镜像。
+- 子项目默认不登记进公开 `docs/agents-registry.md`、不写 `xhqing` 名册、不进 agents-infra 镜像；**例外**：用户明确要求只列名与链接的私有子项目（当前：NewsScoreStudy），按专项指示登记、不介绍内容。
 - 若需要 Agent 知道有哪些私有子项目，用本机私有登记（如 `~/.dev/private/<agent>/private-subprojects.md`），只在 Leader 侧读取。
 
 ## 3. 运行时帽子
