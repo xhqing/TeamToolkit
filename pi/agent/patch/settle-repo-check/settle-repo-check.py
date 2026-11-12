@@ -59,12 +59,33 @@ def registry_rows():
     return rows
 
 
+def main_repo_root(path):
+    """git worktree 的 .git 是文件；反查其主仓库根，普通仓库原样返回。"""
+    git = os.path.join(path, ".git")
+    if os.path.isfile(git):
+        try:
+            with open(git, encoding="utf-8", errors="replace") as f:
+                text = f.read()
+            m = re.search(r"^\s*gitdir:\s*(.+?)\s*$", text, re.M)
+            if m:
+                gitdir = m.group(1)
+                if not os.path.isabs(gitdir):
+                    gitdir = os.path.normpath(os.path.join(path, gitdir))
+                marker = os.sep + ".git" + os.sep + "worktrees" + os.sep
+                idx = gitdir.rfind(marker)
+                if idx >= 0:
+                    return gitdir[:idx]
+        except OSError:
+            pass
+    return path
+
+
 def find_agent(cwd, rows):
-    """cwd 是 Agent 项目 → 它自己；cwd 是某个子项目 → 归其 Agent；都不匹配 → None。
+    """Agent 项目（含任何 worktree）→ 它自己；子项目（含任何 worktree）→ 归其 Agent；都不匹配 → None。
 
     大小写不敏感匹配：目录名与注册表写法可能不一致（如 dir `CC-Bridge` vs 表 `CC-BRIDGE`）。
     """
-    name = os.path.basename(os.path.normpath(cwd))
+    name = os.path.basename(os.path.normpath(main_repo_root(cwd)))
     for a, _ in rows:
         if a.lower() == name.lower():
             return a

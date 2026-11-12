@@ -66,11 +66,14 @@
 2. **子项目 `AGENTS.md` 是本仓库的实体文件**，写四件事：① 本项目是什么（一两句）；② 归哪个 Agent 负责；③ Worker 的角色边界（干完向谁汇报、不碰 local main、不建删 worktree）；④ 规则索引（`.pi/APPEND_SYSTEM.md` / `DEVELOPMENT.md` / `CHANGELOG.md` / `TODO.md` 各放什么）。**不写** Agent 项目的规则副本——那份规则本来就不属于这个仓库。
 3. **子项目 `.pi/` 只放自己的东西**：不再写跨仓库的资源路径（旧的 `settings.json` 四键模板已全部删除）。需要技能 / 扩展就放进自己的 `.pi/{extensions,skills,prompts,themes}`（这四个目录自动发现、不必写进 settings），或者只留 `.pi/APPEND_SYSTEM.md` 一份硬约束。
 4. **为什么这样定**：① 跨仓库路径引用是**隐式依赖**——Agent 项目改名、子项目单独 clone、换机器，都会静默失效（pi 不报错，只是少加载东西）；② 两层压在同一个符号上只能靠「只允许追加、不许重述」的纪律压着，而那条纪律本身就说明两层混在一起有事；③ **安全网不受影响**——全局 `~/.pi/agent/`（全部团队规则、`add` / `commit` / `bump` / `release` 技能、各类守卫扩展）在**任何目录**都会加载，而项目级交叉引用真的带过来的东西远少于直觉（实测九成是空引用：Atlas 名下 8 个子项目引用的目录根本不存在）。
-5. **后台会话分 Leader / Worker 两级（2026-11-07 用户决定）**：
-   - **Leader**：以 Agent 项目根目录为工作目录的会话，是该 agent 的**项目负责人**——负责名下子项目 local main 的同步、按任务建 worktree、收尾时清理 worktree 并把 local main 对齐远端；跨项目协调与向用户汇报也在这里做。
-   - **Worker**：以「已登记子项目根目录」或「该子项目的 git worktree 目录」为工作目录的会话，是**临时工**——只干某一个 worktree 里的具体任务（开发、调试、测试、提交），干完向 Leader 汇报。
-   - **为什么要分**：子项目之所以独立成仓库，正是因为它有**专属规则与工具**；这些内容不能上提到 Agent 项目（一上提就污染所有兄弟子项目），而 pi 只加载 cwd 那一层的 `.pi/`（不向上继承）——Leader 站在 Agent 项目里干活，天然看不到子项目的专属配置。**这套分工与上面「两边完全独立」不矛盾**：独立性说的是配置与规则各管各的，分工说的是「谁来干、干完向谁汇报」。
-   - **工具校验**：`agent_call` / `agent_wake` 的 `dir` 接受三类目录（Agent 项目根 / 已登记子项目根 / 子项目的 git worktree），其它目录拒绝。worktree 通过 `.git` 文件里的 `gitdir:` 反查主仓库，主仓库必须是已登记子项目（因此 `~/Developer/<子项目>-<事项>` 这种平级 worktree 能被正确识别）。
+5. **后台会话分 Leader / Worker 两级（2026-11-12 用户重新定义，取代 2026-11-07 版）**：
+   - **Leader = Agent 项目**：Agent 项目任何分支 / worktree 的根目录作为 cwd 的会话，都是该 agent 的 Leader（“这个人”）。可以开发 Agent 项目本身，也对名下子项目负最终责任——同步 local main、按任务建 worktree、派任务、收尾、向用户汇报。
+   - **Worker = 子项目**：团队内不存在没有 Agent 负责的非 Agent 项目；任何非 Agent 项目都必须是某个 Agent 项目的子项目。子项目任何分支 / worktree 的根目录作为 cwd 的会话，都是 Worker（临时工）——只干该 worktree 里的具体任务（开发、调试、测试、提交），干完向 Leader 汇报；不碰 local main、不建删 worktree。
+   - **关系**：Leader / Worker 不是“主工作区 vs worktree”，而是 **Agent 项目 vs 它负责的子项目**。Agent 项目主工作区与它的任何 worktree 都是 Leader；子项目主工作区与它的任何 worktree 都是 Worker。
+   - **Git 纪律**：Leader 在 Agent 项目 worktree 里仍是 Leader，但 local main 只在主工作区对齐；worktree 里不切 main、不 commit main。
+   - **无主项目禁止入队**：新增任何非 Agent 项目，必须先登记为某个 Agent 项目的子项目（本文件映射表 + Agent 项目 `AGENTS.md`），否则不得入队。
+   - **为什么要分**：子项目有专属规则与工具；这些内容不能上提到 Agent 项目，pi / DSH 只加载 cwd 这一层的项目配置——Worker 在子项目 worktree 里才能加载子项目规则。Agent 项目的 worktree 加载的是 Agent 项目规则，所以它是 Leader。
+   - **工具校验**：`agent_call` / `agent_wake` 的 `dir` 接受四类目录（Agent 项目根 / Agent 项目 worktree → Leader；已登记子项目根 / 子项目 worktree → Worker），其它目录拒绝。worktree 通过 `.git` 里的 `gitdir:` 反查主仓库，主仓库是 Agent 项目还是子项目决定角色。
    - **启动必带 `-a`**：子项目 `.pi/` 下有 `APPEND_SYSTEM.md` 等资源，会触发 pi 的「信任本项目」判定（判据：`.pi/` 下存在 `settings.json` / `extensions` / `skills` / `prompts` / `themes` / `SYSTEM.md` / `APPEND_SYSTEM.md` 任一项）；tmux 后台会话没有人能应答那个提示，不带 `-a` 会卡死在提示上、永远不注册（2026-11-07 实测确认）。
    - **命名约定**：Worker 会话用 `<Agent 名>-<子项目>`（如 `Atlas-cmux`、`Atlas-pi-harness`），与 Leader 会话名区分；同一子项目允许同时存在多个 Worker（各自在不同 worktree 上），用 session-id 区分。
    - **生命周期**：Worker 用完即清（使命完成主动 `tmux kill-session -t pi-<名字>`），不长期挂着——用户看不到 tmux 后台会话，挂着等于隐形进程。
@@ -78,7 +81,7 @@
 7. **迁移口径（2026-11-08 已执行完毕）**：17 个子项目仓库全部改为「实体 `AGENTS.md` + 删掉 `.pi/settings.json` 里的四条跨仓库路径 + `.pi/APPEND_SYSTEM.md` 改为指向本仓库 `AGENTS.md` 与全局规则、角色段移入 `AGENTS.md`」。新增子项目照此从零建，**不要再挂软链接、不要再写 `settings.json` 跨仓库路径**。
 
 - **历史沿革（别重复踩已踩过的坑）**：2026-08-10 立「子项目 `.claude/` 超集」→ 2026-10-12 改为「子项目一律不得存在智能体专属文件」→ 2026-10-17 改为「`.pi` 也挂软链接」→ 2026-10-30 改为「身份层软链接 + 能力层目录引用 + 只允许追加」→ **2026-11-08 改为本版（两边完全独立）**。前几版都栽在同一个取舍上：想让子项目既「继承」又「扩展」，就只能靠软链接或路径引用把两层绑在同一个符号上——绑上以后，继承来的东西不可控地失效（改名 / 换机 / 单独 clone），要扩展的部分又被纪律捆住。实测下来继承过来的内容九成是空引用，所以 2026-11-08 直接把继承这一层砍掉，各管各的。
-- **工具强制**：pi 端扩展 `~/.pi/agent/extensions/agent-call.ts` 在自动唤醒前按本文件「子项目映射」表校验目标目录必须属于三类之一——**Agent 项目根**（Leader）/ **已登记子项目根**（Worker）/ **该子项目的 git worktree**（Worker），其它目录拒绝；启动命令固定带 `-a`。`~/.pi/agent/patch/settle-repo-check/settle-repo-check.py`（收尾巡检，由 pi 扩展调用）同样按下方「子项目映射」表定位子项目（cwd 为子项目目录时也能正确归属）。
+- **工具强制**：pi 端扩展 `~/.pi/agent/extensions/agent-call.ts` 在自动唤醒前按本文件「子项目映射」表校验目标目录必须属于三类之一——**Agent 项目根**（Leader）/ **Agent 项目的 git worktree**（Leader）/ **已登记子项目根**（Worker）/ **子项目的 git worktree**（Worker），其它目录拒绝；启动命令固定带 `-a`。`~/.pi/agent/patch/settle-repo-check/settle-repo-check.py`（收尾巡检，由 pi 扩展调用）同样按下方「子项目映射」表定位子项目（cwd 为子项目目录时也能正确归属）。
 
 **子项目映射（完整清单，权威）**：当前全部 Agent → 子项目对应关系如下表，新增 / 变更子项目时以此表为准，并同步更新对应 Agent 项目 `AGENTS.md` 的「子项目清单」节，保持一致。表中每个子项目根目录都应带**本仓库实体** `AGENTS.md`（项目定位 / 负责 Agent / Worker 边界 / 规则索引）与 `.pi/APPEND_SYSTEM.md`（本项目硬约束，Worker 会话靠它加载），**不挂软链接、不写跨仓库 `settings.json` 路径**，随仓库提交，见上方规则第 1、2、3 条。
 
