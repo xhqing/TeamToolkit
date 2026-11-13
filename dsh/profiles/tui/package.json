@@ -1,0 +1,15 @@
+{
+  "name": "dsh-profile-tui",
+  "private": true,
+  "dependencies": {
+    "dsh-mini-tui": "file:/Users/xhq/Developer/assistant-agent/tmp/dsh-mini-tui-0.2.4.tgz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "dsh-mini-tui"
+      ]
+    }
+  }
+}
