@@ -3,7 +3,8 @@
 
 2026-11-12 用户立：
   - macmini 上默认只用 magpie 的免费模型；
-  - 可用模型清单由用户动态维护，目前只有 magpie 的 hy4free 与 deepseek-v4.1-flash-1017。
+  - 可用模型清单由用户动态维护：2026-11-12 为 hy4free 与 deepseek-v4.1-flash-1017，
+    2026-11-13 用户又授权加入 hy4std（标准计费通道，消耗 WorkBuddy Free plan 的 credits）。
 
 用法：
   python3 ~/.pi/agent/patch/macmini-models/check.py           # 校验清单格式并打印

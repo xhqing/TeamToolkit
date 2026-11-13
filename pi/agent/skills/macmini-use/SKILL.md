@@ -100,7 +100,7 @@ ssh mac-mini 'tmux kill-session -t pi-<名字>'
 | 编译 | clang 14、cmake 3.24、Swift 5.7.2（只有 CLT、**没有完整 Xcode → `xcodebuild` 不可用**） |
 | 其他 | git 2.37.1、pandoc 2.19、tmux、xxd、rsync 2.6.9、zip、Chrome（headless 打印 PDF 可用）、brew 3.5.9（x64，装到 /usr/local） |
 | 缺 | ffmpeg / ffprobe / ImageMagick / ghostscript / yt-dlp / jq / rg / fd / rustc / cargo / go / uv |
-| pi 会话的模型 | macmini 上**只用可用模型清单里的 magpie 模型**（2026-11-12 用户立）：清单 = `~/.pi/agent/patch/macmini-models/allowlist.json`，**目前只有 `magpie/auto/hy4free` 与 `magpie/codearts/deepseek-v4.1-flash-1017`**（用户会动态调整）。本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie。**清单外模型一律不准用**；**用不了就停下来向用户汇报原因**，不得自行换清单外模型。校验：`python3 ~/.pi/agent/patch/macmini-models/check.py --ping` |
+| pi 会话的模型 | macmini 上**只用可用模型清单里的 magpie 模型**（2026-11-12 用户立）：清单 = `~/.pi/agent/patch/macmini-models/allowlist.json`，**当前三项**：`magpie/auto/hy4free`、`magpie/codearts/deepseek-v4.1-flash-1017`（均免费，2026-11-12 用户指定）与 `magpie/auto/hy4std`（标准计费通道，2026-11-13 用户明确授权加入，会消耗 WorkBuddy Free plan 的 credits 额度）。清单由用户动态维护。本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie。**清单外模型一律不准用**；**用不了就停下来向用户汇报原因**，不得自行换清单外模型。校验：`python3 ~/.pi/agent/patch/macmini-models/check.py --ping` |
 
 **Docker 不可用**：CLI 在，但 daemon 启动即 panic（2026-11-03 实测）。要跑容器就回本机或换别的方案。
 
