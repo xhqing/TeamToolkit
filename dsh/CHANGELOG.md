@@ -1,5 +1,17 @@
 # DSH CHANGELOG
 
+## 2026-11-13
+
+- **DSH 核心同步（2026-11-13）**：从权威 `~/.dsh` 单向发布。
+  **为什么改**：`~/.dsh` 是 dsh-team 的权威源，本仓库的 `dsh/` 是它的公开镜像。
+  **改了什么**：5 个文件——
+  - `dsh/profiles/tui/cordis.patch.yml`
+  - `dsh/profiles/tui/cordis.yml`
+  - `dsh/profiles/tui/package.json`
+  - `dsh/profiles/tui/pnpm-lock.yaml`
+  - `dsh/profiles/tui/pnpm-workspace.yaml`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
 ## 2026-11-12
 
 - **DSH 核心同步（2026-11-12）**：从权威 `~/.dsh` 单向发布。
