@@ -6,8 +6,8 @@
  * Python。规则变更时两处同步改，不能只改一边（「规矩必须配套工具强制」）。
  *
  * 背景见 dev-workflow skill 的 references/test-cases.md（2026-09-21 三次修订，
- * Issue 需求端 + 测试 Agent 主通道）：测试（用例）定义权归测试 Agent，开发
- * Agent 对一切测试文件只读 + 可运行、禁止增删改——防「改测试迁就实现」，
+ * 2026-11-13 修订）：测试（用例）定义权经 Hopper 除名后归 dev-agent（Atlas）的
+ * Leader；Worker 对一切测试文件只读 + 可运行、禁止增删改——防「改测试迁就实现」，
  * 也防补「快照式测试」。
  *
  * 2026-10-09 用户收窄（两端同步改）：守卫只防「改测试内容」，不拦「把测试文件
@@ -17,7 +17,70 @@
  * rm/mv/clean/restore/checkout/stash（这些都会改动或搬走测试内容）照常拦。
  */
 
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+// —— 作用范围（2026-11-13 用户立）——
+// 测试开发分离 + 测试文件写保护只覆盖 dev-agent（Atlas）名下的子项目（测试定义权已随
+// Hopper 除名并入 dev-agent，其它 agent 的项目不套用这套范式）。范围按仓库注册表的
+// 「子项目映射」表实时解析，worktree 通过 `.git` 里的 `gitdir:` 反查主仓库名。
+const REGISTRY = path.join(os.homedir(), ".pi", "agent", "docs", "agents-registry.md");
+let scopeCache: { mtimeMs: number; repos: Set<string> } | null = null;
+
+function devAgentSubprojects(): Set<string> {
+	try {
+		const st = fs.statSync(REGISTRY);
+		if (scopeCache && scopeCache.mtimeMs === st.mtimeMs) return scopeCache.repos;
+		const repos = new Set<string>();
+		for (const line of fs.readFileSync(REGISTRY, "utf-8").split("\n")) {
+			const m = line.match(/^\|\s*dev-agent（Atlas）\s*\|\s*([^|]+?)\s*\|/);
+			if (m) repos.add(m[1].replace(/[`*]/g, "").trim());
+		}
+		scopeCache = { mtimeMs: st.mtimeMs, repos };
+		return repos;
+	} catch {
+		return new Set();
+	}
+}
+
+/** 从路径向上找 git 仓库根，返回主仓库目录名（worktree 反查主仓库）。 */
+function repoNameOf(start: string): string | null {
+	let dir = path.resolve(start);
+	for (let i = 0; i < 40; i++) {
+		const gitPath = path.join(dir, ".git");
+		if (fs.existsSync(gitPath)) {
+			try {
+				if (fs.statSync(gitPath).isFile()) {
+					const m = fs.readFileSync(gitPath, "utf-8").match(/gitdir:\s*(.+)/);
+					if (m) {
+						const mainGit = m[1].trim().replace(/\/worktrees\/[^/]+\/?$/, "");
+						return path.basename(path.dirname(mainGit));
+					}
+				}
+				return path.basename(dir);
+			} catch {
+				return path.basename(dir);
+			}
+		}
+		const parent = path.dirname(dir);
+		if (parent === dir) break;
+		dir = parent;
+	}
+	return null;
+}
+
+/** 目标是否落在 dev-agent 名下的子项目仓库里（含其 worktree）。读不到注册表时放行。 */
+function inDevAgentSubproject(targetHint?: string): boolean {
+	const repos = devAgentSubprojects();
+	if (repos.size === 0) return false;
+	const raw = targetHint ? targetHint : process.cwd();
+	let probe = path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw);
+	if (!fs.existsSync(probe)) probe = path.dirname(probe);
+	const name = repoNameOf(probe);
+	return name !== null && repos.has(name);
+}
 
 const AUTH_MARK = "TEST_CASES_WRITE_OK";
 
@@ -46,14 +109,13 @@ const FIND_DELETE = /\s-delete\b/;
 const PREFILTER = /test|spec|e2e|snap|conftest/i;
 
 const DENY_REASON =
-	"[test-cases-guard] 拦截：测试文件（测试目录 test/ tests/ __tests__/ " +
+	"[test-cases-guard] 拦截：dev-agent 名下子项目的测试文件（测试目录 test/ tests/ __tests__/ " +
 	"spec/ e2e/、*.test.* / *.spec.* / test_*.py / *_test.go / conftest.py " +
-	"等）对开发 Agent 只读 + 可运行，禁止增删改——用例定义权归测试 Agent " +
-	"（测试先行，防「改测试迁就实现」与「补快照式测试」；dev-workflow " +
-	"纪律）。若确需写入（测试 Agent 出题、独立会话代行出题、用户授权的" +
-	"例外操作），在命令末尾加授权标记 `# TEST_CASES_WRITE_OK`，或由用户" +
-	"手动操作；若发现测试 / 需求本身有问题，终止开发并向用户上报，不自行" +
-	"改测试绕过（`git add` 把测试文件入暂存区不在此列，不拦——暂存不改内容）。";
+	"等）对 Worker 只读 + 可运行，禁止增删改——测试定义权归 Leader（测试先行，防「改测试迁就实现」" +
+	"与「补快照式测试」；dev-workflow 纪律）。若确需写入（Leader 出题、用户授权的例外操作），" +
+	"在命令末尾加授权标记 `# TEST_CASES_WRITE_OK`，或由用户手动操作；若发现测试 / 需求本身有问题，" +
+	"终止开发并向 Leader / 用户上报，不自行改测试绕过（`git add` 把测试文件入暂存区不在此列，不拦——暂存不改内容）。" +
+	"其它 agent 的项目不在这套范式范围内，不受拦截。";
 
 function stripQuotes(tok: string): string {
 	return tok.replace(/^['"]+|['"]+$/g, "");
@@ -99,14 +161,14 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_call", async (event) => {
 		try {
 			if (isToolCallEventType("bash", event)) {
-				if (bashViolates(event.input.command ?? "")) {
+				if (bashViolates(event.input.command ?? "") && inDevAgentSubproject()) {
 					return { block: true, reason: DENY_REASON };
 				}
 			} else if (
 				isToolCallEventType("write", event) ||
 				isToolCallEventType("edit", event)
 			) {
-				if (isTestTarget(event.input.path ?? "")) {
+				if (isTestTarget(event.input.path ?? "") && inDevAgentSubproject(event.input.path)) {
 					return { block: true, reason: DENY_REASON };
 				}
 			}

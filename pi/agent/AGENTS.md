@@ -290,7 +290,7 @@ Copyright (c) 2026 xhqing and contributors (xhqing/ghostty fork)
 
 **两个团队完全独立（2026-11-11 用户立）**：**pi-team** 负责开源项目，规则在本文件；**dsh-team** 负责闭源项目，规则在 `~/.dsh/AGENTS.md`。两边不共用注册表、名册、镜像、技能、守卫；dsh-team 的项目默认不登记进 `docs/agents-registry.md`，也不进 `xhqing` 名册与 `agents-infra` 镜像；**例外**：用户明确要求只列名与链接的私有子项目，按专项指示登记、不介绍内容（当前：NewsScoreStudy）。反过来，pi-team 的项目也不进 dsh-team。**同一个 Agent 是“一个人”，只有一套版本 / CHANGELOG；两顶帽子（`.pi` / `.dsh`）与 Leader / Worker 工作流的布局见 `~/.pi/agent/docs/dsh-team.md`。**
 
-团队共有 17 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目、归 Kit，2026-11-11 该项目更名为 agents-infra）后从 21 减到 17，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，agents-infra 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
+团队共有 16 个 agent（三个小组 + 直属岗位；2026-10-26 注销 Hermes、2026-10-31 除名 Alfred 与 Tinker、2026-11-05 注销 Prometheus（项目降级为普通项目、归 Kit，2026-11-11 该项目更名为 agents-infra）、2026-11-13 除名 Hopper（测试定义权并入 Atlas / dev-agent，只覆盖其名下子项目）后从 21 减到 16，口径与 `docs/agents-registry.md` 智能体命名注册表的行数一致）。涉及以下场景时**先读对应文档再动手**（权威源在全局 `~/.pi/agent/docs/`，agents-infra 仓库的 `pi/agent/`（docs / skills / patch / AGENTS.md / extensions）为逐字节一致的开源镜像）：
 
 - **新建 Agent 项目**：先读 `~/.pi/agent/docs/agents-registry.md`（名称查重 + 流水线位置）与 `~/.pi/agent/docs/new-agent-scaffold.md`（命名规则（**Agent 项目一律 `<职责>-agent` 全小写、连字符**，Non-agent 项目按「尽可能简单、体现职责」；项目是不是 Agent 项目看 README 的 `Type` 徽章是否为 `AI Agent`）、脚手架清单、README / logo / 徽章规范、`.gitignore` 必含项、开源到 GitHub 流程、双语 README 同步细则）。新建时向注册表追加新 agent 行**免确认**（仅限追加，不改已有行）。
 - **跨 agent 移交 / 推荐子任务**：读 `~/.pi/agent/docs/agents-registry.md`（注册表：名称、项目、职责、销售流水线、三小组分组）。

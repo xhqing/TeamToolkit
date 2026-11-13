@@ -59,7 +59,7 @@ description: "Use this skill whenever you are about to create or modify ANY icon
 
 ### Logo 视觉区分：Agent 门面用统一模板，子项目用项目象征 logo
 
-**Agent 主仓库（公开门面）的 logo 用团队统一模板——emoji + 名称 + 职称（名称：历史惯例为拟人名，如 Hopper；新建 agent 用简洁名，如 `cuAgent`）；Agent 名下子项目（研究本体 / 组件 / 工具仓库）的 logo 用项目象征意义的图形——象征元素 + 项目名 + 项目定位一句话，不用 agent 门面模板。**
+**Agent 主仓库（公开门面）的 logo 用团队统一模板——emoji + 名称 + 职称（名称：历史惯例为拟人名，如 Atlas / Anvil；新建 agent 用简洁名，如 `cuAgent`）；Agent 名下子项目（研究本体 / 组件 / 工具仓库）的 logo 用项目象征意义的图形——象征元素 + 项目名 + 项目定位一句话，不用 agent 门面模板。**
 
 - **为什么**：名称（拟人名 / 简洁名）是 agent 实体的标识，子项目不是 agent、是 agent 的产出物——子项目若沿用门面模板，会与门面完全同貌、分不清「这是 agent 本人还是 agent 的项目」。
 - **怎么用**：新建仓库时先判断它是 agent 门面还是子项目，选对应模板：agent 门面走统一模板（拟人名或简洁名作为「名称」）；子项目的象征元素取项目主题（如 📈 日 K 趋势、⏱️ 日内节奏），配色避开团队已用组合，副标题写项目定位并与 README 对该项目的描述口径一致。既有门面 / 本体 logo 撞脸的存量，接触时顺手改。

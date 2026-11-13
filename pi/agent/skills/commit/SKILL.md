@@ -156,7 +156,7 @@ commit message、PR title / body、Issue 文本都是**公开文本**——commi
      - topics 推断：VSCode 扩展 → `vscode`/`vscode-extension`；性能监控 → `performance`/`monitoring`；macOS 依赖 → `macos`；TypeScript → `typescript`；Claude Code 构建 → `claude-code`；Agent → `ai-agent`。按实际命中选取，不强加。
    - 补全（或检测发现已配）后 → 写 `<!-- commit-skill: github-about = ok -->` + 日期行。
 
-   **9d. Agent 名称**（标记 `agent-persona`）：**项目是 Agent 项目时**（判据：`README.md` 的 `Type` 徽章是 `AI Agent`，或 `AGENTS.md` 自述为 agent），必须有一个**名称**并写进 README（项目核心内容为代表 Agent 能力的 skills / rules / memory / mcp 等，名字即 Agent 的身份）。历史惯例是**蕴含主要能力含义的拟人名**（如 Tinker / Hopper）；项目名与名称是两回事，**Agent 项目名一律 `<职责>-agent`（全小写、连字符、前缀简洁，2026-11-09 用户立）**。
+   **9d. Agent 名称**（标记 `agent-persona`）：**项目是 Agent 项目时**（判据：`README.md` 的 `Type` 徽章是 `AI Agent`，或 `AGENTS.md` 自述为 agent），必须有一个**名称**并写进 README（项目核心内容为代表 Agent 能力的 skills / rules / memory / mcp 等，名字即 Agent 的身份）。历史惯例是**蕴含主要能力含义的拟人名**（如 Anvil / Atlas）；项目名与名称是两回事，**Agent 项目名一律 `<职责>-agent`（全小写、连字符、前缀简洁，2026-11-09 用户立）**。
    - **触发**：`README.md` 有 `Type-AI Agent` 徽章或 `AGENTS.md` 自述为 agent。都不是 → 跳过本项、不记录。
    - **检测已有**：① 查全局 `~/.pi/agent/docs/agents-registry.md` 的「智能体命名注册表」，该仓库已在表中 → 名字即定，README 引用之；② 否则看 README（中英任一）是否已有 persona 说明块（如 `> **<Name>** — <一句话能力说明>` 形式）。两者皆无 → 视为缺名。
    - **缺名则定名**：
