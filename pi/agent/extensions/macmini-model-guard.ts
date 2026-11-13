@@ -11,6 +11,10 @@
  *   「需要专门维护一个 macmini 上面的可用模型清单，这个清单我会根据情况动态调整，
  *     目前只有 magpie 的 hy4free 和 deepseek-4.1-flash-1017」
  *
+ * 2026-11-13 追加（用户明确授权）：`magpie/auto/hy4std` 加入清单。它是 Hy4 的标准计费
+ * 通道（上游 `free: false`、`rate: 0.29`），与 `hy4free` 的声明能力参数相同。守卫逻辑
+ * 不变——清单即权威，是否免费由用户维护清单时决定，代码不判断价格。
+ *
  * 所以本守卫不再硬编码任何模型名，只认清单：
  *   `patch/macmini-models/allowlist.json` 的 `models[].model`（用户动态维护）。
  *   - 清单里的模型 → 放行；

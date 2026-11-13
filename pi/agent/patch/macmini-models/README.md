@@ -6,17 +6,33 @@
 > 需要专门维护一个 macmini 上面的可用模型清单，这个清单我会根据情况动态调整，
 > 目前只有 magpie 的 hy4free 和 deepseek-4.1-flash-1017。
 
+上面是立规当时的原话。2026-11-13 用户又明确授权加入 `hy4std`，见下文「2026-11-13 变更」节。
+
 ## 清单在哪
 
 `allowlist.json`（本目录）。守卫 `~/.pi/agent/extensions/macmini-model-guard.ts`
 **每次调用时实时读取**，所以改完不用重启会话、也不用改代码。
 
-当前两项：
+当前三项：
 
 | 清单里的完整模型名 | 说明 |
 |---|---|
 | `magpie/auto/hy4free` | Hy4（magpie auto 路由，免费） |
 | `magpie/codearts/deepseek-v4.1-flash-1017` | DeepSeek V4.1 Flash 1017（magpie CodeArts 通道，免费） |
+| `magpie/auto/hy4std` | Hy4（magpie auto 路由，标准计费通道，非免费） |
+
+## 2026-11-13 变更
+
+用户明确授权把 `magpie/auto/hy4std` 加入清单。背景：它在 Pi 的模型列表里可选，与
+`hy4free` 对外声明的能力参数完全相同（上下文 100 万、最大输出 64K、支持图片输入、
+只支持 `high` 推理、支持工具调用），两者都是走 WorkBuddy 与 WorkBuddy AI 两个账号的
+`auto/*` 路由组；区别只在计费——`hy4free` 上游标记 `free: true`、价格全 0，
+`hy4std` 标记 `free: false`、带 `rate: 0.29`，会消耗 WorkBuddy Free plan 的 credits
+额度（配置里没写这个系数的换算单位，具体扣多少额度由 magpie 计算）。
+
+加入清单**不等于把它变成免费模型**：它仍是用户当次同意后放行的计费通道，日常优先用
+免费的两项。守卫只读清单、不判断免费与否，清单即唯一权威；这条澄清不动原先
+「默认只用免费模型、用其它付费模型须经用户同意」的规矩——本次正是用户行使了同意权。
 
 ## 怎么改
 
