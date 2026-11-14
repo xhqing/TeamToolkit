@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-11-13 17:22",
-  "note": "macmini 上 pi 允许使用的模型清单（用户动态维护，2026-11-12 立）。只有这里列出的模型可以出现在 macmini 的 pi 启动命令里；其它模型一律拦截，除非用户当轮明确授权（命令末尾加 # AI_AUTHORIZED_MODEL）。改完本文件不用改代码——守卫 extensions/macmini-model-guard.ts 每次调用时实时读取。",
+  "updatedAt": "2026-11-14 16:15",
+  "note": "macmini 上 pi 允许使用的模型清单（用户动态维护，2026-11-12 立）。只有这里列出的模型可以出现在 macmini 的 pi 启动命令里；其它模型一律拦截，除非用户当轮明确授权（命令末尾加 # AI_AUTHORIZED_MODEL）。改完本文件不用改代码——守卫 extensions/macmini-model-guard.ts 每次调用时实时读取。fallback 是「清单内模型全部没额度」时的最终兜底（2026-11-14 用户立），判定实现在 patch/macmini-models/pick.py。",
   "models": [
     {
       "model": "magpie/auto/hy4free",
@@ -17,5 +17,12 @@
       "display": "Hy4（magpie auto 路由，标准计费通道）",
       "note": "2026-11-13 用户授权加入；非免费，消耗 WorkBuddy Free plan 的 credits 额度"
     }
-  ]
+  ],
+  "fallback": {
+    "model": "tokenplus/deepseek/deepseek-v4.1-flash-1017",
+    "display": "DeepSeek V4.1 Flash 1017（TokenPlus 固定快照，最终兜底）",
+    "thinking": "max",
+    "enabled": true,
+    "note": "2026-11-14 用户立：上面 models 里的模型全部没额度时才走这个兜底，思考等级固定 max。是否「全部没额度」由 patch/macmini-models/pick.py 实时判定（读 magpie 额度），守卫据此放行或拦截。"
+  }
 }

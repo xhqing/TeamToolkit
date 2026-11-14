@@ -43,6 +43,26 @@ def load() -> list[dict]:
     return models
 
 
+def load_fallback() -> dict | None:
+    """读 fallback 字段（可选）。有就校验 model 非空，没写就返回 None。"""
+    try:
+        data = json.loads(ALLOWLIST.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    fb = data.get("fallback")
+    if not isinstance(fb, dict):
+        return None
+    model = str(fb.get("model") or "").strip()
+    if not model:
+        print("❌ fallback 字段缺少 model")
+        sys.exit(1)
+    thinking = fb.get("thinking")
+    if thinking is not None and not isinstance(thinking, str):
+        print("❌ fallback.thinking 必须是字符串（如 max）")
+        sys.exit(1)
+    return fb
+
+
 def ping(model: str) -> bool:
     cmd = f"{PI} -p 'Reply with exactly: PING-OK' --model {model}"
     try:
@@ -71,6 +91,13 @@ def main() -> None:
     print(f"条目：{len(models)} 个")
     for m in models:
         print(f"  - {m['model']}  ({m.get('display', '')})")
+    fb = load_fallback()
+    if fb:
+        state = "启用" if fb.get("enabled", True) else "停用"
+        print(f"\n兜底（{state}）：{fb['model']}  思考等级 {fb.get('thinking') or '(未设)'}")
+        print("（清单内模型全部没额度时才走兜底；判定与选择器：python3 pick.py）")
+    else:
+        print("\n（没有 fallback 字段：清单内模型全没额度时无模型可用，只能向用户汇报）")
     if "--ping" in sys.argv:
         print("\nmacmini 实测（经 magpie 隧道）：")
         results = [ping(m["model"]) for m in models]
