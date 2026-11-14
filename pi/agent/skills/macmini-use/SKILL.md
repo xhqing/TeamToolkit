@@ -61,7 +61,9 @@ macmini_status()          # 看两机实时负载，判断该不该分流时用
 只有「需要在远端多轮交互、反复看日志改代码」时才开一个**临时 tmux 会话**（2026-11-12 起不再有常驻会话）：
 
 ```bash
-# 开（模型必须走 allowlist.json 里的清单）
+# 先选模型：按当前额度给出本次该用哪个（清单内优先，全没额度时给兜底）
+python3 ~/.pi/agent/patch/macmini-models/pick.py
+# 开（模型走 pick.py 的结论；清单内模型写成 --model <模型>，兜底要加 --thinking max）
 ssh mac-mini 'tmux new-session -d -s pi-<名字> -c <cwd> "pi -n <名字> --model magpie/auto/hy4free"'
 # 派活
 ssh mac-mini '~/.pi/agent/npm/node_modules/.bin/pi-intercom ask --to <名字> --text "任务与背景"'
@@ -100,7 +102,7 @@ ssh mac-mini 'tmux kill-session -t pi-<名字>'
 | 编译 | clang 14、cmake 3.24、Swift 5.7.2（只有 CLT、**没有完整 Xcode → `xcodebuild` 不可用**） |
 | 其他 | git 2.37.1、pandoc 2.19、tmux、xxd、rsync 2.6.9、zip、Chrome（headless 打印 PDF 可用）、brew 3.5.9（x64，装到 /usr/local） |
 | 缺 | ffmpeg / ffprobe / ImageMagick / ghostscript / yt-dlp / jq / rg / fd / rustc / cargo / go / uv |
-| pi 会话的模型 | macmini 上**只用可用模型清单里的 magpie 模型**（2026-11-12 用户立）：清单 = `~/.pi/agent/patch/macmini-models/allowlist.json`，**当前三项**：`magpie/auto/hy4free`、`magpie/codearts/deepseek-v4.1-flash-1017`（均免费，2026-11-12 用户指定）与 `magpie/auto/hy4std`（标准计费通道，2026-11-13 用户明确授权加入，会消耗 WorkBuddy Free plan 的 credits 额度）。清单由用户动态维护。本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie。**清单外模型一律不准用**；**用不了就停下来向用户汇报原因**，不得自行换清单外模型。校验：`python3 ~/.pi/agent/patch/macmini-models/check.py --ping` |
+| pi 会话的模型 | macmini 上**只用可用模型清单里的 magpie 模型**（2026-11-12 用户立）：清单 = `~/.pi/agent/patch/macmini-models/allowlist.json`，**当前三项**：`magpie/auto/hy4free`、`magpie/codearts/deepseek-v4.1-flash-1017`（均免费，2026-11-12 用户指定）与 `magpie/auto/hy4std`（标准计费通道，2026-11-13 用户明确授权加入，会消耗 WorkBuddy Free plan 的 credits 额度）。清单由用户动态维护。**最终兜底**（2026-11-14 用户立）：清单内模型全部没额度时走 `fallback` 字段的 `tokenplus/deepseek/deepseek-v4.1-flash-1017`，思考等级固定 `max`（命令里必须带 `--thinking max` 或写成 `--model …:max`）。起会话前先跑 `python3 ~/.pi/agent/patch/macmini-models/pick.py` 拿结论（它实时读 magpie 额度判定，含兜底）；本机 launchd 常驻 SSH 反向隧道（`patch/magpie-tunnel/`，`com.xhq.magpie-tunnel`）把 macmini 的 `127.0.0.1:3425` 映射回本机 magpie。**清单与兜底之外的模型一律不准用**；**用不了就停下来向用户汇报原因**，不得自行换别的模型。校验：`python3 ~/.pi/agent/patch/macmini-models/check.py --ping` |
 
 **Docker 不可用**：CLI 在，但 daemon 启动即 panic（2026-11-03 实测）。要跑容器就回本机或换别的方案。
 
@@ -212,6 +214,6 @@ macmini_run: rm -rf /tmp/macmini-jobs/<job>.sh /tmp/macmini-jobs/<job>.log
 - ❌ 把 `node_modules` / `.venv` / 编译缓存 rsync 回本机——架构不通用、还占盘。
 - ❌ 在 macmini 上再开一个 pi 会话只为了跑一条命令——费用翻倍，不值得。
 - ❌ 在 macmini 上起 pi 会话却不先验证模型连通——先跑 `python3 ~/.pi/agent/patch/macmini-models/check.py --ping`；不通就查隧道并向用户汇报，不要换个模型硬顶。
-- ❌ 在 macmini 上使用清单外的模型（包括 magpie 的其它模型，以及 deepseek 官方 / coding-plan / dashscope / zai-coding-cn / tokenplus 等）——2026-11-12 用户立：只认 `allowlist.json` 清单；守卫 `extensions/macmini-model-guard.ts` 会拦，确需清单外模型必须先经用户当次同意。
+- ❌ 在 macmini 上使用清单外的模型（包括 magpie 的其它模型，以及 deepseek 官方 / coding-plan / dashscope / zai-coding-cn / tokenplus 等）——2026-11-12 用户立：只认 `allowlist.json` 清单；守卫 `extensions/macmini-model-guard.ts` 会拦，确需清单外模型必须先经用户当次同意。**唯一例外**是 `fallback` 里的兜底模型，而且只在「清单内模型全部没额度」时可用（守卫问 `pick.py` 实时判定；清单里还有额度时用兜底会被拦下）。
 - ❌ 在 macmini 上留常驻会话——2026-11-12 用户决定停用常驻（duty 守护已卸载）；临时会话用完必须 `tmux kill-session -t pi-<名字>`。
 - ❌ 分流完就忘了收尾——远端留一堆跑飞的进程和几 GB 的 /tmp 日志。

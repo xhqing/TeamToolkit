@@ -8,6 +8,18 @@
 
 - **镜像同步（2026-11-14）**：从全局 `~/.pi/agent` 单向发布。
   **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
+  **改了什么**：7 个文件——
+  - `pi/agent/AGENTS.md`
+  - `pi/agent/extensions/macmini-model-guard.ts`
+  - `pi/agent/patch/macmini-models/README.md`
+  - `pi/agent/patch/macmini-models/allowlist.json`
+  - `pi/agent/patch/macmini-models/check.py`
+  - `pi/agent/skills/macmini-use/SKILL.md`
+  - `pi/agent/patch/macmini-models/pick.py`
+  **回归风险**：无（只同步内容，不改本仓库自身逻辑）。
+
+- **镜像同步（2026-11-14）**：从全局 `~/.pi/agent` 单向发布。
+  **为什么改**：全局能力层有改动，本仓库是它的开源镜像，必须保持一致。
   **改了什么**：2 个文件——
   - `pi/agent/docs/magpie-quota.md`
   - `pi/agent/extensions/magpie-quota.ts`

@@ -30,36 +30,76 @@
  * 逃生门：命令末尾 `# AI_AUTHORIZED_MODEL`（仅限用户当轮明确同意用清单外的模型，
  * AI 不得自行添加）。
  *
+ * 2026-11-14 追加（用户立）：清单之外再加一个「最终兜底」模型——清单内模型全部没额度时
+ * 走它。兜底模型写在 allowlist.json 的 `fallback` 字段里（当前为
+ * `tokenplus/deepseek/deepseek-v4.1-flash-1017`，思考等级固定 max）。「是否全部都
+ * 没额度」不做静态判断，由 patch/macmini-models/pick.py 实时读 magpie 额度判定：
+ *   - 清单内还有可用额度 → 用兜底模型一律拦下（防止顺手用付费模型）；
+ *   - 清单内全部没额度 / magpie 读不到额度 → 放行兜底。
+ * 兜底模型启用时强制带 `--thinking max`（用户对该模型的定义就是 max 思考等级）。
+ *
  * 立规起因：2026-11-11 Atlas 为了让 cmux 的 Worker 在 macmini 上跑起来，自行测了一圈
  * provider 后给 7 个 Worker 指定 `deepseek/deepseek-flash` / `deepseek-v4-pro`，走了
  * 用户登录在 `~/.pi/agent/auth.json` 里的 DeepSeek 官方付费 Key（约 1,284 次请求、
  * 输入约 137 万 + 缓存读约 2.7 亿 token），并把做法写进了 `macmini-use` skill。
  */
 
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir, hostname } from "node:os";
 import { join } from "node:path";
 import { type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const MARK = "AI_AUTHORIZED_MODEL";
-const ALLOWLIST = join(homedir(), ".pi", "agent", "patch", "macmini-models", "allowlist.json");
+const DIR = join(homedir(), ".pi", "agent", "patch", "macmini-models");
+const ALLOWLIST = join(DIR, "allowlist.json");
+const PICK = join(DIR, "pick.py");
 const SETTINGS = join(homedir(), ".pi", "agent", "settings.json");
 
 type Entry = { model?: string; display?: string; note?: string };
+type Fallback = { model: string; enabled: boolean; thinking?: string };
+
+interface Allowlist {
+	models: string[];
+	fallback: Fallback | null;
+}
 
 /** 读清单；文件缺失 / 解析失败返回 null（调用方按「保守拦截」处理）。 */
-function loadAllowlist(): string[] | null {
+function loadAllowlist(): Allowlist | null {
 	try {
 		if (!existsSync(ALLOWLIST)) return null;
-		const data = JSON.parse(readFileSync(ALLOWLIST, "utf8")) as { models?: Entry[] };
+		const data = JSON.parse(readFileSync(ALLOWLIST, "utf8")) as { models?: Entry[]; fallback?: Fallback };
 		const list = (data.models ?? [])
 			.map((e) => String(e?.model ?? "").trim())
 			.filter(Boolean);
-		return list.length ? list : null;
+		if (!list.length) return null;
+		const raw = data.fallback;
+		const model = raw && typeof raw.model === "string" ? raw.model.trim() : "";
+		const fallback: Fallback | null = model
+			? { model, enabled: raw?.enabled !== false, thinking: typeof raw?.thinking === "string" ? raw.thinking : undefined }
+			: null;
+		return { models: list, fallback };
 	} catch {
 		return null;
 	}
 }
+
+/** 问 pick.py：现在允许用兜底模型吗（它会实时读 magpie 额度）。 */
+function checkFallback(model: string): { ok: boolean; output: string } {
+	try {
+		const output = execFileSync("python3", [PICK, "--check-model", model], {
+			encoding: "utf8",
+			timeout: 15_000,
+			stdio: ["ignore", "pipe", "pipe"],
+		});
+		return { ok: true, output: output.trim() };
+	} catch (err) {
+		const e = err as { stdout?: string; stderr?: string; message?: string };
+		const output = (e.stdout || e.stderr || e.message || "未知错误").trim();
+		return { ok: false, output };
+	}
+}
+
 
 /** 当前默认模型（settings.json 的 provider/model 拼完整名）。 */
 function defaultModelName(): string | null {
@@ -93,7 +133,18 @@ function modelOf(seg: string): string | null {
 	return m ? m[1] : null;
 }
 
-function deny(reason: string, allow: string[] | null): string {
+const THINKING_LEVELS = new Set(["off", "minimal", "low", "medium", "high", "xhigh", "max"]);
+
+/** 拆出 `--model provider/id:max` 这种思考等级后缀（pi 原生支持的写法）。 */
+function splitThinking(raw: string): { model: string; thinking?: string } {
+	const idx = raw.lastIndexOf(":");
+	if (idx <= 0) return { model: raw };
+	const suffix = raw.slice(idx + 1);
+	if (!THINKING_LEVELS.has(suffix)) return { model: raw };
+	return { model: raw.slice(0, idx), thinking: suffix };
+}
+
+function deny(reason: string, allow: Allowlist | null): string {
 	const lines = [
 		"⛔ 拦下：在 macmini 上启动 pi 会话时用了清单外的模型。",
 		"",
@@ -101,7 +152,14 @@ function deny(reason: string, allow: string[] | null): string {
 		"可用模型清单由用户动态维护（`~/.pi/agent/patch/macmini-models/allowlist.json`）。",
 	];
 	if (allow) {
-		lines.push("", "当前清单（只能用这些）：", ...allow.map((m) => `- ${m}`));
+		lines.push("", "当前清单（只能用这些）：", ...allow.models.map((m) => `- ${m}`));
+		if (allow.fallback) {
+			const fb = allow.fallback;
+			lines.push(
+				"",
+				`兜底（仅当清单内模型全部没额度时可用，思考等级固定 ${fb.thinking ?? "max"}）：${fb.model}${fb.enabled ? "" : "（已停用）"}`,
+			);
+		}
 	} else {
 		lines.push(
 			"",
@@ -114,6 +172,8 @@ function deny(reason: string, allow: string[] | null): string {
 		"",
 		`本次问题：${reason}`,
 		"",
+		"先跑一次选择器，它会按当前额度告诉你该用哪个模型（含兜底）：",
+		"  `python3 ~/.pi/agent/patch/macmini-models/pick.py`",
 		"magpie 连不上（隧道断 / 本机 magpie 未运行 / 模型报错）时，**停下来向用户汇报原因**：",
 		"  `bash ~/.pi/agent/patch/magpie-tunnel/install.sh --status`",
 		"  `python3 ~/.pi/agent/patch/macmini-models/check.py --ping`",
@@ -143,17 +203,43 @@ export default function (pi: ExtensionAPI) {
 				if (!seg) continue;
 				if (!PI_LAUNCH_RE.test(seg)) continue;
 
-				const model = modelOf(seg);
-				if (model) {
-					if (!allow || !allow.includes(model)) {
-						return { block: true, reason: deny(`模型 ${model} 不在清单里`, allow) };
+				const rawModel = modelOf(seg);
+				if (rawModel) {
+					const { model, thinking } = splitThinking(rawModel);
+					if (allow && allow.models.includes(model)) continue;
+
+					// 兜底模型：只在「清单内模型全部没额度」时放行（实时问 pick.py）
+					const fallback = allow?.fallback;
+					if (fallback && fallback.enabled && model === fallback.model) {
+						const verdict = checkFallback(model);
+						if (!verdict.ok) {
+							return {
+								block: true,
+								reason: deny(`兜底模型 ${model} 现在还不能用：${verdict.output}`, allow),
+							};
+						}
+						// 兜底模型的思考等级固定 max，命令里必须带（--thinking max 或 :max 后缀）
+						const want = fallback.thinking ?? "max";
+						const hasThinking =
+							thinking === want || new RegExp(`--thinking(?:=|\\s+)${want}\\b`).test(seg);
+						if (!hasThinking) {
+							return {
+								block: true,
+								reason: deny(
+									`用兜底模型 ${model} 时必须带 --thinking ${want}（用户对该模型的定义就是 ${want} 思考等级，也可写成 --model ${model}:${want}）`,
+									allow,
+								),
+							};
+						}
+						continue;
 					}
-					continue;
+
+					return { block: true, reason: deny(`模型 ${model} 不在清单里`, allow) };
 				}
 
 				// 不带 --model：默认模型也必须在清单里，否则等于绕过清单
 				const dflt = defaultModelName();
-				if (!allow || !dflt || !allow.includes(dflt)) {
+				if (!allow || !dflt || !allow.models.includes(dflt)) {
 					return {
 						block: true,
 						reason: deny(

@@ -34,6 +34,38 @@
 免费的两项。守卫只读清单、不判断免费与否，清单即唯一权威；这条澄清不动原先
 「默认只用免费模型、用其它付费模型须经用户同意」的规矩——本次正是用户行使了同意权。
 
+## 2026-11-14 变更：最终兜底模型
+
+用户立：清单之外再加一个最终兜底的 fallback——**清单内模型全部没额度时走它**。
+
+| 字段 | 值 |
+|---|---|
+| `fallback.model` | `tokenplus/deepseek/deepseek-v4.1-flash-1017` |
+| `fallback.thinking` | `max`（启动命令必须带 `--thinking max`，或写成 `--model …:max`） |
+| `fallback.enabled` | `true`（改 `false` 即停用兜底） |
+
+「是否全部没额度」不做静态判断，由 `pick.py` 实时读 magpie 额度判定（口径与 pi 扩展
+`/mq` 一致）：清单里还有可用额度 → 用兜底一律被守卫拦下；全部耗尽 / magpie 读不到额度 →
+放行兜底。
+
+## 选模型：pick.py
+
+```bash
+python3 ~/.pi/agent/patch/macmini-models/pick.py          # 看清单各模型额度 + 本次该用哪个 + 启动命令
+python3 ~/.pi/agent/patch/macmini-models/pick.py --json   # 机器可读
+python3 ~/.pi/agent/patch/macmini-models/pick.py --check-model <模型>   # 守卫内部用
+```
+
+输出末尾直接就是可用的启动命令，例如：
+
+```
+👉 本次用：tokenplus/deepseek/deepseek-v4.1-flash-1017
+   原因：清单内模型全部没有额度，走兜底
+   启动：pi -n <名字> --model tokenplus/deepseek/deepseek-v4.1-flash-1017 --thinking max
+```
+
+额度结果带 45 秒磁盘缓存（`/tmp/pi-macmini-models-cache.json`），避免守卫与 AI 同时调用时重复请求。
+
 ## 怎么改
 
 直接编辑 `allowlist.json` 的 `models` 数组，字段：
@@ -53,6 +85,8 @@ python3 ~/.pi/agent/patch/macmini-models/check.py --ping   # 在 macmini 上逐�
 ## 守卫怎么用它
 
 - 清单里的模型 → 放行；
+- 兜底模型（`fallback.model`）→ 仅当清单内模型全部没额度时放行（实时问 `pick.py`），
+  且必须带 `--thinking max`；清单里还有可用额度时用兜底会被拦下；
 - 清单外的模型 → 拦截（包括 magpie 的其它模型，如 `magpie/auto/deepseek-v4.1-flash-1017`）；
 - 命令不带 `--model` → 取 `~/.pi/agent/settings.json` 的默认 provider/model 拼完整名，
   不在清单里也拦（防止「默认模型」绕过清单）；
